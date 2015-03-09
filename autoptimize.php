@@ -150,8 +150,82 @@ function autoptimize_update_config_notice() {
     echo '</p></div>';
 }
 
+/**
+ * Returns true if all the conditions to start output buffering are satisfied
+ *
+ * @return bool
+ */
+function autoptimize_do_buffering() {
+    static $do_buffering = null;
+
+    // Only check once in case we're called multiple times by others
+    if ( null === $do_buffering ) {
+        $ao_noptimize = (bool) apply_filters( 'autoptimize_filter_noptimize', false );
+
+        // noptimize in qs to get non-optimized page for debugging
+        if ( array_key_exists( 'ao_noptimize', $_GET ) ) {
+            if ( '1' === $_GET['ao_noptimize'] ) {
+                $ao_noptimize = true;
+            }
+        }
+
+        // If not a feed or in admin and not explicitly turned off
+        $do_buffering = ( ! is_admin() && ! is_feed() && ! $ao_noptimize );
+    }
+
+    return $do_buffering;
+}
+
 // Set up the buffering
 function autoptimize_start_buffering() {
+    if ( autoptimize_do_buffering() ) {
+        // Config element
+        $conf = autoptimizeConfig::instance();
+
+        // Load our base class
+        include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeBase.php';
+
+        // Load extra classes and set some vars
+        if ( $conf->get('autoptimize_html') ) {
+            include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeHTML.php';
+            // BUG: new minify-html does not support keeping HTML comments, skipping for now
+            // if (defined('AUTOPTIMIZE_LEGACY_MINIFIERS')) {
+                @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/minify-html.php';
+            // } else {
+            //  @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/minify-2.1.7-html.php';
+            // }
+        }
+
+        if ( $conf->get('autoptimize_js') ) {
+            include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeScripts.php';
+            if ( ! class_exists( 'JSMin' ) ) {
+                if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) {
+                    @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/jsmin-1.1.1.php';
+                } else {
+                    @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/minify-2.1.7-jsmin.php';
+                }
+            }
+            define( 'CONCATENATE_SCRIPTS', false );
+            define( 'COMPRESS_SCRIPTS', false );
+        }
+
+        if ( $conf->get('autoptimize_css') ) {
+            include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeStyles.php';
+            if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) {
+                if ( ! class_exists( 'Minify_CSS_Compressor' ) ) {
+                    @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/minify-css-compressor.php';
+                }
+            } else {
+                if ( ! class_exists( 'CSSmin' ) ) {
+                    @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/yui-php-cssmin-2.4.8-3_fixes.php';
+                }
+            }
+            define( 'COMPRESS_CSS', false );
+        }
+
+        // Now, start the real thing!
+        ob_start( 'autoptimize_end_buffering' );
+    }
 }
 
 // Action on end, this is where the magic happens
