@@ -10,7 +10,7 @@ abstract class autoptimizeBase
 	public function __construct($content)
 	{
 		$this->content = $content;
-		//Best place to catch errors
+		// Best place to catch errors
 	}
 
 	//Reads the page and collects tags
