@@ -135,6 +135,14 @@ abstract class autoptimizeBase
 		return $iehacks_out;
 	}
 
+    /**
+     * "Hides" content within HTML comments using a regex-based replacement
+     * if HTML comment markers are found.
+     * `<!--example-->` becomes `%%COMMENTS%%ZXhhbXBsZQ==%%COMMENTS%%`
+     *
+     * @param string $comments_in
+     * @return string
+     */
     protected function hide_comments($comments_in)
     {
         if ( false !== strpos( $comments_in, '<!--' ) ) {
@@ -152,6 +160,13 @@ abstract class autoptimizeBase
         return $comments_out;
     }
 
+    /**
+     * Restores original HTML comment markers inside a string whose HTML
+     * comments have been "hidden" by using `hide_comments()`.
+     *
+     * @param type $comments_in
+     * @return string
+     */
     protected function restore_comments($comments_in)
     {
         if ( false !== strpos( $comments_in, '%%COMMENTS%%' ) ) {
