@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class autoptimizeStyles extends autoptimizeBase
 {
+    const ASSETS_REGEX = '/url\s*\(\s*(?!["\']?data:)([^)]+)\s*\)/i';
+
     private $css             = array();
     private $csscode         = array();
     private $url             = array();
@@ -249,13 +251,15 @@ class autoptimizeStyles extends autoptimizeBase
         return array( 'full' => $headAndData, 'base64data' => $base64data );
     }
 
+
+
     // Re-write (and/or inline) referenced assets
     public function rewrite_assets($code)
     {
         // Re-write (and/or inline) URLs to point them to the CDN host
         $url_src_matches = array();
         // Matches and captures anything specified within the literal `url()` and excludes those containing data: URIs
-        preg_match_all( '/url\s*\(\s*(?!["\']?data:)([^)]+)\s*\)/i', $code, $url_src_matches );
+        preg_match_all( self::ASSETS_REGEX, $code, $url_src_matches );
         if ( is_array( $url_src_matches ) && ! empty( $url_src_matches ) ) {
             foreach ( $url_src_matches[1] as $count => $original_url ) {
                 // Removes quotes and other cruft
@@ -610,7 +614,7 @@ class autoptimizeStyles extends autoptimizeBase
         $code = preg_replace( '#@import ("|\')(.+?)\.css("|\')#', '@import url("${2}.css")', $code );
 
         // Loosened the regex to fix certain edge cases (spaces around `url`)
-        if ( preg_match_all( '/url\s*\(\s*(?!["\']?data:)([^)]+)\s*\)/i', $code, $matches ) ) {
+        if ( preg_match_all( self::ASSETS_REGEX, $code, $matches ) ) {
             $file = str_replace( WP_ROOT_DIR, '/', $file );
             $dir  = dirname( $file ); // Like /wp-content
 
