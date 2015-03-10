@@ -249,6 +249,70 @@ class autoptimizeStyles extends autoptimizeBase
         return array( 'full' => $headAndData, 'base64data' => $base64data );
     }
 
+    // Re-write (and/or inline) referenced assets
+    public function rewrite_assets($code)
+    {
+        // Re-write (and/or inline) URLs to point them to the CDN host
+        $url_src_matches = array();
+        // Matches and captures anything specified within the literal `url()` and excludes those containing data: URIs
+        preg_match_all( '/url\s*\(\s*(?!["\']?data:)([^)]+)\s*\)/i', $code, $url_src_matches );
+        if ( is_array( $url_src_matches ) && ! empty( $url_src_matches ) ) {
+            foreach ( $url_src_matches[1] as $count => $original_url ) {
+                // Removes quotes and other cruft
+                $url = trim( $original_url, " \t\n\r\0\x0B\"'" );
+
+                // If datauri inlining is turned on, do it
+                $inlined = false;
+                if ( $this->datauris ) {
+                    $iurl = $url;
+                    if ( false !== strpos( $iurl, '?' ) ) {
+                        $iurl = reset( explode( '?', $iurl ) );
+                    }
+
+                    $ipath = $this->getpath($iurl);
+
+                    $excluded = $this->check_datauri_exclude_list($ipath);
+                    if ( ! $excluded ) {
+                        $is_datauri_candidate = $this->is_datauri_candidate($ipath);
+                        if ( $is_datauri_candidate ) {
+                            $datauri     = $this->build_or_get_datauri_image($ipath);
+                            $base64data  = $datauri['base64data'];
+
+                            // Add it to the list for replacement
+                            $imgreplace[$url_src_matches[1][$count]] = str_replace( $original_url, $datauri['full'], $url_src_matches[1][$count] ) . ";\n*" . str_replace( $original_url, 'mhtml:%%MHTML%%!' . $mhtmlcount, $url_src_matches[1][$count] ) . ";\n_" . $url_src_matches[1][$count] . ';';
+
+                            // Store image on the mhtml document
+                            $this->mhtml .= "--_\r\nContent-Location:{$mhtmlcount}\r\nContent-Transfer-Encoding:base64\r\n\r\n{$base64data}\r\n";
+                            $mhtmlcount++;
+                            $inlined = true;
+                        }
+                    }
+                }
+
+                /**
+                 * Doing CDN URL replacement for every found match (if CDN is
+                 * specified). This way we make sure to do it even if
+                 * inlining isn't turned on, or if a resource is skipped from
+                 * being inlined for whatever reason above.
+                 */
+                if ( ! $inlined  && ! empty( $this->cdn_url ) ) {
+                    // Just do the "simple" CDN replacement
+                    $cdn_url = $this->url_replace_cdn($url);
+                    $imgreplace[ $url_src_matches[1][ $count ] ] = str_replace(
+                        $original_url, $cdn_url, $url_src_matches[1][$count]
+                    );
+                }
+            }
+        }
+
+        if ( ! empty( $imgreplace ) ) {
+            $this->debug_log( $imgreplace );
+            $code = str_replace( array_keys( $imgreplace ), array_values( $imgreplace ), $code );
+        }
+
+        return $code;
+    }
+
     // Joins and optimizes CSS
     public function minify()
     {
@@ -370,74 +434,31 @@ class autoptimizeStyles extends autoptimizeBase
             }
             unset( $ccheck );
 
-            $imgreplace = array();
-
-            // Re-write (and/or inline) URLs to point them to the CDN host
-            $url_src_matches = array();
-            // Matches and captures anything specified within the literal `url()` and excludes those containing data: URIs
-            preg_match_all( '/url\s*\(\s*(?!["\']?data:)([^)]+)\s*\)/i', $code, $url_src_matches );
-            if ( is_array( $url_src_matches ) && ! empty( $url_src_matches ) ) {
-                foreach ( $url_src_matches[1] as $count => $original_url ) {
-                    // Removes quotes and other cruft
-                    $url = trim( $original_url, " \t\n\r\0\x0B\"'" );
-
-                    // If datauri inlining is turned on, do it
-                    $inlined = false;
-                    if ( $this->datauris ) {
-                        $iurl = $url;
-                        if ( false !== strpos( $iurl, '?' ) ) {
-                            $iurl = reset( explode( '?', $iurl ) );
-                        }
-
-                        $ipath = $this->getpath($iurl);
-
-                        $excluded = $this->check_datauri_exclude_list($ipath);
-                        if ( ! $excluded ) {
-                            $is_datauri_candidate = $this->is_datauri_candidate($ipath);
-                            if ( $is_datauri_candidate ) {
-                                $datauri     = $this->build_or_get_datauri_image($ipath);
-                                $base64data  = $datauri['base64data'];
-
-                                // Add it to the list for replacement
-                                $imgreplace[$url_src_matches[1][$count]] = str_replace( $original_url, $datauri['full'], $url_src_matches[1][$count] ) . ";\n*" . str_replace( $original_url, 'mhtml:%%MHTML%%!' . $mhtmlcount, $url_src_matches[1][$count] ) . ";\n_" . $url_src_matches[1][$count] . ';';
-
-                                // Store image on the mhtml document
-                                $this->mhtml .= "--_\r\nContent-Location:{$mhtmlcount}\r\nContent-Transfer-Encoding:base64\r\n\r\n{$base64data}\r\n";
-                                $mhtmlcount++;
-                                $inlined = true;
-                            }
-                        }
-                    }
-
-                    /**
-                     * Doing CDN URL replacement for every found match (if CDN is
-                     * specified). This way we make sure to do it even if
-                     * inlining isn't turned on, or if a resource is skipped from
-                     * being inlined for whatever reason above.
-                     */
-                    if ( ! $inlined  && ! empty( $this->cdn_url ) ) {
-                        // Just do the "simple" CDN replacement
-                        $cdn_url = $this->url_replace_cdn($url);
-                        $imgreplace[ $url_src_matches[1][ $count ] ] = str_replace(
-                            $original_url, $cdn_url, $url_src_matches[1][$count]
-                        );
-                    }
-                }
-            }
-
-            if ( ! empty( $imgreplace ) ) {
-                $this->debug_log( $imgreplace );
-                $code = str_replace( array_keys( $imgreplace ), array_values( $imgreplace ), $code );
-            }
+            // Rewrite and/or inline referenced assets
+            $code = $this->rewrite_assets($code);
 
             // Minify
-            if ( ( true !== $this->alreadyminified ) && ( apply_filters( 'autoptimize_css_do_minify', true ) ) ) {
+            $code = $this->run_minifier_on($code);
+
+            $this->hashmap[md5( $code )] = $hash;
+        }
+
+        unset( $code );
+        return true;
+    }
+
+    public function run_minifier_on($code)
+    {
+        if ( ! $this->alreadyminified ) {
+            $do_minify = apply_filters( 'autoptimize_css_do_minify', true );
+
+            if ( $do_minify ) {
                 $tmp_code = null;
                 if ( class_exists( 'Minify_CSS_Compressor' ) ) {
                     $tmp_code = trim( Minify_CSS_Compressor::process($code) );
                 } elseif ( class_exists( 'CSSmin' ) ) {
                     $cssmin = new CSSmin();
-                    if (method_exists( $cssmin, 'run' ) ) {
+                    if ( method_exists( $cssmin, 'run' ) ) {
                         $tmp_code = trim( $cssmin->run($code) );
                     } elseif ( @is_callable( array( $cssmin, 'minify') ) ) {
                         $tmp_code = trim( CssMin::minify($code) );
@@ -449,12 +470,9 @@ class autoptimizeStyles extends autoptimizeBase
                     unset( $tmp_code );
                 }
             }
-
-            $this->hashmap[md5( $code )] = $hash;
         }
 
-        unset( $code );
-        return true;
+        return $code;
     }
 
     // Caches the CSS in uncompressed, deflated and gzipped form
