@@ -257,11 +257,11 @@ class autoptimizeStyles extends autoptimizeBase
             if ( preg_match( '#^INLINE;#', $css ) ) {
                 // <style>
                 $css = preg_replace( '#^INLINE;#', '', $css );
-                $css = $this->fixurls(ABSPATH . '/index.php', $css);
+                $css = $this->fixurls(ABSPATH . 'index.php', $css); // ABSPATH already contains a trailing slash
                 $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $css, '' );
                 if ( $tmpstyle !== $css && ! empty( $tmpstyle ) ) {
                     $css = $tmpstyle;
-                    $this->alreadyminified=true;
+                    $this->alreadyminified = true;
                 }
             } else {
                 // <link>
@@ -311,7 +311,7 @@ class autoptimizeStyles extends autoptimizeBase
         // Manage @imports, while is for recursive import management
         foreach ( $this->csscode as &$thiscss ) {
             // Flag to trigger import reconstitution and var to hold external imports
-            $fiximports = false;
+            $fiximports       = false;
             $external_imports = '';
 
             while ( preg_match_all( '#^(/*\s?)@import.*(?:;|$)#Um', $thiscss, $matches ) ) {
@@ -325,7 +325,7 @@ class autoptimizeStyles extends autoptimizeBase
                         $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $code, '' );
                         if ( $tmpstyle !== $code && ! empty( $tmpstyle ) ) {
                             $code = $tmpstyle;
-                            $this->alreadyminified=true;
+                            $this->alreadyminified = true;
                         }
                         if ( ! empty( $code ) ) {
                             $tmp_thiscss = preg_replace( '#(/\*FILESTART\*/.*)' . preg_quote( $import, '#' ) . '#Us', '/*FILESTART2*/' . $code . '$1', $thiscss );
@@ -588,13 +588,20 @@ class autoptimizeStyles extends autoptimizeBase
 
     private function fixurls($file, $code)
     {
-        $file = str_replace( WP_ROOT_DIR, '/', $file );
-        $dir  = dirname( $file ); // Like /wp-content
-
         // Quick fix for import-troubles in e.g. arras theme
         $code = preg_replace( '#@import ("|\')(.+?)\.css("|\')#', '@import url("${2}.css")', $code );
 
-        if ( preg_match_all( '#url\((?!data)(?!\#)(.*)\)#Usi', $code, $matches ) ) {
+        // Loosened the regex to fix certain edge cases (spaces around `url`)
+        if ( preg_match_all( '/url\s*\(\s*(?!["\']?data:)([^)]+)\s*\)/i', $code, $matches ) ) {
+            $file = str_replace( WP_ROOT_DIR, '/', $file );
+            $dir  = dirname( $file ); // Like /wp-content
+
+            // $dir should not contain backslashes, since it's used to replace
+            // urls, but it can contain them when running on Windows because
+            // fixurls() is sometimes called with `ABSPATH . 'index.php'`
+            $dir = str_replace( '\\', '/', $dir );
+            unset( $file ); // not used below at all
+
             $replace = array();
             foreach ( $matches[1] as $k => $url ) {
                 // Remove quotes
@@ -607,7 +614,7 @@ class autoptimizeStyles extends autoptimizeBase
                 }
                 $url = $noQurl;
                 if ( '/' === $url{0} || preg_match( '#^(https?://|ftp://|data:)#i', $url ) ) {
-                    // URL is absolute (host-relative)
+                    // URL is protocol-relative, host-relative or something we don't touch
                     continue;
                 } else {
                     // Relative URL
@@ -623,7 +630,8 @@ class autoptimizeStyles extends autoptimizeBase
                     }
                 }
             }
-            // Do the replacing here to avoid breaking URLs
+
+            // Replace URLs found within $code
             $code = str_replace( array_keys( $replace ), array_values( $replace ), $code );
         }
 
