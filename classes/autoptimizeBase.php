@@ -1,5 +1,8 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
+}
 
 abstract class autoptimizeBase
 {
@@ -13,28 +16,28 @@ abstract class autoptimizeBase
 		// Best place to catch errors
 	}
 
-	//Reads the page and collects tags
+	// Reads the page and collects tags
 	abstract public function read($justhead);
 
-	//Joins and optimizes collected things
+	// Joins and optimizes collected things
 	abstract public function minify();
 
-	//Caches the things
+	// Caches the things
 	abstract public function cache();
 
-	//Returns the content
+	// Returns the content
 	abstract public function getcontent();
 
-	//Converts an URL to a full path
+	// Converts an URL to a full path
 	protected function getpath($url)
 	{
 		$url = apply_filters( 'autoptimize_filter_cssjs_alter_url', $url);
 
-		if ( false !== strpos( $url,'%' ) ) {
+		if ( false !== strpos( $url, '%' ) ) {
 			$url = urldecode( $url );
 		}
 
-		// normalize
+		// Normalize
 		if (0 === strpos( $url, '//' ) ) {
 			if ( is_ssl() ) {
 				$url = 'https:' . $url;
@@ -45,17 +48,17 @@ abstract class autoptimizeBase
 			$url = AUTOPTIMIZE_WP_SITE_URL . $url;
 		}
 
-		// first check; hostname wp site should be hostname of url
+		// First check; hostname wp site should be hostname of url
 		if ( parse_url( $url, PHP_URL_HOST ) !== parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST ) ) {
 			return false;
 		}
 
-		// try to remove "wp root url" from url while not minding http<>https
+		// Try to remove "wp root url" from url while not minding http<>https
 		$tmp_ao_root = preg_replace( '/https?/', '', AUTOPTIMIZE_WP_ROOT_URL );
 		$tmp_url     = preg_replace( '/https?/', '', $url );
     	$path        = str_replace( $tmp_ao_root, '', $tmp_url );
 
-		// final check; if path starts with :// or //, this is not a URL in the WP context and we have to assume we can't aggregate
+		// Final check; if path starts with :// or //, this is not a URL in the WP context and we have to assume we can't aggregate
 		if ( preg_match( '#^:?//#', $path ) ) {
      		/** External script/css (adsense, etc) */
 			return false;
@@ -83,7 +86,7 @@ abstract class autoptimizeBase
 		return $noptimize_out;
 	}
 
-	// unhide noptimize-tags
+	// Unhide noptimize-tags
 	protected function restore_noptimize($noptimize_in)
 	{
 		if ( false !== strpos( $noptimize_in, '%%NOPTIMIZE%%' ) ) {
@@ -222,13 +225,13 @@ abstract class autoptimizeBase
         return $url;
     }
 
-	protected function inject_in_html($payload,$replaceTag)
+	protected function inject_in_html($payload, $replaceTag)
 	{
 		$warned = false;
 		if ( false !== strpos( $this->content, $replaceTag[0] ) ) {
-			if ('after' === $replaceTag[1] ) {
+			if ( 'after' === $replaceTag[1] ) {
 				$replaceBlock = $replaceTag[0] . $payload;
-			} else if ('replace' === $replaceTag[1] ){
+			} else if ( 'replace' === $replaceTag[1] ){
 				$replaceBlock = $payload;
 			} else {
 				$replaceBlock = $payload . $replaceTag[0];
@@ -249,7 +252,7 @@ abstract class autoptimizeBase
             return;
         }
 
-        if ( ! is_string( $data ) ) {
+        if ( ! is_string( $data ) && !is_resource( $data ) ) {
             $data = var_export( $data, true );
         }
 

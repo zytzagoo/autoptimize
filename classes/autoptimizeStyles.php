@@ -1,5 +1,8 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 class autoptimizeStyles extends autoptimizeBase
 {
@@ -269,7 +272,7 @@ class autoptimizeStyles extends autoptimizeBase
                     $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $css, $cssPath );
                     if ($tmpstyle !== $css && ! empty( $tmpstyle ) ) {
                         $css = $tmpstyle;
-                        $this->alreadyminified=true;
+                        $this->alreadyminified = true;
                     }
                 } else {
                     // Couldn't read CSS. Maybe getpath isn't working?
@@ -429,6 +432,7 @@ class autoptimizeStyles extends autoptimizeBase
 
             // Minify
             if ( ( true !== $this->alreadyminified ) && ( apply_filters( 'autoptimize_css_do_minify', true ) ) ) {
+                $tmp_code = null;
                 if ( class_exists( 'Minify_CSS_Compressor' ) ) {
                     $tmp_code = trim( Minify_CSS_Compressor::process($code) );
                 } elseif ( class_exists( 'CSSmin' ) ) {
@@ -573,8 +577,8 @@ class autoptimizeStyles extends autoptimizeBase
             if ( $this->defer ) {
                 $deferredCssBlock .= "}if(window.addEventListener){window.addEventListener('DOMContentLoaded',deferredCSS,false);}else{window.onload = deferredCSS;}</script>";
                 $noScriptCssBlock .= '</noscript>';
-                $this->inject_in_html($noScriptCssBlock, array('<title>', 'before'));
-                $this->inject_in_html($deferredCssBlock, array('</body>', 'before'));
+                $this->inject_in_html($noScriptCssBlock, array( '<title>', 'before' ) );
+                $this->inject_in_html($deferredCssBlock, array( '</body>', 'before' ) );
             }
         }
 
@@ -582,7 +586,7 @@ class autoptimizeStyles extends autoptimizeBase
         return $this->content;
     }
 
-    private function fixurls($file,$code)
+    private function fixurls($file, $code)
     {
         $file = str_replace( WP_ROOT_DIR, '/', $file );
         $dir  = dirname( $file ); // Like /wp-content

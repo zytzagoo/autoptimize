@@ -12,7 +12,9 @@ Released under the GNU General Public License (GPL)
 http://www.gnu.org/licenses/gpl.txt
 */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 // Load config class
 include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeConfig.php';
