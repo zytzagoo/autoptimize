@@ -139,7 +139,7 @@ class autoptimizeStyles extends autoptimizeBase
             $max_size = $this->get_datauri_maxsize();
         }
 
-        if ( $path && preg_match( '#\.(jpe?g|png|gif|webp|bmp)$#', $path ) &&
+        if ( $path && preg_match( '#\.(jpe?g|png|gif|webp|bmp)$#i', $path ) &&
             file_exists( $path ) && is_readable( $path ) && filesize( $path ) <= $max_size ) {
 
             // Seems we have a candidate
