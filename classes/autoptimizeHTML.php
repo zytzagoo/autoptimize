@@ -9,6 +9,11 @@ class autoptimizeHTML extends autoptimizeBase
 	//Does nothing
 	public function read($options)
 	{
+        $noptimizeHTML = apply_filters( 'autoptimize_filter_html_noptimize', false, $this->content );
+        if ( $noptimizeHTML ) {
+            return false;
+        }
+
 		//Remove the HTML comments?
 		$this->keepcomments = (bool) $options['keepcomments'];
 

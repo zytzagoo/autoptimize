@@ -44,12 +44,12 @@ abstract class autoptimizeBase
 			} else {
 				$url = 'http:' . $url;
 			}
-		} else if ( ( false === strpos($url, '//' ) ) && ( strpos( $url, parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST ) ) === false ) ) {
+		} elseif ( ( false === strpos($url, '//' ) ) && ( false === strpos( $url, parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST ) ) ) ) {
 			$url = AUTOPTIMIZE_WP_SITE_URL . $url;
 		}
 
 		// First check; hostname wp site should be hostname of url
-		if ( parse_url( $url, PHP_URL_HOST ) !== parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST ) ) {
+		if ( @parse_url( $url, PHP_URL_HOST ) !== parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST ) ) {
 			return false;
 		}
 
@@ -192,7 +192,7 @@ abstract class autoptimizeBase
         if ( ! empty( $this->cdn_url ) ) {
         	$this->debug_log('before=' . $url);
             // first allow API filter to take care of CDN replacement
-            $tmp_url = apply_filters( 'autoptimize_base_replace_cdn', $url );
+            $tmp_url = apply_filters( 'autoptimize_filter_base_replace_cdn', $url );
             if ( $tmp_url === $url ) {
                 // Filter didn't change anything, proceed
                 // Simple str_replace-based approach fails when $url is protocol-or-host-relative.

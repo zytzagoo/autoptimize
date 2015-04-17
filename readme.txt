@@ -3,8 +3,8 @@ Contributors: futtta, turl
 Tags: css, html, javascript, js, optimize, speed, cache, data-uri, aggregate, minimize, minification, performance, pagespeed, booster, multisite
 Donate link: http://blog.futtta.be/2013/10/21/do-not-donate-to-me/
 Requires at least: 2.7
-Tested up to: 4.1
-Stable tag: 1.9.2
+Tested up to: 4.2
+Stable tag: 1.9.3
 
 Autoptimize speeds up your website and helps you save bandwidth by aggregating and minimizing JS, CSS and HTML.
 
@@ -12,16 +12,16 @@ Autoptimize speeds up your website and helps you save bandwidth by aggregating a
 
 Autoptimize makes optimizing your site really easy. It concatenates all scripts and styles, minifies and compresses them, adds expires headers, caches them, and moves styles to the page head, and scripts to the footer. It also minifies the HTML code itself, making your page really lightweight. There are advanced options available to enable you to tailor Autoptimize to each and every site's specific need.
 
-If you consider performance important, you really should use a caching-plugin such as e.g. [WP Super Cache](http://wordpress.org/extend/plugins/wp-super-cache/) or 
+If you consider performance important, you really should use a caching-plugin such as e.g. [WP Super Cache](http://wordpress.org/extend/plugins/wp-super-cache/) or
 [HyperCache](http://wordpress.org/extend/plugins/hyper-cache/) to complement Autoptimize.
 
 == Installation ==
 
-Just install form your WordPress "Plugins|Add New" screen and all will be well. Manual installation is very straightforward as well:
+Just install from your WordPress "Plugins > Add New" screen and all will be well. Manual installation is very straightforward as well:
 
-1. Upload the zip-file and unzip it in the /wp-content/plugins/ directory
+1. Upload the zip file and unzip it in the `/wp-content/plugins/` directory
 1. Activate the plugin through the 'Plugins' menu in WordPress
-1. Go to `Settings -> Autoptimize` and enable the options you want. Generally this means "Optimize HTML/ CSS/ JavaScript".
+1. Go to `Settings > Autoptimize` and enable the options you want. Generally this means "Optimize HTML/ CSS/ JavaScript".
 
 == Frequently Asked Questions ==
 
@@ -62,6 +62,10 @@ You can however keep the cache size at an acceptable level by either:
 * using the API to force AO not to aggregate inline CSS or JS (see example-code in autoptimize_helper.php_example).
 * excluding JS-variables (or sometimes CSS-selectors) that change on a per page (or per pageload) basis. You can read how you can do that [in this blogpost](http://blog.futtta.be/2014/03/19/how-to-keep-autoptimizes-cache-size-under-control-and-improve-visitor-experience/).
 
+= Why is "look only in head" marked as deprecated =
+
+While "look only in head" still works, it will in the next major version be replaced by an option to choose if inline JS/ CSS should be autoptimized (which is much more useful). So this is just a small heads up, really.
+
 = What can I do with the API? =
 
 A whole lot; there are filters you can use to conditionally disable Autoptimize per request, to change the CSS- and JS-excludes, to change the limit for CSS background-images to be inlined in the CSS, to define what JS-files are moved behing the aggregated on, to change the defer-attribute on the aggregated JS script-tag, ... There are examples for many filters in autoptimize_helper.php_example.
@@ -94,7 +98,7 @@ Both CSS and JS optimization can skip code from being aggregated and minimized b
 
 = Configuring & Troubleshooting Autoptimize =
 
-After having installed and activated the plugin, you'll have access to an admin page where you can to enable HTML, CSS and JavaScript optimization. According to your liking, you can start of just enabling all of them, or if you're more cautious one at a time. 
+After having installed and activated the plugin, you'll have access to an admin page where you can to enable HTML, CSS and JavaScript optimization. According to your liking, you can start of just enabling all of them, or if you're more cautious one at a time.
 
 If your blog doesn't function normally after having turned on Autoptimize, here are some pointers to identify & solve such issues using "advanced settings":
 
@@ -121,7 +125,7 @@ You can do this in your page/ post content, in widgets and in your theme files (
 
 = Can I change the directory & filename of cached autoptimize files? =
 
-Yes, if you want to serve files from e.g. /wp-content/resources/aggregated_12345.css instead of the default /wp-content/cache/autoptimize/autoptimize_12345.css, then add this to wp-config.php: 
+Yes, if you want to serve files from e.g. /wp-content/resources/aggregated_12345.css instead of the default /wp-content/cache/autoptimize/autoptimize_12345.css, then add this to wp-config.php:
 `
 define('AUTOPTIMIZE_CACHE_CHILD_DIR','/resources/');
 define('AUTOPTIMIZE_CACHEFILE_PREFIX','aggregated_');
@@ -155,6 +159,19 @@ You can report problems on the [wordpress.org support forum](http://wordpress.or
 Just [fork Autoptimize on Github](https://github.com/futtta/autoptimize) and code away!
 
 == Changelog ==
+
+= 1.9.3 =
+* improvement: more intelligent CDN-replacement logic, thanks [Squazz for reporting and testing](https://wordpress.org/support/topic/enable-cdn-for-images-referenced-in-the-css?replies=9)
+* improvement: allow strings (comments) to be excluded from HTML-optimization (comment removal)
+* improvement: changed priority with which AO gets triggered by WordPress, solving JS not being aggregated when NextGen Galleries is active, with great [help from msebald](https://wordpress.org/support/topic/js-options-dont-work-if-html-disabled/)
+* improvement: extra JS exclude-strings: gist.github.com, text/html, text/template, wp-slimstat.min.js, _stq, nonce, post_id (the latter two were removed from the "manual" exclude list on the settings-page)
+* new in API: autoptimize_filter_html_exclude, autoptimize_filter_css_defer, autoptimize_filter_css_inline, autoptimize_filter_base_replace_cdn, autopitmize_filter_js_noptimize, autopitmize_filter_css_noptimize, autopitmize_filter_html_noptimize
+* bugfix: remove some PHP notices, as [reported by dimitrov.adrian](https://wordpress.org/support/topic/php-errors-39)
+* bugfix: make sure HTML-optimalization does not gobble a space before a cite [as proposed by ecdltf](https://wordpress.org/support/topic/%E2%80%9Coptimize-html%E2%80%9D-is-gobbling-whitespace-before-cite-tag)
+* bugfix: cleaning the cache did not work on non-default directories as [encountered by NoahJ Champion](https://wordpress.org/support/topic/changing-the-wp-content-path-to-top-level?replies=10#post-6573657)
+* upgraded to [yui compressor php port 2.4.8-4](https://github.com/tubalmartin/YUI-CSS-compressor-PHP-port)
+* added arabic translation, thanks to the [ekleel team](http://www.ekleel.net)
+* tested with WordPress 4.2 beta 3
 
 = 1.9.2 =
 First of all; Happy holidays, all the best for 2015!!
@@ -339,7 +356,7 @@ First of all; Happy holidays, all the best for 2015!!
 
 = 1.0 =
 * Add workaround for whos.among.us
-* Support preserving HTML Comments. 
+* Support preserving HTML Comments.
 * Implement "delayed cache compression"
 * French translation
 * Update Spanish translation
@@ -347,7 +364,7 @@ First of all; Happy holidays, all the best for 2015!!
 = 0.9 =
 * Add workaround for networkedblogs.
 * Add workarounds for histats and statscounter
-* Add workaround for smowtion and infolinks. 
+* Add workaround for smowtion and infolinks.
 * Add workaround for Featured Content Gallery
 * Simplified Chinese translation
 * Update Spanish Translation
@@ -368,7 +385,7 @@ First of all; Happy holidays, all the best for 2015!!
 * Add fix for DISQUS Comment System.
 
 = 0.6 =
-* Add workaround for mybloglog, blogcatalog, tweetmeme and Google CSE 
+* Add workaround for mybloglog, blogcatalog, tweetmeme and Google CSE
 
 = 0.5 =
 * Support localization

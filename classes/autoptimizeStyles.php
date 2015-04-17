@@ -16,10 +16,18 @@ class autoptimizeStyles extends autoptimizeBase
     private $datauris        = false;
     private $hashmap         = array();
     private $alreadyminified = false;
+    private $inline          = false;
+    private $defer           = false;
+    private $defer_inline    = false;
 
     // Reads the page and collects style tags
     public function read($options)
     {
+        $noptimizeCSS = apply_filters( 'autoptimize_filter_css_noptimize', false, $this->content );
+        if ( $noptimizeCSS ) {
+            return false;
+        }
+
         // Remove everything that's not the header
         if ( $options['justhead'] ) {
             $content             = explode( '</head>', $this->content, 2 );
@@ -34,13 +42,18 @@ class autoptimizeStyles extends autoptimizeBase
         }
 
         // Should we defer css?
+        // value: true / false
         $this->defer = $options['defer'];
+        $this->defer = apply_filters( 'autoptimize_filter_css_defer', $this->defer );
 
         // Should we inline while deferring?
+        // value: inlined CSS
         $this->defer_inline = $options['defer_inline'];
 
         // Should we inline?
+        // value: true / false
         $this->inline = $options['inline'];
+        $this->inline = apply_filters( 'autoptimize_filter_css_inline', $this->inline );
 
         // Store cdn url
         $this->cdn_url = $options['cdn_url'];
