@@ -3,7 +3,7 @@
 Plugin Name: Autoptimize
 Plugin URI: http://blog.futtta.be/autoptimize
 Description: Optimizes your website, concatenating the CSS and JavaScript code, and compressing it.
-Version: 1.9.3
+Version: 1.9.4
 Author: Frank Goossens (futtta)
 Author URI: http://blog.futtta.be/
 Domain Path: localization/
@@ -46,7 +46,7 @@ $conf = autoptimizeConfig::instance();
 /* Check if we're updating, in which case we might need to do stuff and flush the cache
 to avoid old versions of aggregated files lingering around */
 
-$autoptimize_version = '1.9.3';
+$autoptimize_version = '1.9.4';
 $autoptimize_db_version = get_option( 'autoptimize_version', 'none' );
 
 if ($autoptimize_db_version !== $autoptimize_version) {
@@ -347,8 +347,11 @@ if ( autoptimizeCache::cacheavail() ) {
     $conf = autoptimizeConfig::instance();
     if ( $conf->get('autoptimize_html') || $conf->get('autoptimize_js') || $conf->get('autoptimize_css') || $conf->get('autoptimize_cdn_js') || $conf->get('autoptimize_cdn_css') ) {
         // Hook to wordpress
-        add_action( 'init', 'autoptimize_start_buffering', -1 );
-        // add_action( 'template_redirect', 'autoptimize_start_buffering', 2 );
+        if (defined('AUTOPTIMIZE_INIT_EARLIER')) {
+            add_action( 'init', 'autoptimize_start_buffering', -1 );
+        } else {
+            add_action( 'template_redirect', 'autoptimize_start_buffering', 2 );
+        }
     }
 }
 
