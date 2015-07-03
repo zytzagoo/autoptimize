@@ -16,14 +16,16 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+define( 'AUTOPTIMIZE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+
 // Load config class
-include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeConfig.php';
+include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeConfig.php';
 
 // Do we gzip when caching (needed early to load autoptimizeCache.php)
 define( 'AUTOPTIMIZE_CACHE_NOGZIP', (bool) get_option( 'autoptimize_cache_nogzip' ) );
 
 // Load cache class
-include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeCache.php';
+include AUTOPTIMIZE_PLUGIN_DIR . '/classes/autoptimizeCache.php';
 
 // wp-content dir, dirname of AO cache dir and AO-prefix can be overridden in wp-config.php
 if ( ! defined( 'AUTOPTIMIZE_CACHE_CHILD_DIR' ) ) { define( 'AUTOPTIMIZE_CACHE_CHILD_DIR', '/cache/autoptimize/' ); }
@@ -107,7 +109,7 @@ if ($autoptimize_db_version !== $autoptimize_version) {
 
 // Load translations
 $plugin_dir = basename( dirname( __FILE__ ) );
-load_plugin_textdomain( 'autoptimize', 'wp-content/plugins/' . $plugin_dir . '/localization', $plugin_dir . '/localization' );
+load_plugin_textdomain( 'autoptimize', false, $plugin_dir . '/localization' );
 
 function autoptimize_uninstall(){
     autoptimizeCache::clearall();
@@ -185,41 +187,39 @@ function autoptimize_start_buffering() {
         $conf = autoptimizeConfig::instance();
 
         // Load our base class
-        include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeBase.php';
+        include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeBase.php';
 
         // Load extra classes and set some vars
         if ( $conf->get('autoptimize_html') ) {
-            include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeHTML.php';
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeHTML.php';
             // BUG: new minify-html does not support keeping HTML comments, skipping for now
             // if (defined('AUTOPTIMIZE_LEGACY_MINIFIERS')) {
-                @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/minify-html.php';
+                @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-html.php';
             // } else {
             //  @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/minify-2.1.7-html.php';
             // }
         }
 
         if ( $conf->get('autoptimize_js') ) {
-            include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeScripts.php';
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeScripts.php';
             if ( ! class_exists( 'JSMin' ) ) {
                 if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) {
-                    @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/jsmin-1.1.1.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/jsmin-1.1.1.php';
                 } else {
-                    @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/minify-2.1.7-jsmin.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.1.7-jsmin.php';
                 }
             }
-            define( 'CONCATENATE_SCRIPTS', false );
-            define( 'COMPRESS_SCRIPTS', false );
         }
 
         if ( $conf->get('autoptimize_css') ) {
-            include WP_PLUGIN_DIR . '/autoptimize/classes/autoptimizeStyles.php';
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeStyles.php';
             if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) {
                 if ( ! class_exists( 'Minify_CSS_Compressor' ) ) {
-                    @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/minify-css-compressor.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-css-compressor.php';
                 }
             } else {
                 if ( ! class_exists( 'CSSmin' ) ) {
-                    @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/yui-php-cssmin-2.4.8-4.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-2.4.8-4.php';
                 }
             }
             define( 'COMPRESS_CSS', false );

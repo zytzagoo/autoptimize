@@ -20,7 +20,7 @@ class autoptimizeScripts extends autoptimizeBase
         'intensedebate.com','scripts.chitika.net/','_gaq.push','jotform.com/',
         'admin-bar.min.js','GoogleAnalyticsObject','plupload.full.min.js',
         'syntaxhighlighter','adsbygoogle','application/ld+json','text/html',
-        'text/template', 'gist.github.com','wp-slimstat.min.js','_stq','nonce',
+        'text/template','gist.github.com','_stq','nonce',
         'post_id'
     );
     private $domove     = array(
