@@ -17,6 +17,9 @@ class autoptimizeHTML extends autoptimizeBase
 		//Remove the HTML comments?
 		$this->keepcomments = (bool) $options['keepcomments'];
 
+        // filter to force xhtml
+		$this->forcexhtml = apply_filters( 'autoptimize_filter_html_forcexhtml', 'false' );
+
 		//Nothing to read for HTML
 		return true;
 	}
@@ -29,7 +32,10 @@ class autoptimizeHTML extends autoptimizeBase
 			$this->content = $this->hide_noptimize($this->content);
 
 			// Minify html
-			$options = array('keepComments' => $this->keepcomments);
+			$options = array( 'keepComments' => $this->keepcomments );
+			if ( $this->forcexhtml ) {
+				$options['xhtml'] = true;
+			}
 
 			if ( is_callable( array( 'Minify_HTML', 'minify' ) ) ) {
 				$tmp_content = Minify_HTML::minify($this->content, $options);
