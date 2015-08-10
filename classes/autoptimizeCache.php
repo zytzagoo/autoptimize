@@ -116,6 +116,7 @@ class autoptimizeCache
 		}
 
 		@unlink( AUTOPTIMIZE_CACHE_DIR . '/.htaccess' );
+        delete_transient( 'AOstats' );
 
         // TODO/FIXME: Why is this a verbatim duplicate from autoptimize_flush_pagecache() ?
         // and it then even schedules basically that same function for later
@@ -174,33 +175,59 @@ class autoptimizeCache
 
 	static function stats()
     {
-        // Count cached info
+        // Get stats from transient
+        $AOstats = get_transient( 'AOstats' );
+
+        // If no transient, do the actual scan
+        if ( ! is_array( $AOstats ) ) {
+            // Cache not available :(
+            if ( ! autoptimizeCache::cacheavail() ) {
+                return 0;
+            }
+
+            // Collect stats from cache dirs
+            $AOstats = self::stats_scan();
+
+            // Store results in transient
+            set_transient( 'AOstats', $AOstats, HOUR_IN_SECONDS );
+        }
+
+        return $AOstats;
+	}
+
+    static function stats_scan()
+    {
         $count = 0;
+        $size  = 0;
 
-		// Cache not available :(
-		if ( ! autoptimizeCache::cacheavail() ) {
-			return $count;
-		}
-
-		// scan the cachedirs
+        // scan the cachedirs
 		foreach ( self::get_cache_contents() as $scandirName => $scanneddir ) {
             $dir = rtrim( AUTOPTIMIZE_CACHE_DIR . $scandirName, '/' ) . '/';
 			foreach ( $scanneddir as $file ) {
                 if ( self::is_valid_cache_file( $dir, $file ) ) {
-					if ( AUTOPTIMIZE_CACHE_NOGZIP && ( false !== strpos( $file, '.js' ) || false !== strpos( $file, '.css' ) ) ) {
-                        // web server is gzipping, we count only .js and .css files
+                    if ( AUTOPTIMIZE_CACHE_NOGZIP &&
+                        (
+                            false !== strpos( $file, '.js' ) ||
+                            false !== strpos( $file, '.css' ) ||
+                            false !== strpos( $file, '.img' ) ||
+                            false !== strpos( $file, '.txt' )
+                        )
+                    ) {
+                        // web server is gzipping, we count .js|.css|.img|.txt files
 						$count++;
 					} elseif ( ! AUTOPTIMIZE_CACHE_NOGZIP && false !== strpos( $file, '.none' ) ) {
                         // we are gzipping ourselves via php, counting only .none files
 						$count++;
 					}
+                    $size += filesize( $dir . $file );
 				}
 			}
 		}
 
-		// return the count of files
-		return $count;
-	}
+        $AOstats = array( $count, $size, time() );
+
+        return $AOstats;
+    }
 
 	static function cacheavail()
     {

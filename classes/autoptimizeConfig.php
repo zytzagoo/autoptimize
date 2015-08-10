@@ -169,7 +169,17 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 </tr>
 <tr valign="top" class="hidden ao_adv">
 <th scope="row"><?php _e('Cached styles and scripts','autoptimize'); ?></th>
-<td><?php echo autoptimizeCache::stats(); ?></td>
+<td><?php
+    $AOstatArr = autoptimizeCache::stats();
+    if ( ! empty( $AOstatArr ) && is_array( $AOstatArr ) ) {
+        $AOcacheSize = size_format( $AOstatArr[1], 2 );
+        $details = '';
+        if ( $AOcacheSize > 0 ) {
+            $details = ', ~' . $AOcacheSize . ' total';
+        }
+        echo $AOstatArr[0] . ' files' . $details . ' (last scanned at ' . date( 'H:i e', $AOstatArr[2] ) . ', refreshes hourly).';
+    }
+?></td>
 </tr>
 <tr valign="top" class="hidden ao_adv">
 <th scope="row"><?php _e('Save aggregated script/css as static files?','autoptimize'); ?></th>
