@@ -121,7 +121,7 @@ function autoptimize_uninstall(){
         'autoptimize_html', 'autoptimize_html_keepcomments', 'autoptimize_js',
         'autoptimize_js_exclude', 'autoptimize_js_forcehead', 'autoptimize_js_justhead',
         'autoptimize_js_trycatch', 'autoptimize_version', 'autoptimize_show_adv',
-        'autoptimize_cdn_url'
+        'autoptimize_cdn_url', 'autoptimize_cachesize_notice'
     );
 
     if ( ! is_multisite() ) {
@@ -139,6 +139,10 @@ function autoptimize_uninstall(){
             }
         }
         switch_to_blog( $original_blog_id );
+    }
+
+    if ( wp_get_schedule( 'ao_cachechecker' ) ) {
+        wp_clear_scheduled_hook( 'ao_cachechecker' );
     }
 }
 
@@ -164,7 +168,15 @@ function autoptimize_do_buffering() {
 
     // Only check once in case we're called multiple times by others
     if ( null === $do_buffering ) {
-        $ao_noptimize = (bool) apply_filters( 'autoptimize_filter_noptimize', false );
+
+        $ao_noptimize = false;
+        // check for DONOTMINIFY constant as used by e.g. WooCommerce POS
+        if ( defined( 'DONOTMINIFY' ) && ( constant( 'DONOTMINIFY' ) === true || constant( 'DONOTMINIFY' ) === 'true' ) ) {
+            $ao_noptimize = true;
+        }
+
+        // filter you can use to block autoptimization on your own terms
+        $ao_noptimize = (bool) apply_filters( 'autoptimize_filter_noptimize', $ao_noptimize );
 
         // noptimize in qs to get non-optimized page for debugging
         if ( array_key_exists( 'ao_noptimize', $_GET ) ) {
@@ -292,6 +304,8 @@ function autoptimize_end_buffering($content) {
         )
     );
 
+    $content = apply_filters( 'autoptimize_filter_html_before_minify', $content );
+
     // Run the classes
     foreach ( $classes as $name ) {
         $instance = new $name( $content );
@@ -356,6 +370,8 @@ if ( autoptimizeCache::cacheavail() ) {
 }
 
 register_uninstall_hook( __FILE__, 'autoptimize_uninstall' );
+include_once 'classlesses/autoptimizeCacheChecker.php';
+
 
 // Do not pollute other plugins
 unset( $conf );

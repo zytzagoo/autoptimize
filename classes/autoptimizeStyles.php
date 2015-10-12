@@ -19,6 +19,7 @@ class autoptimizeStyles extends autoptimizeBase
     private $inline          = false;
     private $defer           = false;
     private $defer_inline    = false;
+    private $whitelist       = '';
 
     // Reads the page and collects style tags
     public function read($options)
@@ -26,6 +27,11 @@ class autoptimizeStyles extends autoptimizeBase
         $noptimizeCSS = apply_filters( 'autoptimize_filter_css_noptimize', false, $this->content );
         if ( $noptimizeCSS ) {
             return false;
+        }
+
+        $whitelistCSS = apply_filters( 'autoptimize_filter_css_whitelist', '' );
+        if ( ! empty( $whitelistCSS ) ) {
+            $this->whitelist = array_filter( array_map( 'trim', explode(',', $whitelistCSS ) ) );
         }
 
         // Remove everything that's not the header
@@ -95,6 +101,10 @@ class autoptimizeStyles extends autoptimizeBase
                         $media = array();
                         foreach ( $medias as $elem ) {
                             // $media[] = current(explode(' ',trim($elem),2));
+                            if ( empty( $elem ) ) {
+                                $elem = 'all';
+                            }
+
                             $media[] = $elem;
                         }
                     } else {
@@ -285,7 +295,7 @@ class autoptimizeStyles extends autoptimizeBase
                 if ( $this->datauris ) {
                     $iurl = $url;
                     if ( false !== strpos( $iurl, '?' ) ) {
-                        $iurl = reset( explode( '?', $iurl ) );
+                        $iurl = strtok( $iurl, '?' );
                     }
 
                     $ipath = $this->getpath($iurl);
@@ -679,16 +689,26 @@ class autoptimizeStyles extends autoptimizeBase
 
     private function ismovable($tag)
     {
-        if ( isset( $this->dontmove ) && is_array( $this->dontmove ) ) {
-            foreach ( $this->dontmove as $match ) {
-                if ( false !== strpos( $tag, $match ) ) {
-                    // Matched something
-                    return false;
-                }
-            }
-        }
+		if ( ! empty( $this->whitelist ) ) {
+			foreach ($this->whitelist as $match) {
+				if ( false !== strpos( $tag, $match ) ) {
+					return true;
+				}
+			}
+			// no match with whitelist
+			return false;
+		} else {
+			if ( is_array( $this->dontmove ) ) {
+				foreach( $this->dontmove as $match ) {
+					if (false !== strpos( $tag, $match ) ) {
+						//Matched something
+						return false;
+					}
+				}
+			}
 
-        // If we're here it's safe to move
-        return true;
-    }
+			//If we're here it's safe to move
+			return true;
+		}
+	}
 }

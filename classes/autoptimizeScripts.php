@@ -19,8 +19,7 @@ class autoptimizeScripts extends autoptimizeBase
         'media.fastclick.net','/ads/','comment-form-quicktags/quicktags.php','edToolbar',
         'intensedebate.com','scripts.chitika.net/','_gaq.push','jotform.com/',
         'admin-bar.min.js','GoogleAnalyticsObject','plupload.full.min.js',
-        'syntaxhighlighter','adsbygoogle','application/ld+json','text/html',
-        'text/template','gist.github.com','_stq','nonce',
+        'syntaxhighlighter','adsbygoogle','gist.github.com','_stq','nonce',
         'post_id'
     );
     private $domove     = array(
@@ -38,6 +37,7 @@ class autoptimizeScripts extends autoptimizeBase
     private $url             = '';
     private $restofcontent   = '';
     private $md5hash         = '';
+    private $whitelist       = '';
 
     // Reads the page and collects script tags
     public function read($options)
@@ -45,6 +45,11 @@ class autoptimizeScripts extends autoptimizeBase
         $noptimizeJS = apply_filters( 'autoptimize_filter_js_noptimize', false, $this->content );
         if ( $noptimizeJS ) {
             return false;
+        }
+
+        $whitelistJS = apply_filters( 'autoptimize_filter_js_whitelist', '' );
+        if ( ! empty( $whitelistJS ) ) {
+            $this->whitelist = array_filter( array_map( 'trim', explode( ',', $whitelistJS ) ) );
         }
 
         // Remove everything that's not the header
@@ -89,6 +94,18 @@ class autoptimizeScripts extends autoptimizeBase
         // Get script files
         if ( preg_match_all( '#<script.*</script>#Usmi', $this->content, $matches ) ) {
             foreach( $matches[0] as $tag ) {
+                // only consider aggregation if no js type is specified or if type is text/javascript
+                $has_type = ( strpos( $tag, 'type=' ) !== false );
+                $type_is_textjs = false;
+                if ( $has_type ) {
+                    // $type_is_textjs = preg_match( '/type\s*=\s*.text\/javascript./i', $tag );
+                    $type_is_textjs = preg_match( '/type\s*=\s*[\'"]?text\/javascript[\'"]?/i', $tag );
+                }
+                if ( ! $has_type || $type_is_textjs ) {
+                    $tag = '';
+                    continue;
+                }
+
                 if ( preg_match( '#src=("|\')(.*)("|\')#Usmi', $tag, $source ) ) {
                     // External script
                     $url = current( explode( '?', $source[2], 2 ) );
@@ -216,7 +233,7 @@ class autoptimizeScripts extends autoptimizeBase
         // $this->jscode has all the uncompressed code now.
         if ( true !== $this->alreadyminified ) {
             if ( class_exists( 'JSMin' ) && apply_filters( 'autoptimize_js_do_minify', true ) ) {
-                if ( @is_callable( array( new JSMin, 'minify' ) ) ) {
+                if ( @is_callable( array( 'JSMin', 'minify' ) ) ) {
                     $tmp_jscode = trim( JSMin::minify($this->jscode) );
                     $tmp_jscode = apply_filters( 'autoptimize_js_after_minify', $tmp_jscode );
                     if ( ! empty( $tmp_jscode ) ) {
@@ -265,14 +282,18 @@ class autoptimizeScripts extends autoptimizeBase
             $defer = 'defer ';
         }
 
-        $defer      = apply_filters( 'autoptimize_filter_js_defer', $defer );
+        $defer = apply_filters( 'autoptimize_filter_js_defer', $defer );
+
+        $bodyreplacementpayload = '<script type="text/javascript" ' . $defer . 'src="' . $this->url . '"></script>';
+        $bodyreplacementpayload = apply_filters( 'autoptimize_filter_js_bodyreplacementpayload', $bodyreplacementpayload );
+
+        $bodyreplacement = implode( '',$this->move['first'] );
+        $bodyreplacement .= $bodyreplacementpayload;
+        $bodyreplacement .= implode( '', $this->move['last'] );
+
         $replaceTag = apply_filters( 'autoptimize_filter_js_replacetag', $replaceTag );
 
-        $bodyreplacement = implode('',$this->move['first']);
-        $bodyreplacement .= '<script type="text/javascript" '.$defer.'src="'.$this->url.'"></script>';
-        $bodyreplacement .= implode('',$this->move['last']);
-
-        $this->inject_in_html($bodyreplacement,$replaceTag);
+        $this->inject_in_html($bodyreplacement, $replaceTag);
 
         // restore comments
         $this->content = $this->restore_comments($this->content);
@@ -287,30 +308,40 @@ class autoptimizeScripts extends autoptimizeBase
         return $this->content;
     }
 
-    // Checks against the whitelist
-    private function ismergeable($tag)
+    // Checks against the white- and blacklists
+	private function ismergeable($tag)
     {
-        foreach ( $this->domove as $match ) {
-            if (false !== strpos( $tag, $match ) )  {
-                // Matched something
-                return false;
+		if ( ! empty( $this->whitelist ) ) {
+			foreach ( $this->whitelist as $match ) {
+				if (false !== strpos( $tag, $match ) ) {
+					return true;
+				}
+			}
+			// no match with whitelist
+			return false;
+		} else {
+			foreach($this->domove as $match) {
+				if ( false !== strpos( $tag, $match ) )	{
+					// Matched something
+					return false;
+				}
+			}
+
+			if ( $this->movetolast($tag) ) {
+				return false;
             }
-        }
 
-        if ( $this->movetolast($tag) ) {
-            return false;
-        }
+			foreach( $this->dontmove as $match ) {
+				if ( false !== strpos( $tag, $match ) )	{
+					// Matched something
+					return false;
+				}
+			}
 
-        foreach ( $this->dontmove as $match ) {
-            if ( false !== strpos( $tag, $match ) ) {
-                // Matched something
-                return false;
-            }
-        }
-
-        // If we're here it's safe to merge
-        return true;
-    }
+			// If we're here it's safe to merge
+			return true;
+		}
+	}
 
     // Checks agains the blacklist
     private function ismovable($tag)

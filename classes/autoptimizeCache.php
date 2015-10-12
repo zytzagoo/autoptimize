@@ -188,8 +188,11 @@ class autoptimizeCache
             // Collect stats from cache dirs
             $AOstats = self::stats_scan();
 
-            // Store results in transient
-            set_transient( 'AOstats', $AOstats, HOUR_IN_SECONDS );
+            $count = $AOstats[0];
+            if ( $count > 100 ) {
+                // Store results in transient
+                set_transient( 'AOstats', $AOstats, HOUR_IN_SECONDS );
+            }
         }
 
         return $AOstats;
@@ -245,8 +248,16 @@ class autoptimizeCache
         /** write .htaccess here to overrule wp_super_cache */
         $htAccess = AUTOPTIMIZE_CACHE_DIR . '/.htaccess';
         if ( ! is_file( $htAccess ) ) {
-            if ( is_multisite() || ! AUTOPTIMIZE_CACHE_NOGZIP ) {
-                @file_put_contents($htAccess,'<IfModule mod_headers.c>
+			/**
+			 * create wp-content/AO_htaccess_tmpl with
+			 * whatever htaccess rules you might need
+			 * if you want to override default AO htaccess
+			 */
+			$htaccess_tmpl = WP_CONTENT_DIR . '/AO_htaccess_tmpl';
+			if ( is_file( $htaccess_tmpl ) ) {
+				$htAccessContent = file_get_contents( $htaccess_tmpl );
+			} elseif ( is_multisite() || ! AUTOPTIMIZE_CACHE_NOGZIP ) {
+				$htAccessContent = '<IfModule mod_headers.c>
         Header set Vary "Accept-Encoding"
         Header set Cache-Control "max-age=10672000, must-revalidate"
 </IfModule>
@@ -271,9 +282,9 @@ class autoptimizeCache
         Order allow,deny
         Allow from all
     </Files>
-</IfModule>');
+</IfModule>';
 			} else {
-                @file_put_contents($htAccess,'<IfModule mod_headers.c>
+                $htAccessContent = '<IfModule mod_headers.c>
         Header set Vary "Accept-Encoding"
         Header set Cache-Control "max-age=10672000, must-revalidate"
 </IfModule>
@@ -284,7 +295,7 @@ class autoptimizeCache
         ExpiresByType application/javascript A30672000
 </IfModule>
 <IfModule mod_deflate.c>
-        <FilesMatch "\.(js|css)$">
+    <FilesMatch "\.(js|css)$">
         SetOutputFilter DEFLATE
     </FilesMatch>
 </IfModule>
@@ -298,9 +309,10 @@ class autoptimizeCache
         Order deny,allow
         Deny from all
     </Files>
-</IfModule>');
-            }
-        }
+</IfModule>';
+			}
+			@file_put_contents($htAccess, $htAccessContent);
+		}
 
         // All OK
         return true;

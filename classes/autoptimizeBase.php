@@ -37,6 +37,8 @@ abstract class autoptimizeBase
 			$url = urldecode( $url );
 		}
 
+        $site_host = parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST );
+
 		// Normalize
 		if (0 === strpos( $url, '//' ) ) {
 			if ( is_ssl() ) {
@@ -44,14 +46,28 @@ abstract class autoptimizeBase
 			} else {
 				$url = 'http:' . $url;
 			}
-		} elseif ( ( false === strpos($url, '//' ) ) && ( false === strpos( $url, parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST ) ) ) ) {
+		} elseif ( ( false === strpos($url, '//' ) ) && ( false === strpos( $url, $site_host ) ) ) {
 			$url = AUTOPTIMIZE_WP_SITE_URL . $url;
 		}
 
 		// First check; hostname wp site should be hostname of url
-		if ( @parse_url( $url, PHP_URL_HOST ) !== parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST ) ) {
-			return false;
-		}
+        $url_host = @parse_url($url, PHP_URL_HOST);
+        if ( $url_host !== $site_host ) {
+            /*
+            * autoptimize_filter_cssjs_multidomain takes an array of hostnames
+            * each item in that array will be considered part of the same WP multisite installation
+            * as workaround for WPML installs having CSS/JS pointing to main domain when on non-main one
+            */
+            if ( is_array( $multidomains = apply_filters('autoptimize_filter_cssjs_multidomain', '' ) ) ) {
+                if ( in_array( $url_host, $multidomains ) ) {
+                    $url = str_replace( $url_host, $site_host, $url );
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
 
 		// Try to remove "wp root url" from url while not minding http<>https
 		$tmp_ao_root = preg_replace( '/https?/', '', AUTOPTIMIZE_WP_ROOT_URL );
@@ -236,7 +252,7 @@ abstract class autoptimizeBase
 			} else {
 				$replaceBlock = $payload . $replaceTag[0];
 			}
-			$this->content = str_replace( $replaceTag[0], $replaceBlock, $this->content );
+            $this->content = substr_replace( $this->content, $replaceBlock, strpos( $this->content, $replaceTag[0] ), strlen( $replaceTag[0] ) );
 		} else {
 			$this->content .= $payload;
 			if ( ! $warned ) {
