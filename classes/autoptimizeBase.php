@@ -54,11 +54,25 @@ abstract class autoptimizeBase
         $url_host = @parse_url($url, PHP_URL_HOST);
         if ( $url_host !== $site_host ) {
             /*
-            * autoptimize_filter_cssjs_multidomain takes an array of hostnames
+            * first try to get all domains from WPML (if available)
+            * then explicitely declare $this->cdn_url as OK as well
+            * then apply own filter autoptimize_filter_cssjs_multidomain takes an array of hostnames
             * each item in that array will be considered part of the same WP multisite installation
-            * as workaround for WPML installs having CSS/JS pointing to main domain when on non-main one
             */
-            if ( is_array( $multidomains = apply_filters('autoptimize_filter_cssjs_multidomain', '' ) ) ) {
+            $multidomains = array();
+
+            $multidomainsWPML = apply_filters( 'wpml_setting', array(), 'language_domains' );
+            if (!empty($multidomainsWPML)) {
+                $multidomains = array_map( array( $this, 'ao_getDomain'), $multidomainsWPML );
+            }
+
+            if ( ! empty( $this->cdn_url ) ) {
+                $multidomains[] = parse_url( $this->cdn_url, PHP_URL_HOST );
+            }
+
+            $multidomains = apply_filters( 'autoptimize_filter_cssjs_multidomain', $multidomains );
+
+            if ( ! empty( $multidomains ) ) {
                 if ( in_array( $url_host, $multidomains ) ) {
                     $url = str_replace( $url_host, $site_host, $url );
                 } else {
@@ -83,6 +97,11 @@ abstract class autoptimizeBase
     	$path = str_replace( '//', '/', WP_ROOT_DIR . $path );
     	return $path;
 	}
+
+    // needed for WPML-filter
+    protected function ao_getDomain($in) {
+        return ( parse_url( $in, PHP_URL_HOST ) );
+    }
 
 	// hide everything between noptimize-comment tags
 	protected function hide_noptimize($noptimize_in)
@@ -220,6 +239,8 @@ abstract class autoptimizeBase
                 // $this->debug_log('is_host_relative=' . $is_host_relative);
                 // $this->debug_log('cdn_url=' . $cdn_url);
 
+                // TODO/FIXME: check if things work with an explicit port specified in cdn url
+
                 if ( $is_host_relative ) {
                     // Prepending host-relative urls with the cdn url
                     $url = $cdn_url . $url;
@@ -238,6 +259,7 @@ abstract class autoptimizeBase
             }
             $this->debug_log('after=' . $url);
         }
+
         return $url;
     }
 

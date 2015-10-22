@@ -20,6 +20,7 @@ class autoptimizeStyles extends autoptimizeBase
     private $defer           = false;
     private $defer_inline    = false;
     private $whitelist       = '';
+    private $cssinlinesize   = '';
 
     // Reads the page and collects style tags
     public function read($options)
@@ -33,6 +34,8 @@ class autoptimizeStyles extends autoptimizeBase
         if ( ! empty( $whitelistCSS ) ) {
             $this->whitelist = array_filter( array_map( 'trim', explode(',', $whitelistCSS ) ) );
         }
+
+        $this->cssinlinesize = apply_filters( 'autoptimize_filter_css_inlinesize', 128 );
 
         // Remove everything that's not the header
         if ( $options['justhead'] ) {
@@ -468,6 +471,8 @@ class autoptimizeStyles extends autoptimizeBase
             // Rewrite and/or inline referenced assets
             $code = $this->rewrite_assets($code);
 
+            // $code = $this->cdn_fonts($code);
+
             // Minify
             $code = $this->run_minifier_on($code);
 
@@ -499,6 +504,31 @@ class autoptimizeStyles extends autoptimizeBase
                 if ( ! empty( $tmp_code ) ) {
                     $code = $tmp_code;
                     unset( $tmp_code );
+                }
+            }
+        }
+
+        return $code;
+    }
+
+    public function cdn_fonts($code)
+    {
+        // CDN the fonts!
+        if ( ( ! empty( $this->cdn_url ) ) && apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) ) {
+            $fontreplace = array();
+            $fonturl_regex = <<<'LOD'
+~(?(DEFINE)(?<quoted_content>(["']) (?>[^"'\\]++ | \\{2} | \\. | (?!\g{-1})["'] )*+ \g{-1})(?<comment> /\* .*? \*/ ) (?<url_skip>(?: data: ) [^"'\s)}]*+ ) (?<other_content>(?> [^u}/"']++ | \g<quoted_content> | \g<comment> | \Bu | u(?!rl\s*+\() | /(?!\*) | \g<url_start> \g<url_skip> ["']?+ )++ ) (?<anchor> \G(?<!^) ["']?+ | @font-face \s*+ { ) (?<url_start> url\( \s*+ ["']?+ ) ) \g<comment> (*SKIP)(*FAIL) | \g<anchor> \g<other_content>?+ \g<url_start> \K ((?:(?:https?:)?(?://[[:alnum:]\-\.]+)(?::[0-9]+)?)?\/[^"'\s)}]*+) ~xs
+LOD;
+
+            preg_match_all($fonturl_regex, $code, $matches);
+            if ( is_array( $matches ) ) {
+                foreach ( $matches[8] as $count => $quotedurl ) {
+                    $url = trim($quotedurl, " \t\n\r\0\x0B\"'");
+                    $cdn_url = $this->url_replace_cdn($url);
+                    $fontreplace[$matches[8][$count]] = str_replace( $quotedurl, $cdn_url, $matches[8][$count] );
+                }
+                if ( ! empty( $fontreplace ) ) {
+                    $code = str_replace( array_keys( $fontreplace ), array_values( $fontreplace ), $code );
                 }
             }
         }
@@ -619,7 +649,12 @@ class autoptimizeStyles extends autoptimizeBase
                     $deferredCssBlock .= "lCss('" . $url . "','" . $media . "');";
                     $noScriptCssBlock .= '<link type="text/css" media="' . $media . '" href="' . $url . '" rel="stylesheet" />';
                 } else {
-                    $this->inject_in_html('<link type="text/css" media="' . $media . '" href="' . $url . '" rel="stylesheet" />', $replaceTag);
+                    // $this->inject_in_html('<link type="text/css" media="' . $media . '" href="' . $url . '" rel="stylesheet" />', $replaceTag);
+                    if ( strlen( $this->csscode[$media] ) > $this->cssinlinesize ) {
+                        $this->inject_in_html('<link type="text/css" media="' . $media . '" href="' . $url . '" rel="stylesheet" />', $replaceTag);
+                    } else {
+                        $this->inject_in_html('<style type="text/css" media="' . $media . '">' . $this->csscode[$media] . '</style>', $replaceTag);
+                    }
                 }
             }
 
@@ -690,7 +725,7 @@ class autoptimizeStyles extends autoptimizeBase
     private function ismovable($tag)
     {
 		if ( ! empty( $this->whitelist ) ) {
-			foreach ($this->whitelist as $match) {
+			foreach ( $this->whitelist as $match) {
 				if ( false !== strpos( $tag, $match ) ) {
 					return true;
 				}
@@ -699,7 +734,7 @@ class autoptimizeStyles extends autoptimizeBase
 			return false;
 		} else {
 			if ( is_array( $this->dontmove ) ) {
-				foreach( $this->dontmove as $match ) {
+				foreach ( $this->dontmove as $match ) {
 					if (false !== strpos( $tag, $match ) ) {
 						//Matched something
 						return false;

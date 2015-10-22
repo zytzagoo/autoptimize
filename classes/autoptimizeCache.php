@@ -116,7 +116,7 @@ class autoptimizeCache
 		}
 
 		@unlink( AUTOPTIMIZE_CACHE_DIR . '/.htaccess' );
-        delete_transient( 'AOstats' );
+        delete_transient( 'autoptimize_stats' );
 
         // TODO/FIXME: Why is this a verbatim duplicate from autoptimize_flush_pagecache() ?
         // and it then even schedules basically that same function for later
@@ -176,7 +176,7 @@ class autoptimizeCache
 	static function stats()
     {
         // Get stats from transient
-        $AOstats = get_transient( 'AOstats' );
+        $AOstats = get_transient( 'autoptimize_stats' );
 
         // If no transient, do the actual scan
         if ( ! is_array( $AOstats ) ) {
@@ -191,7 +191,7 @@ class autoptimizeCache
             $count = $AOstats[0];
             if ( $count > 100 ) {
                 // Store results in transient
-                set_transient( 'AOstats', $AOstats, HOUR_IN_SECONDS );
+                set_transient( 'autoptimize_stats', $AOstats, HOUR_IN_SECONDS );
             }
         }
 
