@@ -142,6 +142,8 @@ class autoptimizeCache
             $wpfc->deleteCache();
         } elseif ( class_exists( 'c_ws_plugin__qcache_purging_routines' ) ) {
             c_ws_plugin__qcache_purging_routines::purge_cache_dir(); // quick cache
+        } elseif ( class_exists( 'zencache' ) ) {
+            zencache::clear(); // zen cache, tbc
         } elseif ( file_exists ( WP_CONTENT_DIR . '/wp-cache-config.php' ) && function_exists( 'prune_super_cache' ) ) {
             // fallback for WP-Super-Cache
             global $cache_path;

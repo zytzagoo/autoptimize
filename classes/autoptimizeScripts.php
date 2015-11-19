@@ -33,6 +33,7 @@ class autoptimizeScripts extends autoptimizeBase
     private $trycatch        = false;
     private $alreadyminified = false;
     private $forcehead       = false;
+    private $include_inline  = false;
     private $jscode          = '';
     private $url             = '';
     private $restofcontent   = '';
@@ -49,23 +50,31 @@ class autoptimizeScripts extends autoptimizeBase
             return false;
         }
 
+        // only optimize known good JS?
         $whitelistJS = apply_filters( 'autoptimize_filter_js_whitelist', '' );
         if ( ! empty( $whitelistJS ) ) {
             $this->whitelist = array_filter( array_map( 'trim', explode( ',', $whitelistJS ) ) );
         }
 
+        // is there JS we should simply remove
         $removableJS = apply_filters( 'autoptimize_filter_js_removables', '');
         if (!empty($removableJS)) {
             $this->jsremovables = array_filter( array_map( 'trim', explode( ',', $removableJS ) ) );
         }
 
-        // Remove everything that's not the header
-        if ( $options['justhead'] ) {
-            $content = explode( '</head>', $this->content, 2 );
-            $this->content = $content[0] . '</head>';
+        // only header?
+        if ( apply_filters( 'autoptimize_filter_js_justhead', $options['justhead'] ) ) {
+            $content             = explode( '</head>', $this->content, 2 );
+            $this->content       = $content[0] . '</head>';
             $this->restofcontent = $content[1];
         }
 
+        // include inline?
+        if ( apply_filters( 'autoptimize_js_include_inline', $options['include_inline'] ) ) {
+            $this->include_inline = true;
+        }
+
+        // get extra exclusions settings or filter
         $excludeJS = $options['js_exclude'];
         $excludeJS = apply_filters( 'autoptimize_filter_js_exclude', $excludeJS );
 
@@ -164,12 +173,16 @@ class autoptimizeScripts extends autoptimizeBase
 
                     // unhide comments, as javascript may be wrapped in comment-tags for old times' sake
                     $tag = $this->restore_comments($tag);
-                    if ( $this->ismergeable($tag) && ( apply_filters( 'autoptimize_js_include_inline', true ) ) ) {
+                    if ( $this->ismergeable($tag) && $this->include_inline ) {
                         preg_match( '#<script.*>(.*)</script>#Usmi', $tag , $code );
                         $code = preg_replace('#.*<!\[CDATA\[(?:\s*\*/)?(.*)(?://|/\*)\s*?\]\]>.*#sm', '$1', $code[1] );
                         $code = preg_replace('/(?:^\\s*<!--\\s*|\\s*(?:\\/\\/)?\\s*-->\\s*$)/', '', $code );
                         $this->scripts[] = 'INLINE;' . $code;
                     } else {
+                        // TODO/FIXME: see commit 4e08dbc16
+                        // issue; non-aggregated JS was inserted before the autoptimized JS
+                        // workaround: simply removed "movefirst/ movelast" from logic for inline JS cfr. line 147-158
+                        /*
                         // Can we move this?
                         if ( $this->ismovable($tag) ) {
                             if ( $this->movetolast($tag) ) {
@@ -181,6 +194,8 @@ class autoptimizeScripts extends autoptimizeBase
                             // We shouldn't touch this
                             $tag = '';
                         }
+                        */
+                        $tag = '';
                     }
                     // Re-hide comments to be able to do the removal based on tag from $this->content
                     $tag = $this->hide_comments($tag);
@@ -230,6 +245,8 @@ class autoptimizeScripts extends autoptimizeBase
                     if ( $tmpscriptsrc !== $scriptsrc && ! empty( $tmpscriptsrc ) ) {
                         $scriptsrc = $tmpscriptsrc;
                         $this->alreadyminified = true;
+                    } else if ( ( false !== strpos( $script, 'min.js' ) ) && ( true === $this->inject_min_late ) ) {
+                        $scriptsrc = '%%INJECTLATER%%' . base64_encode( $script ) .'%%INJECTLATER%%';
                     }
                     $this->jscode .= "\n" . $scriptsrc;
                 }/*else{
@@ -252,11 +269,12 @@ class autoptimizeScripts extends autoptimizeBase
             if ( class_exists( 'JSMin' ) && apply_filters( 'autoptimize_js_do_minify', true ) ) {
                 if ( @is_callable( array( 'JSMin', 'minify' ) ) ) {
                     $tmp_jscode = trim( JSMin::minify($this->jscode) );
-                    $tmp_jscode = apply_filters( 'autoptimize_js_after_minify', $tmp_jscode );
                     if ( ! empty( $tmp_jscode ) ) {
                         $this->jscode = $tmp_jscode;
                         unset( $tmp_jscode );
                     }
+                    $this->jscode = $this->inject_minified($this->jscode);
+                    $this->jscode = apply_filters( 'autoptimize_js_after_minify', $this->jscode );
                     return true;
                 } else {
                     return false;
@@ -310,7 +328,9 @@ class autoptimizeScripts extends autoptimizeBase
 
         $replaceTag = apply_filters( 'autoptimize_filter_js_replacetag', $replaceTag );
 
-        $this->inject_in_html($bodyreplacement, $replaceTag);
+        if ( strlen( $this->jscode ) > 0 ) {
+            $this->inject_in_html($bodyreplacement, $replaceTag);
+        }
 
         // restore comments
         $this->content = $this->restore_comments($this->content);

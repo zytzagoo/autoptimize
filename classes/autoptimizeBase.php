@@ -7,13 +7,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 abstract class autoptimizeBase
 {
 	protected $content = '';
+    public $inject_min_late;
 
     public $debug_log = false;
 
 	public function __construct($content)
 	{
 		$this->content = $content;
-		// Best place to catch errors
+
+        // filter to "late inject minified CSS or JS", default to true for now (it is faster)
+        $this->inject_min_late = apply_filters( 'autoptimize_filter_cssjs_inject_min_late', true );
 	}
 
 	// Reads the page and collects tags
@@ -292,6 +295,64 @@ abstract class autoptimizeBase
         }
 
         return false;
+    }
+
+    // Callback used in self::inject_minified()
+    public function inject_minified_callback($matches)
+    {
+        static $conf = null;
+        if (null === $conf) {
+            $conf = autoptimizeConfig::instance();
+        }
+        
+        $filepath    = base64_decode( $matches[1] );
+        $filecontent = file_get_contents( $filepath );
+
+        // Some things are differently handled for css/js
+        $is_js_file = ( '.js' === substr( $filepath, -3, 3 ) );
+
+        // Remove comments and blank lines
+        if ( $is_js_file ) {
+            $filecontent = preg_replace( '#^\s*\/\/.*$#Um', '', $filecontent );
+        }
+
+        // Nuke un-important comments
+        $filecontent = preg_replace( '#\/\*[^!].*\*\/\s?#Us', '', $filecontent );
+
+        // Normalize newlines
+        $filecontent = preg_replace( '#(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+#', "\n", $filecontent );
+
+        // JS specifics
+        if ( $is_js_file ) {
+            // Append a semicolon at the end of js files if it's missing
+            $last_char = substr( $filecontent, -1, 1);
+            if ( ';' !== $last_char && '}' !== $last_char ) {
+                $filecontent .= ';';
+            }
+            // Check if try/catch should be used
+            $opt_js_try_catch = $conf->get('autoptimize_js_trycatch');
+            if ( 'on' === $opt_js_try_catch ) {
+                // Wrap in try/catch
+                $filecontent = 'try{' . $filecontent . '}catch(e){}';
+            }
+        }
+
+        // Return modified code
+        return "\n" . $filecontent;
+    }
+
+    // Inject already minified code in optimized JS/CSS
+    protected function inject_minified($in) {
+        if ( false !== strpos( $in, '%%INJECTLATER%%' ) ) {
+            $out = preg_replace_callback(
+                '#%%INJECTLATER%%(.*?)%%INJECTLATER%%#is',
+                array($this, 'inject_minified_callback'),
+                $in
+            );
+        } else {
+            $out = $in;
+        }
+        return $out;
     }
 
     protected function debug_log($data)

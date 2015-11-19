@@ -49,7 +49,7 @@ class autoptimizeConfig
 
 <div class="wrap">
 
-<h2><?php _e('Autoptimize Settings','autoptimize'); ?></h2>
+<h1><?php _e('Autoptimize Settings','autoptimize'); ?></h1>
 
 <div style="float:left;width:70%;">
 <?php
@@ -70,7 +70,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 <form method="post" action="options.php">
 <?php settings_fields('autoptimize'); ?>
 
-<h3><?php _e('HTML Options','autoptimize'); ?></h3>
+<h2><?php _e('HTML Options','autoptimize'); ?></h2>
 <table class="form-table">
 <tr valign="top">
 <th scope="row"><?php _e('Optimize HTML Code?','autoptimize'); ?></th>
@@ -83,7 +83,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 </tr>
 </table>
 
-<h3><?php _e('JavaScript Options','autoptimize'); ?></h3>
+<h2><?php _e('JavaScript Options','autoptimize'); ?></h2>
 <table class="form-table">
 <tr valign="top">
 <th scope="row"><?php _e('Optimize JavaScript Code?','autoptimize'); ?></th>
@@ -92,12 +92,19 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 <tr valign="top" class="hidden js_sub ao_adv">
 <th scope="row"><?php _e('Force JavaScript in &lt;head&gt;?','autoptimize'); ?></th>
 <td><label for="autoptimize_js_forcehead"><input type="checkbox" name="autoptimize_js_forcehead" <?php echo get_option('autoptimize_js_forcehead')?'checked="checked" ':''; ?>/>
-<?php _e('For performance reasons it is better to include JavaScript at the bottom of HTML, but this sometimes breaks things. Especially useful for jQuery-based themes.','autoptimize'); ?></label></td>
+<?php _e('For new installations, AO will include JS in the head-section by default, but for performance reasons it is better to include JavaScript at the bottom of HTML.','autoptimize'); ?></label></td>
 </tr>
+<?php if (get_option('autoptimize_js_justhead')) { ?>
 <tr valign="top" class="hidden js_sub ao_adv">
 <th scope="row"><?php _e('Look for scripts only in &lt;head&gt;?','autoptimize');  _e(' <i>(deprecated)</i>','autoptimize'); ?></th>
 <td><label for="autoptimize_js_justhead"><input type="checkbox" name="autoptimize_js_justhead" <?php echo get_option('autoptimize_js_justhead')?'checked="checked" ':''; ?>/>
 <?php _e('Mostly useful in combination with previous option when using jQuery-based templates, but might help keeping cache size under control.','autoptimize'); ?></label></td>
+</tr>
+<?php } ?>
+<tr valign="top" class="hidden css_sub ao_adv">
+<th scope="row"><?php _e('Also aggregate inline JS?','autoptimize'); ?></th>
+<td><label for="autoptimize_js_include_inline"><input type="checkbox" name="autoptimize_js_include_inline" <?php echo get_option('autoptimize_js_include_inline')?'checked="checked" ':''; ?>/>
+<?php _e('Check this option for Autoptimize to also aggregate JS in the HTML.','autoptimize'); ?></label></td>
 </tr>
 <tr valign="top" class="hidden js_sub ao_adv">
 <th scope="row"><?php _e('Exclude scripts from Autoptimize:','autoptimize'); ?></th>
@@ -111,7 +118,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 </tr>
 </table>
 
-<h3><?php _e('CSS Options','autoptimize'); ?></h3>
+<h2><?php _e('CSS Options','autoptimize'); ?></h2>
 <table class="form-table">
 <tr valign="top">
 <th scope="row"><?php _e('Optimize CSS Code?','autoptimize'); ?></th>
@@ -122,10 +129,17 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 <td><label for="autoptimize_css_datauris"><input type="checkbox" name="autoptimize_css_datauris" <?php echo get_option('autoptimize_css_datauris')?'checked="checked" ':''; ?>/>
 <?php _e('Enable this to include small background-images in the CSS itself instead of as seperate downloads.','autoptimize'); ?></label></td>
 </tr>
+<?php if (get_option('autoptimize_css_justhead')) { ?>
 <tr valign="top" class="hidden css_sub ao_adv">
 <th scope="row"><?php _e('Look for styles only in &lt;head&gt;?','autoptimize'); _e(' <i>(deprecated)</i>','autoptimize'); ?></th>
 <td><label for="autoptimize_css_justhead"><input type="checkbox" name="autoptimize_css_justhead" <?php echo get_option('autoptimize_css_justhead')?'checked="checked" ':''; ?>/>
 <?php _e('Don\'t autoptimize CSS outside the head-section. If the cache gets big, you might want to enable this.','autoptimize'); ?></label></td>
+</tr>
+<?php } ?>
+<tr valign="top" class="hidden css_sub ao_adv">
+<th scope="row"><?php _e('Also aggregate inline CSS?','autoptimize'); ?></th>
+<td><label for="autoptimize_css_include_inline"><input type="checkbox" name="autoptimize_css_include_inline" <?php echo get_option('autoptimize_css_include_inline')?'checked="checked" ':''; ?>/>
+<?php _e('Check this option for Autoptimize to also aggregate CSS in the HTML.','autoptimize'); ?></label></td>
 </tr>
 <tr valign="top" class="hidden css_sub ao_adv">
 <th scope="row"><?php _e('Inline and Defer CSS?','autoptimize'); ?></th>
@@ -148,7 +162,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 </tr>
 </table>
 
-<h3><?php _e('CDN Options','autoptimize'); ?></h3>
+<h2><?php _e('CDN Options','autoptimize'); ?></h2>
 <table class="form-table">
 <tr valign="top">
 <th scope="row"><?php _e('CDN Base URL','autoptimize'); ?></th>
@@ -157,7 +171,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 </tr>
 </table>
 
-<h3 class="hidden ao_adv"><?php _e('Cache Info','autoptimize'); ?></h3>
+<h2 class="hidden ao_adv"><?php _e('Cache Info','autoptimize'); ?></h2>
 <table class="form-table" >
 <tr valign="top" class="hidden ao_adv">
 <th scope="row"><?php _e('Cache folder','autoptimize'); ?></th>
@@ -199,14 +213,14 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 <div style="float:right;width:30%" id="autoptimize_admin_feed">
             <div style="margin:0px 15px 15px 15px;font-size:larger;"><?php _e("Need help? <a href='https://wordpress.org/plugins/autoptimize/faq/'>Check out the FAQ</a> or post your question on <a href='http://wordpress.org/support/plugin/autoptimize'>the support-forum</a>."); ?></div>
             <div style="margin:0px 15px 15px 15px;font-size:larger;"><a href="<?php echo network_admin_url(); ?>plugin-install.php?tab=search&type=author&s=futtta"><?php _e("Happy with Autoptimize? Try my other plugins!"); ?></a></div>
-                <h3>
+                <h2>
                         <?php _e("futtta about","autoptimize") ?>
                         <select id="feed_dropdown" >
                                 <option value="1"><?php _e("Autoptimize","autoptimize") ?></option>
                                 <option value="2"><?php _e("WordPress","autoptimize") ?></option>
                                 <option value="3"><?php _e("Web Technology","autoptimize") ?></option>
                         </select>
-                </h3>
+                </h2>
                 <div id="futtta_feed"></div>
         </div>
     <div style="float:right;margin:50px 15px;"><a href="http://blog.futtta.be/2013/10/21/do-not-donate-to-me/" target="_blank"><img width="100px" height="85px" src="<?php echo content_url(); ?>/plugins/autoptimize/classes/external/do_not_donate_smallest.png" title="<?php _e("Do not donate for this plugin!"); ?>"></a></div>
@@ -353,24 +367,26 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 
 
     public function registersettings() {
-        register_setting( 'autoptimize',' autoptimize_html' );
-        register_setting( 'autoptimize',' autoptimize_html_keepcomments' );
-        register_setting( 'autoptimize',' autoptimize_js' );
-        register_setting( 'autoptimize',' autoptimize_js_exclude' );
-        register_setting( 'autoptimize',' autoptimize_js_trycatch' );
-        register_setting( 'autoptimize',' autoptimize_js_justhead' );
-        register_setting( 'autoptimize',' autoptimize_js_forcehead' );
-        register_setting( 'autoptimize',' autoptimize_css' );
-        register_setting( 'autoptimize',' autoptimize_css_exclude' );
-        register_setting( 'autoptimize',' autoptimize_css_justhead' );
-        register_setting( 'autoptimize',' autoptimize_css_datauris' );
-        register_setting( 'autoptimize',' autoptimize_css_defer' );
-        register_setting( 'autoptimize',' autoptimize_css_defer_inline' );
-        register_setting( 'autoptimize',' autoptimize_css_inline' );
-        register_setting( 'autoptimize',' autoptimize_cdn_url' );
-        register_setting( 'autoptimize',' autoptimize_cache_clean' );
-        register_setting( 'autoptimize',' autoptimize_cache_nogzip' );
-        register_setting( 'autoptimize',' autoptimize_show_adv' );
+        register_setting( 'autoptimize', 'autoptimize_html' );
+        register_setting( 'autoptimize', 'autoptimize_html_keepcomments' );
+        register_setting( 'autoptimize', 'autoptimize_js' );
+        register_setting( 'autoptimize', 'autoptimize_js_exclude' );
+        register_setting( 'autoptimize', 'autoptimize_js_trycatch' );
+        register_setting( 'autoptimize', 'autoptimize_js_justhead' );
+        register_setting( 'autoptimize', 'autoptimize_js_forcehead' );
+        register_setting( 'autoptimize', 'autoptimize_js_include_inline' );
+        register_setting( 'autoptimize', 'autoptimize_css' );
+        register_setting( 'autoptimize', 'autoptimize_css_exclude' );
+        register_setting( 'autoptimize', 'autoptimize_css_justhead' );
+        register_setting( 'autoptimize', 'autoptimize_css_datauris' );
+        register_setting( 'autoptimize', 'autoptimize_css_defer' );
+        register_setting( 'autoptimize', 'autoptimize_css_defer_inline' );
+        register_setting( 'autoptimize', 'autoptimize_css_inline' );
+        register_setting( 'autoptimize', 'autoptimize_css_include_inline' );
+        register_setting( 'autoptimize', 'autoptimize_cdn_url' );
+        register_setting( 'autoptimize', 'autoptimize_cache_clean' );
+        register_setting( 'autoptimize', 'autoptimize_cache_nogzip' );
+        register_setting( 'autoptimize', 'autoptimize_show_adv' );
     }
 
     public function setmeta($links, $file = null)
@@ -409,10 +425,12 @@ if (get_option('autoptimize_show_adv','0')=='1') {
                 'autoptimize_js_exclude' => 's_sid, smowtion_size, sc_project, WAU_, wau_add, comment-form-quicktags, edToolbar, ch_client, seal.js',
                 'autoptimize_js_trycatch' => 0,
                 'autoptimize_js_justhead' => 0,
+                'autoptimize_js_include_inline' => 0,
                 'autoptimize_js_forcehead' => 0,
                 'autoptimize_css' => 0,
                 'autoptimize_css_exclude' => 'admin-bar.min.css, dashicons.min.css',
                 'autoptimize_css_justhead' => 0,
+                'autoptimize_css_include_inline' => 0,
                 'autoptimize_css_defer' => 0,
                 'autoptimize_css_defer_inline' => '',
                 'autoptimize_css_inline' => 0,

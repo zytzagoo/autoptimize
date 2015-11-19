@@ -23,6 +23,8 @@ class autoptimizeStyles extends autoptimizeBase
     private $cssinlinesize   = '';
     private $cssremovables   = array();
 
+    private $include_inline  = false;
+
     // Reads the page and collects style tags
     public function read($options)
     {
@@ -41,13 +43,18 @@ class autoptimizeStyles extends autoptimizeBase
             $this->cssremovables = array_filter( array_map( 'trim', explode( ',', $removableCSS ) ) );
         }
 
-        $this->cssinlinesize = apply_filters( 'autoptimize_filter_css_inlinesize', 128 );
+        $this->cssinlinesize = apply_filters( 'autoptimize_filter_css_inlinesize', 256 );
 
         // Remove everything that's not the header
-        if ( $options['justhead'] ) {
+        if ( $options['justhead'] || apply_filters( 'autoptimize_filter_css_justhead', false ) ) {
             $content             = explode( '</head>', $this->content, 2 );
             $this->content       = $content[0] . '</head>';
             $this->restofcontent = $content[1];
+        }
+
+        // include inline?
+        if ( apply_filters( 'autoptimize_css_include_inline', $options['include_inline'] ) ) {
+            $this->include_inline = true;
         }
 
         // List of CSS strings which are excluded from autoptimization
@@ -81,13 +88,13 @@ class autoptimizeStyles extends autoptimizeBase
         // noptimize me
         $this->content = $this->hide_noptimize($this->content);
 
-        // Exclude noscript, as those may contain CSS
-        if ( false !== strpos( $this->content, '<noscript>' ) ) {
+        // Exclude (no)script, as those may contain CSS which should be left as is
+        if ( false !== strpos( $this->content, '<script' ) ) {
             $this->content = preg_replace_callback(
-                '#<noscript>.*?</noscript>#is',
+                '#<(?:no)?script.*?<\/(?:no)?script>#is',
                 create_function(
                     '$matches',
-                    'return "%%NOSCRIPT%%".base64_encode($matches[0])."%%NOSCRIPT%%";'
+                    'return "%%SCRIPT%%".base64_encode($matches[0])."%%SCRIPT%%";'
                 ),
                 $this->content
             );
@@ -143,7 +150,7 @@ class autoptimizeStyles extends autoptimizeBase
                         // And re-hide them to be able to to the removal based on tag
                         $tag = $this->hide_comments($tag);
 
-                        if ( apply_filters( 'autoptimize_css_include_inline', true ) ) {
+                        if ( $this->include_inline ) {
                             $code = preg_replace( '#^.*<!\[CDATA\[(?:\s*\*/)?(.*)(?://|/\*)\s*?\]\]>.*$#sm', '$1', $code[1] );
                             $this->css[] = array( $media, 'INLINE;' . $code );
                         } else {
@@ -377,6 +384,9 @@ class autoptimizeStyles extends autoptimizeBase
                     if ($tmpstyle !== $css && ! empty( $tmpstyle ) ) {
                         $css = $tmpstyle;
                         $this->alreadyminified = true;
+                    } else if ( ( false !== strpos( $script, 'min.css' ) ) && ( true === $this->inject_min_late ) ) {
+                        // only if filter is true?
+                        $css = '%%INJECTLATER%%' . base64_encode( $cssPath ) . '%%INJECTLATER%%';
                     }
                 } else {
                     // Couldn't read CSS. Maybe getpath isn't working?
@@ -436,7 +446,10 @@ class autoptimizeStyles extends autoptimizeBase
                             if ( $tmpstyle !== $code && ! empty( $tmpstyle ) ) {
                                 $code = $tmpstyle;
                                 $this->alreadyminified = true;
+                            } else if ( ( false !== strpos( $script, 'min.css' ) ) && ( true === $this->inject_min_late ) ) {
+                                $code = '%%INJECTLATER%%' . base64_encode( $path ) . '%%INJECTLATER%%';
                             }
+
                             if ( ! empty( $code ) ) {
                                 $tmp_thiscss = preg_replace( '#(/\*FILESTART\*/.*)' . preg_quote( $import, '#' ) . '#Us', '/*FILESTART2*/' . $code . '$1', $thiscss );
                                 if ( ! empty( $tmp_thiscss ) ) {
@@ -512,6 +525,9 @@ class autoptimizeStyles extends autoptimizeBase
                         $tmp_code = trim( CssMin::minify($code) );
                     }
                 }
+
+                $tmp_code = $this->inject_minified($tmp_code);
+
                 $tmp_code = apply_filters( 'autoptimize_css_after_minify', $tmp_code );
                 if ( ! empty( $tmp_code ) ) {
                     $code = $tmp_code;
@@ -590,13 +606,13 @@ LOD;
         // restore comments
         $this->content = $this->restore_comments($this->content);
 
-        // restore noscript
-        if ( strpos( $this->content, '%%NOSCRIPT%%' ) !== false ) {
+        // restore (no)script
+        if ( strpos( $this->content, '%%SCRIPT%%' ) !== false ) {
             $this->content = preg_replace_callback(
-                '#%%NOSCRIPT%%(.*?)%%NOSCRIPT%%#is',
+                '#%%SCRIPT%%(.*?)%%SCRIPT%%#is',
                 create_function(
                     '$matches',
-                    'return stripslashes(base64_decode($matches[1]));'
+                    'return base64_decode($matches[1]);'
                 ),
                 $this->content
             );
@@ -621,7 +637,7 @@ LOD;
             }
         } else {
             if ( $this->defer ) {
-                $deferredCssBlock = "<script>function lCss(url,media) {var d=document;var l=d.createElement('link');l.rel='stylesheet';l.type='text/css';l.href=url;l.media=media; d.getElementsByTagName('head')[0].appendChild(l);}function deferredCSS() {";
+                $deferredCssBlock = "<script>function lCss(url,media) {var d=document;var l=d.createElement('link');l.rel='stylesheet';l.type='text/css';l.href=url;l.media=media;aoin=d.getElementsByTagName('noscript')[0];aoin.parentNode.insertBefore(l,aoin.nextSibling);}function deferredCSS() {";
                 $noScriptCssBlock = '<noscript>';
 
                 $defer_inline_code = $this->defer_inline;
@@ -664,7 +680,7 @@ LOD;
                     // $this->inject_in_html('<link type="text/css" media="' . $media . '" href="' . $url . '" rel="stylesheet" />', $replaceTag);
                     if ( strlen( $this->csscode[$media] ) > $this->cssinlinesize ) {
                         $this->inject_in_html('<link type="text/css" media="' . $media . '" href="' . $url . '" rel="stylesheet" />', $replaceTag);
-                    } else {
+                    } else if ( strlen( $this->csscode[$media] ) > 0 ) {
                         $this->inject_in_html('<style type="text/css" media="' . $media . '">' . $this->csscode[$media] . '</style>', $replaceTag);
                     }
                 }
