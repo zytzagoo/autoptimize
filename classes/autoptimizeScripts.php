@@ -38,6 +38,8 @@ class autoptimizeScripts extends autoptimizeBase
     private $restofcontent   = '';
     private $md5hash         = '';
     private $whitelist       = '';
+    private $jsremovables    = array();
+
 
     // Reads the page and collects script tags
     public function read($options)
@@ -50,6 +52,11 @@ class autoptimizeScripts extends autoptimizeBase
         $whitelistJS = apply_filters( 'autoptimize_filter_js_whitelist', '' );
         if ( ! empty( $whitelistJS ) ) {
             $this->whitelist = array_filter( array_map( 'trim', explode( ',', $whitelistJS ) ) );
+        }
+
+        $removableJS = apply_filters( 'autoptimize_filter_js_removables', '');
+        if (!empty($removableJS)) {
+            $this->jsremovables = array_filter( array_map( 'trim', explode( ',', $removableJS ) ) );
         }
 
         // Remove everything that's not the header
@@ -107,6 +114,11 @@ class autoptimizeScripts extends autoptimizeBase
                 }
 
                 if ( preg_match( '#src=("|\')(.*)("|\')#Usmi', $tag, $source ) ) {
+                    if ( $this->isremovable($tag, $this->jsremovables) ) {
+                        $this->content = str_replace( $tag, '', $this->content );
+                        continue;
+                    }
+
                     // External script
                     $url = current( explode( '?', $source[2], 2 ) );
                     $path = $this->getpath($url);
@@ -145,6 +157,11 @@ class autoptimizeScripts extends autoptimizeBase
                     }
                 } else {
                     // Inline script
+                    if ( $this->isremovable($tag, $this->jsremovables) ) {
+                        $this->content = str_replace( $tag, '', $this->content );
+                        continue;
+                    }
+
                     // unhide comments, as javascript may be wrapped in comment-tags for old times' sake
                     $tag = $this->restore_comments($tag);
                     if ( $this->ismergeable($tag) && ( apply_filters( 'autoptimize_js_include_inline', true ) ) ) {

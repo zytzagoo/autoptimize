@@ -284,6 +284,16 @@ abstract class autoptimizeBase
 		}
 	}
 
+    protected function isremovable($tag, $removables) {
+        foreach ( $removables as $match ) {
+            if ( false !== strpos( $tag, $match ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     protected function debug_log($data)
     {
         if ( ! isset( $this->debug_log ) || ! $this->debug_log ) {

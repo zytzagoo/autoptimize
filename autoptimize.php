@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// plugin_dir_path() returns the trailing slash!
 define( 'AUTOPTIMIZE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 // Load config class
@@ -25,7 +26,7 @@ include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeConfig.php';
 define( 'AUTOPTIMIZE_CACHE_NOGZIP', (bool) get_option( 'autoptimize_cache_nogzip' ) );
 
 // Load cache class
-include AUTOPTIMIZE_PLUGIN_DIR . '/classes/autoptimizeCache.php';
+include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCache.php';
 
 // wp-content dir, dirname of AO cache dir and AO-prefix can be overridden in wp-config.php
 if ( ! defined( 'AUTOPTIMIZE_CACHE_CHILD_DIR' ) ) { define( 'AUTOPTIMIZE_CACHE_CHILD_DIR', '/cache/autoptimize/' ); }
@@ -208,7 +209,7 @@ function autoptimize_start_buffering() {
             // if (defined('AUTOPTIMIZE_LEGACY_MINIFIERS')) {
                 @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-html.php';
             // } else {
-            //  @include WP_PLUGIN_DIR . '/autoptimize/classes/external/php/minify-2.1.7-html.php';
+            //  @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.1.7-html.php';
             // }
         }
 

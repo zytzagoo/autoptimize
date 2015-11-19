@@ -54,7 +54,7 @@ class autoptimizeCache
     {
 		if ( false == $this->nogzip ) {
 			$file    = $this->delayed ? 'delayed.php' : 'default.php';
-			$phpcode = file_get_contents( WP_PLUGIN_DIR . '/autoptimize/config/' . $file);
+			$phpcode = file_get_contents( AUTOPTIMIZE_PLUGIN_DIR . 'config/' . $file);
 			$phpcode = str_replace( array( '%%CONTENT%%', 'exit;' ), array( $mime, '' ), $phpcode );
 
 			file_put_contents( $this->cachedir . $this->filename, $phpcode );
