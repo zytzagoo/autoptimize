@@ -92,7 +92,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 <tr valign="top" class="hidden js_sub ao_adv">
 <th scope="row"><?php _e('Force JavaScript in &lt;head&gt;?','autoptimize'); ?></th>
 <td><label for="autoptimize_js_forcehead"><input type="checkbox" name="autoptimize_js_forcehead" <?php echo get_option('autoptimize_js_forcehead')?'checked="checked" ':''; ?>/>
-<?php _e('For new installations, AO will include JS in the head-section by default, but for performance reasons it is better to include JavaScript at the bottom of HTML.','autoptimize'); ?></label></td>
+<?php _e('With this option enabled there is a smaller chance of things to break (especially if you are not aggregating inline JS), but the optimized JS will not be deferred and will remain render blocking.','autoptimize'); ?></label></td>
 </tr>
 <?php if (get_option('autoptimize_js_justhead')) { ?>
 <tr valign="top" class="hidden js_sub ao_adv">
@@ -101,10 +101,10 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 <?php _e('Mostly useful in combination with previous option when using jQuery-based templates, but might help keeping cache size under control.','autoptimize'); ?></label></td>
 </tr>
 <?php } ?>
-<tr valign="top" class="hidden css_sub ao_adv">
+<tr valign="top" class="hidden js_sub ao_adv">
 <th scope="row"><?php _e('Also aggregate inline JS?','autoptimize'); ?></th>
 <td><label for="autoptimize_js_include_inline"><input type="checkbox" name="autoptimize_js_include_inline" <?php echo get_option('autoptimize_js_include_inline')?'checked="checked" ':''; ?>/>
-<?php _e('Check this option for Autoptimize to also aggregate JS in the HTML.','autoptimize'); ?></label></td>
+<?php _e('Check this option for Autoptimize to also aggregate JS in the HTML. If this option is not enabled, you will probably have to "force JavaScript in head".','autoptimize'); ?></label></td>
 </tr>
 <tr valign="top" class="hidden js_sub ao_adv">
 <th scope="row"><?php _e('Exclude scripts from Autoptimize:','autoptimize'); ?></th>
@@ -210,9 +210,28 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 
 </form>
 </div>
+<style>.autoptimize_banner ul li {font-size:medium;text-align:center;} .unslider-arrow {left:unset;}</style>
+<div class="autoptimize_banner">
+    <ul>
+    <?php
+    $AO_banner = get_transient( 'autoptimize_banner' );
+    if ( empty( $AO_banner ) ) {
+        $banner_resp = wp_remote_get( 'http://optimizingmatters.com/autoptimize_news.html' );
+        if ( ! is_wp_error( $banner_resp ) ) {
+            if ('200' == wp_remote_retrieve_response_code( $banner_resp ) ) {
+                $AO_banner = wp_remote_retrieve_body( $banner_resp );
+                set_transient("autoptimize_banner", $AO_banner, DAY_IN_SECONDS);
+            }
+        }
+    }
+    echo $AO_banner;
+    ?>
+        <li><?php _e("Need help? <a href='https://wordpress.org/plugins/autoptimize/faq/'>Check out the FAQ</a> or post your question on <a href='http://wordpress.org/support/plugin/autoptimize'>the support-forum</a>."); ?></li>
+        <li><?php _e("Happy with Autoptimize?","autoptimize"); ?><br /><a href="<?php echo network_admin_url(); ?>plugin-install.php?tab=search&type=author&s=futtta"><?php _e("Try my other plugins!"); ?></a></li>
+    </ul>
+</div>
+
 <div style="float:right;width:30%" id="autoptimize_admin_feed">
-            <div style="margin:0px 15px 15px 15px;font-size:larger;"><?php _e("Need help? <a href='https://wordpress.org/plugins/autoptimize/faq/'>Check out the FAQ</a> or post your question on <a href='http://wordpress.org/support/plugin/autoptimize'>the support-forum</a>."); ?></div>
-            <div style="margin:0px 15px 15px 15px;font-size:larger;"><a href="<?php echo network_admin_url(); ?>plugin-install.php?tab=search&type=author&s=futtta"><?php _e("Happy with Autoptimize? Try my other plugins!"); ?></a></div>
                 <h2>
                         <?php _e("futtta about","autoptimize") ?>
                         <select id="feed_dropdown" >
@@ -235,6 +254,9 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 
     jQuery(document).ready(function() {
         check_ini_state();
+
+        jQuery('.autoptimize_banner').unslider({autoplay:true, delay:5000});
+
         jQuery( "#ao_show_adv" ).click(function() {
             jQuery( "#ao_show_adv" ).hide();
             jQuery( "#ao_hide_adv" ).show();
@@ -358,11 +380,14 @@ if (get_option('autoptimize_show_adv','0')=='1') {
     {
         wp_enqueue_script( 'jqzrssfeed', plugins_url( '/external/js/jquery.zrssfeed.min.js', __FILE__ ), array( 'jquery' ), null, true );
         wp_enqueue_script( 'jqcookie', plugins_url( '/external/js/jquery.cookie.min.js', __FILE__ ), array( 'jquery' ), null, true );
+        wp_enqueue_script( 'unslider', plugins_url( '/external/js/unslider-min.js', __FILE__ ), array( 'jquery' ), null, true );
     }
 
     public function autoptimize_admin_styles()
     {
         wp_enqueue_style( 'zrssfeed', plugins_url( '/external/js/jquery.zrssfeed.css', __FILE__ ) );
+        wp_enqueue_style( 'unslider', plugins_url( '/external/js/unslider.css', __FILE__ ) );
+        wp_enqueue_style( 'unslider-dots', plugins_url( '/external/js/unslider-dots.css', __FILE__ ) );
     }
 
 
@@ -426,7 +451,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
                 'autoptimize_js_trycatch' => 0,
                 'autoptimize_js_justhead' => 0,
                 'autoptimize_js_include_inline' => 0,
-                'autoptimize_js_forcehead' => 0,
+                'autoptimize_js_forcehead' => 1,
                 'autoptimize_css' => 0,
                 'autoptimize_css_exclude' => 'admin-bar.min.css, dashicons.min.css',
                 'autoptimize_css_justhead' => 0,
