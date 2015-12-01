@@ -57,17 +57,17 @@ class autoptimizeCache
 			$phpcode = file_get_contents( AUTOPTIMIZE_PLUGIN_DIR . 'config/' . $file);
 			$phpcode = str_replace( array( '%%CONTENT%%', 'exit;' ), array( $mime, '' ), $phpcode );
 
-			file_put_contents( $this->cachedir . $this->filename, $phpcode );
-			file_put_contents( $this->cachedir . $this->filename . '.none', $code );
+			file_put_contents( $this->cachedir . $this->filename, $phpcode, LOCK_EX );
+			file_put_contents( $this->cachedir . $this->filename . '.none', $code, LOCK_EX );
 
 			if ( ! $this->delayed ) {
 				// Compress now!
-				file_put_contents( $this->cachedir . $this->filename . '.deflate', gzencode( $code, 9, FORCE_DEFLATE ) );
-				file_put_contents( $this->cachedir . $this->filename . '.gzip', gzencode( $code, 9, FORCE_GZIP ) );
+				file_put_contents( $this->cachedir . $this->filename . '.deflate', gzencode( $code, 9, FORCE_DEFLATE ), LOCK_EX );
+				file_put_contents( $this->cachedir . $this->filename . '.gzip', gzencode( $code, 9, FORCE_GZIP ), LOCK_EX );
 			}
 		} else {
 			// Write code to cache without doing anything else
-			file_put_contents( $this->cachedir . $this->filename, $code );
+			file_put_contents( $this->cachedir . $this->filename, $code, LOCK_EX );
 		}
 	}
 
@@ -159,6 +159,13 @@ class autoptimizeCache
             // fallback; schedule event and try to clear there
             wp_schedule_single_event( time() + 1, 'ao_flush_pagecache' , array( time() ) );
         }
+
+        if ( ! function_exists( 'autoptimize_do_cachepurged_action ' ) ) {
+            function autoptimize_do_cachepurged_action() {
+                do_action( 'autoptimize_action_cachepurged' );
+            }
+        }
+        add_action( 'after_setup_theme', 'autoptimize_do_cachepurged_action' );
 
 		return true;
 	}

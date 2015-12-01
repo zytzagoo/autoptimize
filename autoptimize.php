@@ -56,71 +56,10 @@ if ($autoptimize_db_version !== $autoptimize_version) {
     if ( 'none' === $autoptimize_db_version ) {
         add_action( 'admin_notices', 'autoptimize_install_config_notice' );
     } else {
-        $autoptimize_major_version = substr( $autoptimize_db_version, 0, 3 );
-        switch ( $autoptimize_major_version ) {
-            case '1.6':
-                // from back in the days when I did not yet consider multisite
-                // if user was on version 1.6.x, force advanced options to be shown by default
-                update_option( 'autoptimize_show_adv', '1' );
-
-                // and remove old options
-                $to_delete_options = array(
-                    'autoptimize_cdn_css', 'autoptimize_cdn_css_url', 'autoptimize_cdn_js', 'autoptimize_cdn_js_url',
-                    'autoptimize_cdn_img', 'autoptimize_cdn_img_url', 'autoptimize_css_yui', 'autoptimize_js_yui'
-                );
-                foreach ( $to_delete_options as $del_opt ) {
-                    delete_option( $del_opt );
-                }
-
-                // and notify user to check result
-                add_action( 'admin_notices', 'autoptimize_update_config_notice' );
-            case '1.7':
-                // force 3.8 dashicons in CSS exclude options when upgrading from 1.7 to 1.8
-                if ( ! is_multisite() ) {
-                    $css_exclude = get_option( 'autoptimize_css_exclude' );
-                    if ( empty( $css_exclude ) ) {
-                        $css_exclude = 'admin-bar.min.css, dashicons.min.css';
-                    } elseif ( false === strpos( $css_exclude, 'dashicons.min.css') ) {
-                        $css_exclude .= ', dashicons.min.css';
-                    }
-                    update_option( 'autoptimize_css_exclude', $css_exclude );
-                } else {
-                    global $wpdb;
-                    $blog_ids = $wpdb->get_col( "SELECT blog_id FROM $wpdb->blogs" );
-                    $original_blog_id = get_current_blog_id();
-                    foreach ( $blog_ids as $blog_id ) {
-                        switch_to_blog( $blog_id );
-                        $css_exclude = get_option( 'autoptimize_css_exclude' );
-                        if ( empty( $css_exclude ) ) {
-                            $css_exclude = 'admin-bar.min.css, dashicons.min.css';
-                        } elseif (false === strpos( $css_exclude, 'dashicons.min.css' ) ) {
-                            $css_exclude .= ', dashicons.min.css';
-                        }
-                        update_option( 'autoptimize_css_exclude', $css_exclude );
-                    }
-                    switch_to_blog( $original_blog_id );
-                }
-            case '1.9':
-                /* 2.0 will not aggregate inline CSS/JS by default, but we want
-                users on 1.9 to keep their inline code aggregated by default */
-                if ( ! is_multisite() ) {
-                    update_option( 'autoptimize_css_include_inline', 'on' );
-                    update_option( 'autoptimize_js_include_inline', 'on' );
-                } else {
-                    global $wpdb;
-                    $blog_ids = $wpdb->get_col( "SELECT blog_id FROM $wpdb->blogs" );
-                    $original_blog_id = get_current_blog_id();
-                    foreach ( $blog_ids as $blog_id ) {
-                        switch_to_blog( $blog_id );
-                        update_option( 'autoptimize_css_include_inline', 'on' );
-                        update_option( 'autoptimize_js_include_inline', 'on' );
-                    }
-                    switch_to_blog( $original_blog_id );
-                }
-        }
+        // updating, include the update-code
+        include AUTOPTIMIZE_PLUGIN_DIR . '/classlesses/autoptimizeUpdateCode.php';
     }
 
-    autoptimizeCache::clearall();
     update_option( 'autoptimize_version', $autoptimize_version );
     $autoptimize_db_version = $autoptimize_version;
 }
@@ -246,6 +185,12 @@ function autoptimize_start_buffering() {
                     @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.1.7-jsmin.php';
                 }
             }
+            if ( ! defined( 'CONCATENATE_SCRIPTS' ) ) {
+                define( 'CONCATENATE_SCRIPTS', false );
+            }
+            if ( ! defined( 'COMPRESS_SCRIPTS' ) ) {
+                define( 'COMPRESS_SCRIPTS', false );
+            }
         }
 
         if ( $conf->get('autoptimize_css') ) {
@@ -256,10 +201,12 @@ function autoptimize_start_buffering() {
                 }
             } else {
                 if ( ! class_exists( 'CSSmin' ) ) {
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-2.4.8-4.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-2.4.8-4_fgo.php';
                 }
             }
-            define( 'COMPRESS_CSS', false );
+            if ( ! defined( 'COMPRESS_CSS' ) ) {
+                define( 'COMPRESS_CSS', false );
+            }
         }
 
         // Now, start the real thing!

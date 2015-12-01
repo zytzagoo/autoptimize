@@ -113,7 +113,7 @@ class autoptimizeStyles extends autoptimizeBase
                     $this->content = str_replace( $tag, '', $this->content );
                 } else if ( $this->ismovable($tag) ) {
                     // Get the media
-                    if (false !== strpos( $tag, 'media=' ) ) {
+                    if ( false !== strpos( $tag, 'media=' ) ) {
                         preg_match( '#media=(?:"|\')([^>]*)(?:"|\')#Ui', $tag, $medias );
                         $medias = explode( ',', $medias[1] );
                         $media = array();
@@ -129,6 +129,8 @@ class autoptimizeStyles extends autoptimizeBase
                         // No media specified - applies to all
                         $media = array( 'all' );
                     }
+
+                    $media = apply_filters( 'autoptimize_filter_css_tagmedia', $media, $tag );
 
                     if ( preg_match( '#<link.*href=("|\')(.*)("|\')#Usmi', $tag, $source ) ) {
                         // <link>
