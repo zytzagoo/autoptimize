@@ -115,14 +115,9 @@ class autoptimizeScripts extends autoptimizeBase
         // Get script files
         if ( preg_match_all( '#<script.*</script>#Usmi', $this->content, $matches ) ) {
             foreach( $matches[0] as $tag ) {
-                // only consider aggregation if no js type is specified or if type is text/javascript
-                $has_type = ( strpos( $tag, 'type=' ) !== false );
-                $type_is_textjs = false;
-                if ( $has_type ) {
-                    // $type_is_textjs = preg_match( '/type\s*=\s*.text\/javascript./i', $tag );
-                    $type_is_textjs = preg_match( '/type\s*=\s*[\'"]?text\/javascript[\'"]?/i', $tag );
-                }
-                if ( ! $has_type || $type_is_textjs ) {
+                // Do aggregation only when no js type is specified or when type is text/javascript
+                $should_aggregate = $this->should_aggregate($tag);
+                if ( ! $should_aggregate ) {
                     $tag = '';
                     continue;
                 }
@@ -215,6 +210,38 @@ class autoptimizeScripts extends autoptimizeBase
 
         // No script files, great ;-)
         return false;
+    }
+
+    /**
+     * Determines wheter a <script> $tag should be aggregated or not.
+     *
+     * We consider these as "aggregation-safe" currently:
+     * - script tags without a `type` attribute
+     * - script tags with an explicit `type` of `text/javascript`
+     *
+     * Everything else should return false.
+     *
+     * @param string $tag
+     * @return bool
+     */
+    public function should_aggregate($tag)
+    {
+        $has_type = ( strpos( $tag, 'type=' ) !== false );
+
+        $type_is_textjs = false;
+        if ( $has_type ) {
+            // TODO/FIXME: profile preg_match vs str(i)pos-based approaches
+
+            // $type_is_textjs = preg_match( '/type\s*=\s*.text\/javascript./i', $tag );
+            $type_is_textjs = (bool) preg_match( '/type\s*=\s*[\'"]?text\/javascript[\'"]?/i', $tag );
+        }
+
+        $should_aggregate = false;
+        if ( ! $has_type || $type_is_textjs ) {
+            $should_aggregate = true;
+        }
+
+        return $should_aggregate;
     }
 
     //Joins and optimizes JS
