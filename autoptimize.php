@@ -297,7 +297,7 @@ function autoptimize_end_buffering($content) {
 
 function autoptimize_flush_pagecache($nothing) {
     if ( function_exists( 'wp_cache_clear_cache' ) ) {
-        if (is_multisite()) {
+        if ( is_multisite() ) {
             $blog_id = get_current_blog_id();
             wp_cache_clear_cache( $blog_id );
         } else {
@@ -321,7 +321,7 @@ function autoptimize_flush_pagecache($nothing) {
     } elseif ( file_exists ( WP_CONTENT_DIR . '/wp-cache-config.php' ) && function_exists( 'prune_super_cache' ) ) {
         // fallback for WP-Super-Cache
         global $cache_path;
-        if (is_multisite()) {
+        if ( is_multisite() ) {
             $blog_id = get_current_blog_id();
             prune_super_cache( get_supercache_dir( $blog_id ), true );
             prune_super_cache( $cache_path . 'blogs/', true );
@@ -335,9 +335,9 @@ add_action( 'ao_flush_pagecache', 'autoptimize_flush_pagecache', 10, 1 );
 
 if ( autoptimizeCache::cacheavail() ) {
     $conf = autoptimizeConfig::instance();
-    if ( $conf->get('autoptimize_html') || $conf->get('autoptimize_js') || $conf->get('autoptimize_css') ) {
+    if ( $conf->get('autoptimize_html') || $conf->get('autoptimize_js') || $conf->get('autoptimize_css' ) ) {
         // Hook to wordpress
-        if (defined('AUTOPTIMIZE_INIT_EARLIER')) {
+        if ( defined( 'AUTOPTIMIZE_INIT_EARLIER' ) ) {
             add_action( 'init', 'autoptimize_start_buffering', -1 );
         } else {
             add_action( 'template_redirect', 'autoptimize_start_buffering', 2 );

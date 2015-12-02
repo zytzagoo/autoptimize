@@ -108,8 +108,9 @@ class autoptimizeStyles extends autoptimizeBase
 
         // Get <style> and <link>
         if ( preg_match_all( '#(<style[^>]*>.*</style>)|(<link[^>]*stylesheet[^>]*>)#Usmi', $this->content, $matches ) ) {
+
             foreach ( $matches[0] as $tag ) {
-                if ( $this->isremovable($tag, $this->cssremovables) ) {
+                if ( $this->isremovable($tag, $this->cssremovables ) ) {
                     $this->content = str_replace( $tag, '', $this->content );
                 } else if ( $this->ismovable($tag) ) {
                     // Get the media
