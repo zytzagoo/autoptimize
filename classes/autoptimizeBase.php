@@ -225,7 +225,7 @@ abstract class autoptimizeBase
         return $comments_out;
 	}
 
-    protected function url_replace_cdn($url)
+    public function url_replace_cdn($url)
     {
         if ( ! empty( $this->cdn_url ) ) {
         	$this->debug_log('before=' . $url);
@@ -304,12 +304,17 @@ abstract class autoptimizeBase
         if (null === $conf) {
             $conf = autoptimizeConfig::instance();
         }
-        
+
         $filepath    = base64_decode( $matches[1] );
         $filecontent = file_get_contents( $filepath );
 
         // Some things are differently handled for css/js
         $is_js_file = ( '.js' === substr( $filepath, -3, 3 ) );
+
+        $is_css_file = false;
+        if ( ! $is_js_file ) {
+            $is_css_file = ( '.css' === substr( $filepath, -4, 4 ) );
+        }
 
         // Remove comments and blank lines
         if ( $is_js_file ) {
@@ -335,6 +340,8 @@ abstract class autoptimizeBase
                 // Wrap in try/catch
                 $filecontent = 'try{' . $filecontent . '}catch(e){}';
             }
+        } elseif ( $is_css_file ) {
+            $filecontent = autoptimizeStyles::fixurls($filepath, $filecontent);
         }
 
         // Return modified code

@@ -297,8 +297,6 @@ class autoptimizeStyles extends autoptimizeBase
         return array( 'full' => $headAndData, 'base64data' => $base64data );
     }
 
-
-
     // Re-write (and/or inline) referenced assets
     public function rewrite_assets($code)
     {
@@ -371,7 +369,7 @@ class autoptimizeStyles extends autoptimizeBase
             if ( preg_match( '#^INLINE;#', $css ) ) {
                 // <style>
                 $css = preg_replace( '#^INLINE;#', '', $css );
-                $css = $this->fixurls(ABSPATH . 'index.php', $css); // ABSPATH already contains a trailing slash
+                $css = self::fixurls(ABSPATH . 'index.php', $css); // ABSPATH already contains a trailing slash
                 $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $css, '' );
                 if ( $tmpstyle !== $css && ! empty( $tmpstyle ) ) {
                     $css = $tmpstyle;
@@ -381,7 +379,7 @@ class autoptimizeStyles extends autoptimizeBase
                 // <link>
                 if ( false !== $css && file_exists( $css ) && is_readable( $css ) ) {
                     $cssPath = $css;
-                    $css = $this->fixurls($css, file_get_contents( $css ));
+                    $css = self::fixurls($css, file_get_contents( $css ));
                     $css = preg_replace( '/\x{EF}\x{BB}\x{BF}/', '', $css );
                     $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $css, $cssPath );
                     if ($tmpstyle !== $css && ! empty( $tmpstyle ) ) {
@@ -443,7 +441,7 @@ class autoptimizeStyles extends autoptimizeBase
                         $path = $this->getpath($url);
                         $import_ok = false;
                         if ( file_exists( $path ) && is_readable( $path ) ) {
-                            $code = addcslashes( $this->fixurls($path, file_get_contents( $path ) ), "\\" );
+                            $code = addcslashes( self::fixurls($path, file_get_contents( $path ) ), "\\" );
                             $code = preg_replace( '/\x{EF}\x{BB}\x{BF}/', '', $code );
                             $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $code, '' );
                             if ( $tmpstyle !== $code && ! empty( $tmpstyle ) ) {
@@ -701,7 +699,7 @@ LOD;
         return $this->content;
     }
 
-    private function fixurls($file, $code)
+    static function fixurls($file, $code)
     {
         // Quick fix for import-troubles in e.g. arras theme
         $code = preg_replace( '#@import ("|\')(.+?)\.css("|\')#', '@import url("${2}.css")', $code );

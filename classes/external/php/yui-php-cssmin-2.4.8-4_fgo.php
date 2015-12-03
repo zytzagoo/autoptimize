@@ -411,7 +411,8 @@ class CSSmin
 
         // restore preserved comments and strings in reverse order
         for ($i = count($this->preserved_tokens) - 1; $i >= 0; $i--) {
-            $css = preg_replace('/' . self::TOKEN . $i . '___/', $this->preserved_tokens[$i], $css, 1);
+			  $css = preg_replace('/' . self::TOKEN . $i . '___/', $this->preserved_tokens[$i], $css, 1);
+			  // $css.=$this->preserved_tokens[$i];
         }
 
         // Trim the final string (for any leading or trailing white spaces)
@@ -468,7 +469,9 @@ class CSSmin
 
             if ($found_terminator) {
                 $token = $this->str_slice($css, $start_index, $end_index);
-                $token = preg_replace('/\s+/', '', $token);
+				if (strpos($token,"<svg")===false) {
+					$token = preg_replace('/\s+/', '', $token);
+				}
                 $this->preserved_tokens[] = $token;
 
                 $preserver = 'url(' . self::TOKEN . (count($this->preserved_tokens) - 1) . '___)';
@@ -591,6 +594,12 @@ class CSSmin
     {
         $this->preserved_tokens[] = preg_replace('/([\+\-]{1})\(/','$1 (', trim(preg_replace('/\s*([\*\/\(\),])\s*/', '$1', $matches[2])));
         return 'calc('. self::TOKEN . (count($this->preserved_tokens) - 1) . '___' . ')';
+    }
+
+    private function replace_flex($matches)
+    {
+        $this->preserved_tokens[] = trim($matches[1]);
+        return 'flex:'.self::TOKEN . (count($this->preserved_tokens) - 1) . '___';
     }
 
 	private function preserve_old_IE_specific_matrix_definition($matches)
