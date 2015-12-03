@@ -43,6 +43,8 @@ if ( is_multisite() ) {
 define( 'AUTOPTIMIZE_CACHE_DELAY', true );
 define( 'WP_ROOT_DIR', str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', WP_CONTENT_DIR ) );
 
+// define( 'AUTOPTIMIZE_WP_SITE_URL', site_url() );
+
 // Initialize the cache at least once
 $conf = autoptimizeConfig::instance();
 
@@ -149,7 +151,8 @@ function autoptimize_do_buffering() {
             }
         }
 
-        // If not a feed or in admin and not explicitly turned off
+        // We only buffer the frontend requests (and then only if not a feed and not turned off explicitly)
+        // TODO/FIXME: Tests throw a notice here since we're calling is_feed() without the main query being ran
         $do_buffering = ( ! is_admin() && ! is_feed() && ! $ao_noptimize );
     }
 
@@ -221,12 +224,20 @@ function autoptimize_end_buffering($content) {
     }
 
     // load URL constants as late as possible to allow domain mapper to kick in
-    if ( function_exists( 'domain_mapping_siteurl' ) ) {
-        define( 'AUTOPTIMIZE_WP_SITE_URL', domain_mapping_siteurl( get_current_blog_id() ) );
-        define( 'AUTOPTIMIZE_WP_CONTENT_URL', str_replace( get_original_url( AUTOPTIMIZE_WP_SITE_URL ), AUTOPTIMIZE_WP_SITE_URL, content_url() ) );
-    } else {
-        define( 'AUTOPTIMIZE_WP_SITE_URL', site_url() );
-        define( 'AUTOPTIMIZE_WP_CONTENT_URL', content_url() );
+    // (but do so only if they haven't been defined already)
+    if ( ! defined( 'AUTOPTIMIZE_WP_SITE_URL' ) ) {
+        if ( function_exists( 'domain_mapping_siteurl' ) ) {
+            define( 'AUTOPTIMIZE_WP_SITE_URL', domain_mapping_siteurl( get_current_blog_id() ) );
+        } else {
+            define( 'AUTOPTIMIZE_WP_SITE_URL', site_url() );
+        }
+    }
+    if ( ! defined( 'AUTOPTIMIZE_WP_CONTENT_URL' ) ) {
+        if ( function_exists( 'domain_mapping_siteurl' ) ) {
+            define( 'AUTOPTIMIZE_WP_CONTENT_URL', str_replace( get_original_url( AUTOPTIMIZE_WP_SITE_URL ), AUTOPTIMIZE_WP_SITE_URL, content_url() ) );
+        } else {
+            define( 'AUTOPTIMIZE_WP_CONTENT_URL', content_url() );
+        }
     }
 
     if ( is_multisite() ) {

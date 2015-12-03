@@ -439,31 +439,41 @@ if (get_option('autoptimize_show_adv','0')=='1') {
         return $links;
     }
 
+    /**
+     * @return array
+     */
+    public static function get_defaults()
+    {
+        static $config = array(
+            'autoptimize_html' => 0,
+            'autoptimize_html_keepcomments' => 0,
+            'autoptimize_js' => 0,
+            'autoptimize_js_exclude' => 's_sid, smowtion_size, sc_project, WAU_, wau_add, comment-form-quicktags, edToolbar, ch_client, seal.js',
+            'autoptimize_js_trycatch' => 0,
+            'autoptimize_js_justhead' => 0,
+            'autoptimize_js_include_inline' => 0,
+            'autoptimize_js_forcehead' => 1,
+            'autoptimize_css' => 0,
+            'autoptimize_css_exclude' => 'admin-bar.min.css, dashicons.min.css',
+            'autoptimize_css_justhead' => 0,
+            'autoptimize_css_include_inline' => 0,
+            'autoptimize_css_defer' => 0,
+            'autoptimize_css_defer_inline' => '',
+            'autoptimize_css_inline' => 0,
+            'autoptimize_css_datauris' => 0,
+            'autoptimize_cdn_url' => '',
+            'autoptimize_cache_nogzip' => 1,
+            'autoptimize_show_adv' => 0
+        );
+
+        return $config;
+    }
+
     public function get($key)
     {
         if ( ! is_array( $this->config ) ) {
             // Default config
-            $config = array(
-                'autoptimize_html' => 0,
-                'autoptimize_html_keepcomments' => 0,
-                'autoptimize_js' => 0,
-                'autoptimize_js_exclude' => 's_sid, smowtion_size, sc_project, WAU_, wau_add, comment-form-quicktags, edToolbar, ch_client, seal.js',
-                'autoptimize_js_trycatch' => 0,
-                'autoptimize_js_justhead' => 0,
-                'autoptimize_js_include_inline' => 0,
-                'autoptimize_js_forcehead' => 1,
-                'autoptimize_css' => 0,
-                'autoptimize_css_exclude' => 'admin-bar.min.css, dashicons.min.css',
-                'autoptimize_css_justhead' => 0,
-                'autoptimize_css_include_inline' => 0,
-                'autoptimize_css_defer' => 0,
-                'autoptimize_css_defer_inline' => '',
-                'autoptimize_css_inline' => 0,
-                'autoptimize_css_datauris' => 0,
-                'autoptimize_cdn_url' => '',
-                'autoptimize_cache_nogzip' => 1,
-                'autoptimize_show_adv' => 0
-            );
+            $config = self::get_defaults();
 
             // Override with user settings
             foreach ( array_keys( $config ) as $name ) {

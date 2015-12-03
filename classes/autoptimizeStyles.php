@@ -775,4 +775,25 @@ LOD;
 			return true;
 		}
 	}
+
+    public function getOptions()
+    {
+        return $this->options;
+    }
+
+    public function replaceOptions($options)
+    {
+        $this->options = $options;
+    }
+
+    public function setOption($name, $value)
+    {
+        $this->options[$name] = $value;
+        $this->$name = $value;
+    }
+
+    public function getOption($name)
+    {
+        return $this->options[$name];
+    }
 }
