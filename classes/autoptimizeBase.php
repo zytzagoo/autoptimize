@@ -225,39 +225,39 @@ abstract class autoptimizeBase
     {
         if ( ! empty( $this->cdn_url ) ) {
         	$this->debug_log('before=' . $url);
-            // first allow API filter to take care of CDN replacement
-            $tmp_url = apply_filters( 'autoptimize_filter_base_replace_cdn', $url );
-            if ( $tmp_url === $url ) {
-                // Filter didn't change anything, proceed
-                // Simple str_replace-based approach fails when $url is protocol-or-host-relative.
-                $is_protocol_relative = ( '/' === $url{1} ); // second char is '/'
-                $is_host_relative     = ( ! $is_protocol_relative && ( '/' === $url{0} ) );
-                $cdn_url              = rtrim( $this->cdn_url, '/' );
 
-                // $this->debug_log('is_protocol_relative=' . $is_protocol_relative);
-                // $this->debug_log('is_host_relative=' . $is_host_relative);
-                // $this->debug_log('cdn_url=' . $cdn_url);
+            // Simple str_replace-based approach fails when $url is protocol-or-host-relative.
+            $is_protocol_relative = ( '/' === $url{1} ); // second char is '/'
+            $is_host_relative     = ( ! $is_protocol_relative && ( '/' === $url{0} ) );
+            $cdn_url              = rtrim( $this->cdn_url, '/' );
 
-                // TODO/FIXME: check if things work with an explicit port specified in cdn url
+            // $this->debug_log('is_protocol_relative=' . $is_protocol_relative);
+            // $this->debug_log('is_host_relative=' . $is_host_relative);
+            // $this->debug_log('cdn_url=' . $cdn_url);
 
-                if ( $is_host_relative ) {
-                    // Prepending host-relative urls with the cdn url
-                    $url = $cdn_url . $url;
+            // TODO/FIXME: check if things work with an explicit port specified in cdn url
+
+            if ( $is_host_relative ) {
+                // Prepending host-relative urls with the cdn url
+                $url = $cdn_url . $url;
+            } else {
+                // Either a protocol-relative or "regular" url, replacing it either way
+                if ( $is_protocol_relative ) {
+                    // Massage $site_url so that simple str_replace still "works" by
+                    // searching for the protocol-relative version of AUTOPTIMIZE_WP_SITE_URL
+                    $site_url = str_replace( array( 'http:', 'https:' ), '', AUTOPTIMIZE_WP_SITE_URL );
                 } else {
-                	// Either a protocol-relative or "regular" url, replacing it either way
-                	if ( $is_protocol_relative ) {
-                		// Massage $site_url so that simple str_replace still "works" by
-                		// searching for the protocol-relative version of AUTOPTIMIZE_WP_SITE_URL
-                		$site_url = str_replace( array( 'http:', 'https:' ), '', AUTOPTIMIZE_WP_SITE_URL );
-                	} else {
-                		$site_url = AUTOPTIMIZE_WP_SITE_URL;
-                	}
-            		$this->debug_log('`' . $site_url . '` -> `' . $cdn_url . '` in `' . $url . '`');
-                	$url = str_replace( $site_url, $cdn_url, $url );
+                    $site_url = AUTOPTIMIZE_WP_SITE_URL;
                 }
+                $this->debug_log('`' . $site_url . '` -> `' . $cdn_url . '` in `' . $url . '`');
+                $url = str_replace( $site_url, $cdn_url, $url );
             }
+
             $this->debug_log('after=' . $url);
         }
+
+        // allow API filter to take care of CDN replacement
+        $url = apply_filters( 'autoptimize_filter_base_replace_cdn', $url );
 
         return $url;
     }
