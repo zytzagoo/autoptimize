@@ -11,8 +11,11 @@ DB_PASS=$3
 DB_HOST=${4-localhost}
 WP_VERSION=${5-latest}
 
-WP_TESTS_DIR=${WP_TESTS_DIR-C:/tmp/wordpress-tests-lib}
-WP_CORE_DIR=${WP_CORE_DIR-C:/tmp/wordpress/}
+: "${TMPDIR:=${TMP:-$(CDPATH=/var:/; cd -P tmp)}}"
+cd -- "${TMPDIR:?NO TEMP DIRECTORY FOUND!}" || exit
+
+WP_TESTS_DIR=${WP_TESTS_DIR-$TMPDIR/wordpress-tests-lib}
+WP_CORE_DIR=${WP_CORE_DIR-$TMPDIR/wordpress/}
 
 download() {
     if [ `which curl` ]; then
