@@ -79,7 +79,8 @@ function autoptimize_uninstall(){
         'autoptimize_js_exclude', 'autoptimize_js_forcehead', 'autoptimize_js_justhead',
         'autoptimize_js_trycatch', 'autoptimize_version', 'autoptimize_show_adv',
         'autoptimize_cdn_url', 'autoptimize_cachesize_notice',
-        'autoptimize_css_include_inline', 'autoptimize_js_include_inline'
+        'autoptimize_css_include_inline', 'autoptimize_js_include_inline',
+        'autoptimize_css_nogooglefont'
     );
 
     if ( ! is_multisite() ) {
@@ -271,7 +272,8 @@ function autoptimize_end_buffering($content) {
             'inline' => $conf->get('autoptimize_css_inline'),
             'css_exclude' => $conf->get('autoptimize_css_exclude'),
             'cdn_url' => $conf->get('autoptimize_cdn_url'),
-            'include_inline' => $conf->get('autoptimize_css_include_inline')
+            'include_inline' => $conf->get('autoptimize_css_include_inline'),
+            'nogooglefont' => $conf->get('autoptimize_css_nogooglefont')
         ),
         'autoptimizeHTML' => array(
             'keepcomments' => $conf->get('autoptimize_html_keepcomments')

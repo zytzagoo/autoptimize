@@ -22,8 +22,8 @@ class autoptimizeStyles extends autoptimizeBase
     private $whitelist       = '';
     private $cssinlinesize   = '';
     private $cssremovables   = array();
-
     private $include_inline  = false;
+    private $inject_min_late = '';
 
     // Reads the page and collects style tags
     public function read($options)
@@ -38,12 +38,20 @@ class autoptimizeStyles extends autoptimizeBase
             $this->whitelist = array_filter( array_map( 'trim', explode(',', $whitelistCSS ) ) );
         }
 
-        $removableCSS = apply_filters( 'autoptimize_filter_css_removables', '' );
+        if ($options['nogooglefont']) {
+            $removableCSS = 'fonts.googleapis.com';
+        } else {
+            $removableCSS = '';
+        }
+        $removableCSS = apply_filters( 'autoptimize_filter_css_removables', $removableCSS );
         if ( ! empty( $removableCSS ) ) {
             $this->cssremovables = array_filter( array_map( 'trim', explode( ',', $removableCSS ) ) );
         }
 
         $this->cssinlinesize = apply_filters( 'autoptimize_filter_css_inlinesize', 256 );
+
+        // filter to "late inject minified CSS", default to true for now (it is faster)
+        $this->inject_min_late = apply_filters( 'autoptimize_filter_css_inject_min_late', true );
 
         // Remove everything that's not the header
         if ( $options['justhead'] || apply_filters( 'autoptimize_filter_css_justhead', false ) ) {
