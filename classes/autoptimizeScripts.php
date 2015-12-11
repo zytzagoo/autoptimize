@@ -182,10 +182,6 @@ class autoptimizeScripts extends autoptimizeBase
                         $code = preg_replace('/(?:^\\s*<!--\\s*|\\s*(?:\\/\\/)?\\s*-->\\s*$)/', '', $code );
                         $this->scripts[] = 'INLINE;' . $code;
                     } else {
-                        // TODO/FIXME: see commit 4e08dbc16
-                        // issue; non-aggregated JS was inserted before the autoptimized JS
-                        // workaround: simply removed "movefirst/ movelast" from logic for inline JS cfr. line 147-158
-                        /*
                         // Can we move this?
                         if ( $this->ismovable($tag) ) {
                             if ( $this->movetolast($tag) ) {
@@ -197,8 +193,6 @@ class autoptimizeScripts extends autoptimizeBase
                             // We shouldn't touch this
                             $tag = '';
                         }
-                        */
-                        $tag = '';
                     }
                     // Re-hide comments to be able to do the removal based on tag from $this->content
                     $tag = $this->hide_comments($tag);
@@ -418,6 +412,8 @@ class autoptimizeScripts extends autoptimizeBase
     // Checks agains the blacklist
     private function ismovable($tag)
     {
+        return false;
+
         foreach ( $this->domove as $match ) {
             if ( false !== strpos( $tag, $match ) ) {
                 // Matched something
