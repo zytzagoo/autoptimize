@@ -149,7 +149,7 @@ MARKUP;
 <!--[if gt IE 8]><!--> <html class="no-svg no-js"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <!--<![endif]-->
 <head>
 <meta charset="utf-8">
-<link type="text/css" media="all" href="http://cdn.example.org/wp-content/cache/autoptimize/css/autoptimize_b9843156b1fe2f085fab748c6666a2a5.css" rel="stylesheet" /><title>Mliječna juha od brokule &#9832; Kuhaj.hr</title><script type="text/javascript" src="http://cdn.example.org/wp-content/cache/autoptimize/js/autoptimize_bd83f51f04f320304d3200b764f4e3cf.js"></script>
+<link type="text/css" media="all" href="http://cdn.example.org/wp-content/cache/autoptimize/css/autoptimize_b9843156b1fe2f085fab748c6666a2a5.css" rel="stylesheet" /><title>Mliječna juha od brokule &#9832; Kuhaj.hr</title><script type="text/javascript" src="http://cdn.example.org/wp-content/cache/autoptimize/js/autoptimize_f582aecc35381e327be4fc8f2d996ef5.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
     <!--[if lt IE 9]>
