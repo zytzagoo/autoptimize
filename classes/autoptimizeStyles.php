@@ -379,7 +379,7 @@ class autoptimizeStyles extends autoptimizeBase
                 $css = preg_replace( '#^INLINE;#', '', $css );
                 $css = self::fixurls(ABSPATH . 'index.php', $css); // ABSPATH already contains a trailing slash
                 $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $css, '' );
-                if ( $tmpstyle !== $css && ! empty( $tmpstyle ) ) {
+                if ( has_filter( 'autoptimize_css_individual_style' ) && ! empty( $tmpstyle ) ) {
                     $css = $tmpstyle;
                     $this->alreadyminified = true;
                 }
@@ -390,7 +390,7 @@ class autoptimizeStyles extends autoptimizeBase
                     $css = self::fixurls($css, file_get_contents( $css ));
                     $css = preg_replace( '/\x{EF}\x{BB}\x{BF}/', '', $css );
                     $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $css, $cssPath );
-                    if ($tmpstyle !== $css && ! empty( $tmpstyle ) ) {
+                    if ( has_filter( 'autoptimize_css_individual_style' ) && ! empty( $tmpstyle ) ) {
                         $css = $tmpstyle;
                         $this->alreadyminified = true;
                     } else if ( ( false !== strpos( $script, 'min.css' ) ) && ( true === $this->inject_min_late ) ) {
@@ -452,7 +452,7 @@ class autoptimizeStyles extends autoptimizeBase
                             $code = addcslashes( self::fixurls($path, file_get_contents( $path ) ), "\\" );
                             $code = preg_replace( '/\x{EF}\x{BB}\x{BF}/', '', $code );
                             $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $code, '' );
-                            if ( $tmpstyle !== $code && ! empty( $tmpstyle ) ) {
+                            if ( has_filter( 'autoptimize_css_individual_style' ) && ! empty( $tmpstyle ) ) {
                                 $code = $tmpstyle;
                                 $this->alreadyminified = true;
                             } else if ( ( false !== strpos( $script, 'min.css' ) ) && ( true === $this->inject_min_late ) ) {
