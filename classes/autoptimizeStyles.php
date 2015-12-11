@@ -393,7 +393,7 @@ class autoptimizeStyles extends autoptimizeBase
                     if ( has_filter( 'autoptimize_css_individual_style' ) && ! empty( $tmpstyle ) ) {
                         $css = $tmpstyle;
                         $this->alreadyminified = true;
-                    } else if ( ( false !== strpos( $script, 'min.css' ) ) && ( true === $this->inject_min_late ) ) {
+                    } else if ( ( false !== strpos( $cssPath, 'min.css' ) ) && ( false === strpos( $css, '@import' ) ) && ( true === $this->inject_min_late ) ) {
                         // only if filter is true?
                         $css = '%%INJECTLATER%%' . base64_encode( $cssPath ) . '%%INJECTLATER%%';
                     }
@@ -455,7 +455,7 @@ class autoptimizeStyles extends autoptimizeBase
                             if ( has_filter( 'autoptimize_css_individual_style' ) && ! empty( $tmpstyle ) ) {
                                 $code = $tmpstyle;
                                 $this->alreadyminified = true;
-                            } else if ( ( false !== strpos( $script, 'min.css' ) ) && ( true === $this->inject_min_late ) ) {
+                            } else if ( ( false !== strpos( $path, 'min.css' ) ) && ( false === strpos( $css, '@import' ) ) && ( true === $this->inject_min_late ) ) {
                                 $code = '%%INJECTLATER%%' . base64_encode( $path ) . '%%INJECTLATER%%';
                             }
 
