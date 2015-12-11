@@ -2,7 +2,7 @@
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
 if ( ! $_tests_dir ) {
-	$_tests_dir = '/tmp/wordpress-tests-lib';
+    $_tests_dir = '/tmp/wordpress-tests-lib';
 }
 
 require_once $_tests_dir . '/includes/functions.php';
@@ -26,7 +26,7 @@ function _manually_load_plugin() {
         return true;
     });
 
-	require dirname( dirname( __FILE__ ) ) . '/autoptimize.php';
+    require dirname( dirname( __FILE__ ) ) . '/autoptimize.php';
 
     autoptimize_start_buffering();
 }
