@@ -45,7 +45,7 @@ class autoptimizeConfig
     public function show()
     {
 ?>
-<style>input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weight:100;}</style>
+<style>input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weight:100;} #futtta_feed ul{list-style:outside;} #futtta_feed {font-size:medium; margin:0px 20px;}</style>
 
 <div class="wrap">
 
@@ -124,10 +124,15 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 <th scope="row"><?php _e('Optimize CSS Code?','autoptimize'); ?></th>
 <td><input type="checkbox" id="autoptimize_css" name="autoptimize_css" <?php echo get_option('autoptimize_css')?'checked="checked" ':''; ?>/></td>
 </tr>
-<tr class="css_sub" valign="top">
+<tr class="hidden css_sub ao_adv" valign="top">
 <th scope="row"><?php _e('Generate data: URIs for images?','autoptimize'); ?></th>
 <td><label for="autoptimize_css_datauris"><input type="checkbox" name="autoptimize_css_datauris" <?php echo get_option('autoptimize_css_datauris')?'checked="checked" ':''; ?>/>
 <?php _e('Enable this to include small background-images in the CSS itself instead of as seperate downloads.','autoptimize'); ?></label></td>
+</tr>
+<tr class="hidden css_sub ao_adv" valign="top">
+<th scope="row"><?php _e('Remove Google Fonts?','autoptimize'); ?></th>
+<td><label for="autoptimize_css_datauris"><input type="checkbox" name="autoptimize_css_nogooglefont" <?php echo get_option('autoptimize_css_nogooglefont')?'checked="checked" ':''; ?>/>
+<?php _e('Check this if you don\'t need or want Google Fonts being loaded.','autoptimize'); ?></label></td>
 </tr>
 <?php if (get_option('autoptimize_css_justhead')) { ?>
 <tr valign="top" class="hidden css_sub ao_adv">
@@ -240,16 +245,26 @@ if (get_option('autoptimize_show_adv','0')=='1') {
                                 <option value="3"><?php _e("Web Technology","autoptimize") ?></option>
                         </select>
                 </h2>
-                <div id="futtta_feed"></div>
+                <div id="futtta_feed">
+                    <div id="autoptimizefeed">
+                        <?php $this->getFutttaFeeds("http://feeds.feedburner.com/futtta_autoptimize"); ?>
+                    </div>
+                    <div id="wordpressfeed">
+                        <?php $this->getFutttaFeeds("http://feeds.feedburner.com/futtta_wordpress"); ?>
+                    </div>
+                    <div id="webtechfeed">
+                        <?php $this->getFutttaFeeds("http://feeds.feedburner.com/futtta_webtech"); ?>
+                    </div>
+                </div>
         </div>
     <div style="float:right;margin:50px 15px;"><a href="http://blog.futtta.be/2013/10/21/do-not-donate-to-me/" target="_blank"><img width="100px" height="85px" src="<?php echo content_url(); ?>/plugins/autoptimize/classes/external/do_not_donate_smallest.png" title="<?php _e("Do not donate for this plugin!"); ?>"></a></div>
 </div>
 
 <script type="text/javascript">
     var feed = new Array;
-    feed[1]="http://feeds.feedburner.com/futtta_autoptimize";
-    feed[2]="http://feeds.feedburner.com/futtta_wordpress";
-    feed[3]="http://feeds.feedburner.com/futtta_webtech";
+    feed[1]="autoptimizefeed";
+    feed[2]="wordpressfeed";
+    feed[3]="webtechfeed";
     cookiename="autoptimize_feed";
 
     jQuery(document).ready(function() {
@@ -348,12 +363,8 @@ if (get_option('autoptimize_show_adv','0')=='1') {
     }
 
     function show_feed(id) {
-        jQuery('#futtta_feed').rssfeed(feed[id], {
-            <?php if ( is_ssl() ) echo "ssl: true,"; ?>
-                limit: 4,
-            date: true,
-            header: false
-        });
+        jQuery('#futtta_feed').children().hide();
+        jQuery('#'+feed[id]).show();
         jQuery("#feed_dropdown").val(id);
         jQuery.cookie(cookiename,id,{ expires: 365 });
     }
@@ -378,14 +389,12 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 
     public function autoptimize_admin_scripts()
     {
-        wp_enqueue_script( 'jqzrssfeed', plugins_url( '/external/js/jquery.zrssfeed.min.js', __FILE__ ), array( 'jquery' ), null, true );
         wp_enqueue_script( 'jqcookie', plugins_url( '/external/js/jquery.cookie.min.js', __FILE__ ), array( 'jquery' ), null, true );
         wp_enqueue_script( 'unslider', plugins_url( '/external/js/unslider-min.js', __FILE__ ), array( 'jquery' ), null, true );
     }
 
     public function autoptimize_admin_styles()
     {
-        wp_enqueue_style( 'zrssfeed', plugins_url( '/external/js/jquery.zrssfeed.css', __FILE__ ) );
         wp_enqueue_style( 'unslider', plugins_url( '/external/js/unslider.css', __FILE__ ) );
         wp_enqueue_style( 'unslider-dots', plugins_url( '/external/js/unslider-dots.css', __FILE__ ) );
     }
@@ -408,6 +417,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
         register_setting( 'autoptimize', 'autoptimize_css_defer_inline' );
         register_setting( 'autoptimize', 'autoptimize_css_inline' );
         register_setting( 'autoptimize', 'autoptimize_css_include_inline' );
+        register_setting( 'autoptimize', 'autoptimize_css_nogooglefont');
         register_setting( 'autoptimize', 'autoptimize_cdn_url' );
         register_setting( 'autoptimize', 'autoptimize_cache_clean' );
         register_setting( 'autoptimize', 'autoptimize_cache_nogzip' );
@@ -461,6 +471,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
             'autoptimize_css_defer_inline' => '',
             'autoptimize_css_inline' => 0,
             'autoptimize_css_datauris' => 0,
+            'autoptimize_css_nogooglefont' => 0,
             'autoptimize_cdn_url' => '',
             'autoptimize_cache_nogzip' => 1,
             'autoptimize_show_adv' => 0
@@ -493,5 +504,31 @@ if (get_option('autoptimize_show_adv','0')=='1') {
         }
 
         return false;
+    }
+
+    private function getFutttaFeeds($url) {
+        $rss = fetch_feed( $url );
+        $maxitems = 0;
+
+        if ( ! is_wp_error( $rss ) ) {
+            $maxitems = $rss->get_item_quantity( 7 );
+            $rss_items = $rss->get_items( 0, $maxitems );
+        }
+        ?>
+        <ul>
+            <?php if ( $maxitems == 0 ) : ?>
+                <li><?php _e( 'No items', 'autoptimize' ); ?></li>
+            <?php else : ?>
+                <?php foreach ( $rss_items as $item ) : ?>
+                    <li>
+                        <a href="<?php echo esc_url( $item->get_permalink() ); ?>"
+                            title="<?php printf( __( 'Posted %s', 'autoptimize' ), $item->get_date('j F Y | g:i a') ); ?>">
+                            <?php echo esc_html( $item->get_title() ); ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </ul>
+        <?php
     }
 }

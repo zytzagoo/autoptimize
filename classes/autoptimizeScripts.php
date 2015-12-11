@@ -40,7 +40,7 @@ class autoptimizeScripts extends autoptimizeBase
     private $md5hash         = '';
     private $whitelist       = '';
     private $jsremovables    = array();
-
+    private $inject_min_late = '';
 
     // Reads the page and collects script tags
     public function read($options)
@@ -73,6 +73,9 @@ class autoptimizeScripts extends autoptimizeBase
         if ( apply_filters( 'autoptimize_js_include_inline', $options['include_inline'] ) ) {
             $this->include_inline = true;
         }
+
+        // filter to "late inject minified JS", default to true for now (it is faster)
+        $this->inject_min_late = apply_filters( 'autoptimize_filter_js_inject_min_late', true );
 
         // filters to override hardcoded do(nt)move(last) array contents (array in, array out!)
         $this->dontmove = apply_filters( 'autoptimize_filter_js_dontmove', $this->dontmove );
@@ -179,10 +182,6 @@ class autoptimizeScripts extends autoptimizeBase
                         $code = preg_replace('/(?:^\\s*<!--\\s*|\\s*(?:\\/\\/)?\\s*-->\\s*$)/', '', $code );
                         $this->scripts[] = 'INLINE;' . $code;
                     } else {
-                        // TODO/FIXME: see commit 4e08dbc16
-                        // issue; non-aggregated JS was inserted before the autoptimized JS
-                        // workaround: simply removed "movefirst/ movelast" from logic for inline JS cfr. line 147-158
-                        /*
                         // Can we move this?
                         if ( $this->ismovable($tag) ) {
                             if ( $this->movetolast($tag) ) {
@@ -194,8 +193,6 @@ class autoptimizeScripts extends autoptimizeBase
                             // We shouldn't touch this
                             $tag = '';
                         }
-                        */
-                        $tag = '';
                     }
                     // Re-hide comments to be able to do the removal based on tag from $this->content
                     $tag = $this->hide_comments($tag);
@@ -258,7 +255,7 @@ class autoptimizeScripts extends autoptimizeBase
                     $script = 'try{' . $script . '}catch(e){}';
                 }
                 $tmpscript = apply_filters( 'autoptimize_js_individual_script', $script, '' );
-                if ( $tmpscript !== $script && ! empty( $tmpscript ) ) {
+                if ( has_filter( 'autoptimize_js_individual_script' ) && ! empty( $tmpscript ) ) {
                     $script = $tmpscript;
                     $this->alreadyminified = true;
                 }
@@ -274,7 +271,7 @@ class autoptimizeScripts extends autoptimizeBase
                         $scriptsrc = 'try{' . $scriptsrc . '}catch(e){}';
                     }
                     $tmpscriptsrc = apply_filters( 'autoptimize_js_individual_script', $scriptsrc, $script );
-                    if ( $tmpscriptsrc !== $scriptsrc && ! empty( $tmpscriptsrc ) ) {
+                    if ( has_filter( 'autoptimize_js_individual_script' ) && ! empty( $tmpscriptsrc ) ) {
                         $scriptsrc = $tmpscriptsrc;
                         $this->alreadyminified = true;
                     } else if ( ( false !== strpos( $script, 'min.js' ) ) && ( true === $this->inject_min_late ) ) {
@@ -415,6 +412,8 @@ class autoptimizeScripts extends autoptimizeBase
     // Checks agains the blacklist
     private function ismovable($tag)
     {
+        return false;
+
         foreach ( $this->domove as $match ) {
             if ( false !== strpos( $tag, $match ) ) {
                 // Matched something
