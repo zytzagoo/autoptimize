@@ -22,12 +22,9 @@ class AOTest extends WP_UnitTestcase
      */
     function test_rewrite_markup_with_cdn($input, $expected)
     {
-        // $input = $this->normalize_newlines($input);
-        // $expected = $this->normalize_newlines($expected);
-
         $actual = autoptimize_end_buffering($input);
-        //$actual = $this->normalize_newlines($actual);
 
+        // $this->markTestIncomplete('Full-blown rewrite test currently doesn\'t work on Windows (or with any custom WP-tests setup/location really).');
         $this->assertEquals($expected, $actual);
     }
 
@@ -184,6 +181,56 @@ MARKUP;
 </body>
 </html>
 MARKUP;
+
+        // When `is_multisite()` returns true, default path to files is different
+        $out_ms = <<<MARKUP
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8 lt-ie7"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
+<!--[if IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
+<!--[if IE 8]> <html class="no-svg no-js lt-ie9"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-svg no-js"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<link type="text/css" media="all" href="http://cdn.example.org/wp-content/cache/autoptimize/1/css/autoptimize_b9843156b1fe2f085fab748c6666a2a5.css" rel="stylesheet" /><title>Mliječna juha od brokule &#9832; Kuhaj.hr</title><script type="text/javascript" src="http://cdn.example.org/wp-content/cache/autoptimize/1/js/autoptimize_d8ed20bf2857a3789e01bce1400de680.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <!--[if lt IE 9]>
+    <script src="http://example.org/wp-content/themes/my-theme/js/vendor/html5shiv-printshiv.min.js" type="text/javascript"></script>
+    <![endif]-->
+    <!--[if (gte IE 6)&(lte IE 8)]>
+        <script type="text/javascript" src="http://example.org/wp-content/themes/my-theme/js/vendor/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body class="single single-post">
+
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/hr_HR/sdk.js#version=v2.0&xfbml=1&appId=";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>
+    </script>
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
+MARKUP;
+
+        // TODO/FIXME: this seemed like the fastest way to get MS crude test to pass
+        if ( is_multisite() ) {
+            $out = $out_ms;
+        }
 
         return array(
 
