@@ -54,7 +54,7 @@ class autoptimizeStyles extends autoptimizeBase
         $this->inject_min_late = apply_filters( 'autoptimize_filter_css_inject_min_late', true );
 
         // Remove everything that's not the header
-        if ( $options['justhead'] || apply_filters( 'autoptimize_filter_css_justhead', false ) ) {
+        if ( apply_filters( 'autoptimize_filter_css_justhead', $options['justhead'] ) ) {
             $content             = explode( '</head>', $this->content, 2 );
             $this->content       = $content[0] . '</head>';
             $this->restofcontent = $content[1];
