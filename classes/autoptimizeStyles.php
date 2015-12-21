@@ -387,7 +387,7 @@ class autoptimizeStyles extends autoptimizeBase
                 // <link>
                 if ( false !== $css && file_exists( $css ) && is_readable( $css ) ) {
                     $cssPath = $css;
-                    $css = self::fixurls($css, file_get_contents( $css ));
+                    $css = self::fixurls($cssPath, file_get_contents( $cssPath ));
                     $css = preg_replace( '/\x{EF}\x{BB}\x{BF}/', '', $css );
                     $tmpstyle = apply_filters( 'autoptimize_css_individual_style', $css, $cssPath );
                     if ( has_filter( 'autoptimize_css_individual_style' ) && ! empty( $tmpstyle ) ) {
