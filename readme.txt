@@ -3,8 +3,8 @@ Contributors: futtta, turl, optimizingmatters
 Tags: css, html, javascript, js, optimize, speed, cache, aggregate, minimize, minification, performance, pagespeed
 Donate link: http://blog.futtta.be/2013/10/21/do-not-donate-to-me/
 Requires at least: 2.7
-Tested up to: 4.2
-Stable tag: 1.9.4
+Tested up to: 4.4
+Stable tag: 2.0.0
 
 Autoptimize speeds up your website and helps you save bandwidth by aggregating and minimizing JS, CSS and HTML.
 
@@ -14,6 +14,8 @@ Autoptimize makes optimizing your site really easy. It concatenates all scripts 
 
 If you consider performance important, you really should use a caching-plugin such as e.g. [WP Super Cache](http://wordpress.org/extend/plugins/wp-super-cache/) or
 [HyperCache](http://wordpress.org/extend/plugins/hyper-cache/) to complement Autoptimize.
+
+(Image under creative commons [by LL Twistiti](https://www.flickr.com/photos/twistiti/818552808/))
 
 == Installation ==
 
@@ -83,6 +85,15 @@ Copy it to /wp-content/plugins/autoptimize_helper.php and activate it in WordPre
 Starting from version 1.7.0, CDN is activated upon entering the CDN blog root directory (e.g. http://cdn.example.net/wordpress/). If that URL is present, it will used for all Autoptimize-generated files (i.e. aggregated CSS and JS), including background-images in the CSS (when not using data-uri's).
 
 If you want your uploaded images to be on the CDN as well, you can change the upload_url_path in your WordPress configuration (/wp-admin/options.php) to the target CDN upload directory (e.g. http://cdn.example.net/wordpress/wp-content/uploads/). Do take into consideration this only works for images uploaded from that point onwards, not for images that already were uploaded. Thanks to [BeautyPirate for the tip](http://wordpress.org/support/topic/please-don%c2%b4t-remove-cdn?replies=15#post-4720048)!
+
+= Why aren't my fonts put on the CDN as well? =
+
+Autoptimize supports this, but it is not enabled by default because [non-local fonts might require some extra configuration](http://davidwalsh.name/cdn-fonts). But if you have your cross-origin request policy in order, you can tell Autoptimize to put your fonts on the CDN by hooking into the API, setting `autoptimize_filter_css_fonts_cdn` to `true` this way;
+
+`add_filter('autoptimize_filter_css_fonts_cdn','cdn_fonts');
+function cdn_fonts() {
+    return true;
+    }`
 
 = How can I force the aggregated files to be static CSS or JS instead of PHP? =
 
@@ -187,13 +198,14 @@ Just [fork Autoptimize on Github](https://github.com/futtta/autoptimize) and cod
 == Changelog ==
 
 = 2.0.0 =
-* On average 30% faster minification!
+* On average 30% faster minification (more info [in this blogpost](http://blog.futtta.be/2015/12/22/making-autoptimize-faster/))!
 * New: Option to (de-)activate aggregation of inline JS and CSS.
 * New: Option to remove Google Fonts.
 * New: Cache-size will be checked daily and a notice will be shown on wp-admin if cache size goes over 512 MB (can be changed by filter).
 * New: Small autoptimized CSS (less then 256 characters, can be changed by filter) will be inlined instead of linked.
 * New in API: filters to declare a JS and CSS whitelist, where only files in that whitelist are autoptimized and all others are left untouched.
 * New in API: filters to declare “removable” CSS and JS, upon which Autoptimize will simply delete that code (emoji CSS/JS for example, if you prefer not to dequeue them).
+* New in API: filter to move fonts to CDN as well.
 * lots of small and bigger bugfixes, I won’t bother you with a full list but have a look at [the commmit log on GitHub](https://github.com/futtta/autoptimize/commits/master).
 * tested and confirmed working with PHP7
 
