@@ -337,4 +337,54 @@ CSS;
 
         $this->assertEquals($expected, $minified);
     }
+
+    /**
+     * @dataProvider provider_test_should_aggregate_script_types
+     * @covers autoptimizeScripts::should_aggregate
+     */
+    public function test_should_aggregate_script_types($input, $expected)
+    {
+        $instance = new autoptimizeScripts('');
+        $actual = $instance->should_aggregate($input);
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function provider_test_should_aggregate_script_types()
+    {
+        return array(
+            // no type attribute at all
+            array(
+                // input
+                '<script>var something=true</script>',
+                // expected output
+                true
+            ),
+            // case-insensitive
+            array(
+                '<script type="text/ecmaScript">var something=true</script>',
+                true
+            ),
+            // allowed/aggregated now (wasn't previously)
+            array(
+                '<script type="application/javascript">var something=true</script>',
+                true
+            ),
+            // quotes shouldn't matter, nor should case-sensitivity
+            array(
+                '<script type=\'text/JaVascriPt">var something=true</script>',
+                true
+            ),
+            // liberal to whitespace around attribute names/values
+            array(
+                '<script tYpe = text/javascript>var something=true</script>',
+                true
+            ),
+            // something custom, should be ignored/skipped
+            array(
+                '<script type=template/javascript>var something=true</script>',
+                false
+            ),
+        );
+    }
 }
