@@ -301,7 +301,7 @@ abstract class autoptimizeBase
             $conf = autoptimizeConfig::instance();
         }
 
-        $filepath    = base64_decode( $matches[1] );
+        $filepath    = base64_decode( strtok( $matches[1], '|') );
         $filecontent = file_get_contents( $filepath );
 
         // Some things are differently handled for css/js

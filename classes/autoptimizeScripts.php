@@ -275,7 +275,7 @@ class autoptimizeScripts extends autoptimizeBase
                         $scriptsrc = $tmpscriptsrc;
                         $this->alreadyminified = true;
                     } else if ( ( false !== strpos( $script, 'min.js' ) ) && ( true === $this->inject_min_late ) ) {
-                        $scriptsrc = '%%INJECTLATER%%' . base64_encode( $script ) . '%%INJECTLATER%%';
+                        $scriptsrc = '%%INJECTLATER%%' . base64_encode( $script ) . '|' . md5( $scriptsrc ) . '%%INJECTLATER%%';
                     }
                     $this->jscode .= "\n" . $scriptsrc;
                 }/*else{
