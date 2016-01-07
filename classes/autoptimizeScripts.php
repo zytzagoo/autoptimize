@@ -210,13 +210,16 @@ class autoptimizeScripts extends autoptimizeBase
     }
 
     /**
-     * Determines wheter a <script> $tag should be aggregated or not.
+     * Determines wheter a certain `<script>` $tag should be aggregated or not.
      *
      * We consider these as "aggregation-safe" currently:
      * - script tags without a `type` attribute
-     * - script tags with an explicit `type` of `text/javascript`
+     * - script tags with these `type` attribute values: `text/javascript`, `text/ecmascript`, `application/javascript`,
+     * and `application/ecmascript`
      *
      * Everything else should return false.
+     *
+     * @link https://developer.mozilla.org/en/docs/Web/HTML/Element/script#attr-type
      *
      * @param string $tag
      * @return bool
@@ -225,16 +228,13 @@ class autoptimizeScripts extends autoptimizeBase
     {
         $has_type = ( strpos( $tag, 'type=' ) !== false );
 
-        $type_is_textjs = false;
+        $type_valid = false;
         if ( $has_type ) {
-            // TODO/FIXME: profile preg_match vs str(i)pos-based approaches
-
-            // $type_is_textjs = preg_match( '/type\s*=\s*.text\/javascript./i', $tag );
-            $type_is_textjs = (bool) preg_match( '/type\s*=\s*[\'"]?text\/javascript[\'"]?/i', $tag );
+            $type_valid = (bool) preg_match( '/type\s*=\s*[\'"]?(?:text|application)\/(?:javascript|ecmascript)[\'"]?/i', $tag );
         }
 
         $should_aggregate = false;
-        if ( ! $has_type || $type_is_textjs ) {
+        if ( ! $has_type || $type_valid ) {
             $should_aggregate = true;
         }
 
