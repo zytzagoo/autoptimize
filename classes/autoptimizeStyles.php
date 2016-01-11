@@ -393,8 +393,7 @@ class autoptimizeStyles extends autoptimizeBase
                     if ( has_filter( 'autoptimize_css_individual_style' ) && ! empty( $tmpstyle ) ) {
                         $css = $tmpstyle;
                         $this->alreadyminified = true;
-                    } else if ( ( false !== strpos( $cssPath, 'min.css' ) ) && ( false === strpos( $css, '@import' ) ) && ( true === $this->inject_min_late ) ) {
-                        // only if filter is true?
+                    } else if ( $this->can_inject_late($css_path, $css) ) {
                         $css = '%%INJECTLATER%%' . base64_encode( $cssPath ) . '|' . md5( $css ) . '%%INJECTLATER%%';
                     }
                 } else {
@@ -455,7 +454,7 @@ class autoptimizeStyles extends autoptimizeBase
                             if ( has_filter( 'autoptimize_css_individual_style' ) && ! empty( $tmpstyle ) ) {
                                 $code = $tmpstyle;
                                 $this->alreadyminified = true;
-                            } else if ( ( false !== strpos( $path, 'min.css' ) ) && ( false === strpos( $css, '@import' ) ) && ( true === $this->inject_min_late ) ) {
+                            } else if ( $this->can_inject_late($path, $code) ) {
                                 $code = '%%INJECTLATER%%' . base64_encode( $path ) . '|' . md5( $code ) . '%%INJECTLATER%%';
                             }
 
@@ -673,7 +672,7 @@ LOD;
                             unset( $tmp_code );
                         }
                     }
-                    $code_out = '<style type="text/css" media="all">' . $defer_inline_code . '</style>';
+                    $code_out = '<style type="text/css" id="aoatfcss" media="all">' . $defer_inline_code . '</style>';
                     $this->inject_in_html($code_out, $replaceTag);
                 }
             }
@@ -696,7 +695,7 @@ LOD;
             }
 
             if ( $this->defer ) {
-                $deferredCssBlock .= "}if(window.addEventListener){window.addEventListener('DOMContentLoaded',deferredCSS,false);}else{window.onload = deferredCSS;}</script>";
+                $deferredCssBlock .= "document.getElementById('aoatfcss').media='none';}if(window.addEventListener){window.addEventListener('DOMContentLoaded',deferredCSS,false);}else{window.onload = deferredCSS;}</script>";
                 $noScriptCssBlock .= '</noscript>';
                 $this->inject_in_html($noScriptCssBlock, array( '<title>', 'before' ) );
                 $this->inject_in_html($deferredCssBlock, array( '</body>', 'before' ) );
@@ -783,6 +782,26 @@ LOD;
 			return true;
 		}
 	}
+
+    private function can_inject_late($cssPath, $css)
+    {
+        if ( false === strpos( $cssPath, 'min.css' ) || ( true !== $this->inject_min_late ) ) {
+            // late-inject turned off or file not minified based on filename
+            return false;
+        } else if ( false !== strpos( $css, '@import' ) ) {
+            // can't late-inject files with imports as those need to be aggregated
+            return false;
+        } else if ( ( false !== strpos( $css, '@font-face') ) && ( apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) === true) && ( ! empty( $this->cdn_url ) ) ) {
+            // don't late-inject CSS with font-src's if fonts are set to be CDN'ed
+            return false;
+        } else if ( ( ( $this->datauris == true ) || ( ! empty( $this->cdn_url ) ) ) && preg_match( '#(background[^;}]*url\(#Ui', $css ) ) {
+            // don't late-inject CSS with images if CDN is set OR is image inlining is on
+            return false;
+        } else {
+            // phew, all is safe, we can late-inject
+            return true;
+        }
+    }
 
     public function getOptions()
     {
