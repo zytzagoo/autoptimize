@@ -556,7 +556,7 @@ class autoptimizeStyles extends autoptimizeBase
 ~(?(DEFINE)(?<quoted_content>(["']) (?>[^"'\\]++ | \\{2} | \\. | (?!\g{-1})["'] )*+ \g{-1})(?<comment> /\* .*? \*/ ) (?<url_skip>(?: data: ) [^"'\s)}]*+ ) (?<other_content>(?> [^u}/"']++ | \g<quoted_content> | \g<comment> | \Bu | u(?!rl\s*+\() | /(?!\*) | \g<url_start> \g<url_skip> ["']?+ )++ ) (?<anchor> \G(?<!^) ["']?+ | @font-face \s*+ { ) (?<url_start> url\( \s*+ ["']?+ ) ) \g<comment> (*SKIP)(*FAIL) | \g<anchor> \g<other_content>?+ \g<url_start> \K ((?:(?:https?:)?(?://[[:alnum:]\-\.]+)(?::[0-9]+)?)?\/[^"'\s)}]*+) ~xs
 LOD;
 
-            preg_match_all($fonturl_regex, $code, $matches);
+            preg_match_all( $fonturl_regex, $code, $matches );
             if ( is_array( $matches ) ) {
                 foreach ( $matches[8] as $count => $quotedurl ) {
                     $url = trim($quotedurl, " \t\n\r\0\x0B\"'");
@@ -794,7 +794,7 @@ LOD;
         } else if ( ( false !== strpos( $css, '@font-face') ) && ( apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) === true) && ( ! empty( $this->cdn_url ) ) ) {
             // don't late-inject CSS with font-src's if fonts are set to be CDN'ed
             return false;
-        } else if ( ( ( $this->datauris == true ) || ( ! empty( $this->cdn_url ) ) ) && preg_match( '#(background[^;}]*url\(#Ui', $css ) ) {
+        } else if ( ( ( $this->datauris == true ) || ( ! empty( $this->cdn_url ) ) ) && preg_match( '#background[^;}]*url\(#Ui', $css ) ) {
             // don't late-inject CSS with images if CDN is set OR is image inlining is on
             return false;
         } else {

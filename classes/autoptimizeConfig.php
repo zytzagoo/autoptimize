@@ -200,7 +200,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
         if ( $AOcacheSize > 0 ) {
             $details = ', ~' . $AOcacheSize . ' total';
         }
-        echo $AOstatArr[0] . ' files' . $details . ' (last scanned at ' . date( 'H:i e', $AOstatArr[2] ) . ', refreshes hourly).';
+        echo $AOstatArr[0]. __(' files, totalling ', 'autoptimize' ) . $AOcacheSize . __(' Kbytes (calculated at ', 'autoptimize' ).date('H:i e', $AOstatArr[2]) . ')';
     }
 ?></td>
 </tr>
@@ -237,8 +237,8 @@ if (get_option('autoptimize_show_adv','0')=='1') {
         echo $AO_banner;
     }
     ?>
-        <li><?php _e("Need help? <a href='https://wordpress.org/plugins/autoptimize/faq/'>Check out the FAQ</a> or post your question on <a href='http://wordpress.org/support/plugin/autoptimize'>the support-forum</a>."); ?></li>
-        <li><?php _e("Happy with Autoptimize?","autoptimize"); ?><br /><a href="<?php echo network_admin_url(); ?>plugin-install.php?tab=search&type=author&s=optimizingmatters"><?php _e("Try my other plugins!"); ?></a></li>
+        <li><?php _e("Need help? <a href='https://wordpress.org/plugins/autoptimize/faq/'>Check out the FAQ</a> or post your question on <a href='http://wordpress.org/support/plugin/autoptimize'>the support-forum</a>.","autoptimize"); ?></li>
+        <li><?php _e("Happy with Autoptimize?","autoptimize"); ?><br /><a href="<?php echo network_admin_url(); ?>plugin-install.php?tab=search&type=author&s=optimizingmatters"><?php _e("Try my other plugins!","autoptimize"); ?></a></li>
     </ul>
 </div>
 
