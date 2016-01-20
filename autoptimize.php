@@ -218,9 +218,51 @@ function autoptimize_start_buffering() {
     }
 }
 
+/**
+ * Returns true if markup is considered to be AMP.
+ * This is far from actual validation againts AMP spec, but it'll do for now.
+ */
+function autoptimize_is_amp_markup($content) {
+    $is_amp_markup = false;
+
+    if ( false === stripos( $content, '<html amp' ) && false === stripos( $content, '<html ⚡' ) ) {
+        $is_amp_markup = false;
+    } else {
+        $is_amp_markup = true;
+    }
+
+    return $is_amp_markup;
+}
+
+/**
+ * Returns true if the markup contains something that indicates that it shouldn't be modified at all.
+ *
+ * @param string $content
+ * @return boolean
+ */
+function autoptimize_should_bail_from_processing_buffer($content) {
+    $bail = false;
+
+    $has_no_html_tag = ( false === stripos( $content, '<html' ) );
+    $has_xsl_stylesheet = ( false !== stripos( $content, '<xsl:stylesheet' ) );
+
+    if ( $has_no_html_tag ) {
+        // Can't be valid amp markup without an html tag preceding it
+        $is_amp_markup = false;
+    } else {
+        $is_amp_markup = autoptimize_is_amp_markup( $content );
+    }
+
+    if ( $has_no_html_tag || $is_amp_markup || $has_xsl_stylesheet ) {
+        $bail = true;
+    }
+
+    return $bail;
+}
+
 // Action on end, this is where the magic happens
 function autoptimize_end_buffering($content) {
-    if ( false === stripos( $content, '<html' ) || false !== stripos( $content, '<xsl:stylesheet' ) ) {
+    if ( autoptimize_should_bail_from_processing_buffer( $content ) ) {
         return $content;
     }
 
@@ -241,11 +283,14 @@ function autoptimize_end_buffering($content) {
         }
     }
 
-    if ( is_multisite() ) {
-        $blog_id = get_current_blog_id();
-        define( 'AUTOPTIMIZE_CACHE_URL', AUTOPTIMIZE_WP_CONTENT_URL . AUTOPTIMIZE_CACHE_CHILD_DIR . $blog_id . '/' );
-    } else {
-        define( 'AUTOPTIMIZE_CACHE_URL', AUTOPTIMIZE_WP_CONTENT_URL . AUTOPTIMIZE_CACHE_CHILD_DIR );
+    // Enables calling this function many times in tests (otherwise the constant is already defined from earlier calls)
+    if ( ! defined( 'AUTOPTIMIZE_CACHE_URL' ) ) {
+        if ( is_multisite() ) {
+            $blog_id = get_current_blog_id();
+            define( 'AUTOPTIMIZE_CACHE_URL', AUTOPTIMIZE_WP_CONTENT_URL . AUTOPTIMIZE_CACHE_CHILD_DIR . $blog_id . '/' );
+        } else {
+            define( 'AUTOPTIMIZE_CACHE_URL', AUTOPTIMIZE_WP_CONTENT_URL . AUTOPTIMIZE_CACHE_CHILD_DIR );
+        }
     }
 
     define('AUTOPTIMIZE_WP_ROOT_URL', str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', AUTOPTIMIZE_WP_CONTENT_URL ) );

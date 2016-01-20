@@ -387,4 +387,75 @@ CSS;
             ),
         );
     }
+
+    /**
+     * @dataProvider provider_autoptimize_should_bail_from_processing_buffer
+     * @covers autoptimize_should_bail_from_processing_buffer
+     */
+    public function test_autoptimize_should_bail_from_processing_buffer($input, $expected)
+    {
+        $actual = autoptimize_should_bail_from_processing_buffer($input);
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function provider_autoptimize_should_bail_from_processing_buffer()
+    {
+        return array(
+            array(
+                '<!doctype html>
+<html ⚡>',
+                true,
+            ),
+            array(
+                '<!doctype html>
+<html amp>',
+                true
+            ),
+            array(
+                '<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
+                true
+            ),
+            array(
+                '<!doctype html>
+<html>',
+                false
+            )
+        );
+    }
+
+    /**
+     * @dataProvider provider_autoptimize_is_amp_markup
+     * @covers autoptimize_is_amp_markup
+     */
+    public function test_autoptimize_is_amp_markup($input, $expected)
+    {
+        $actual = autoptimize_is_amp_markup($input);
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function provider_autoptimize_is_amp_markup()
+    {
+        return array(
+            array(
+                '<!doctype html>
+<html ⚡>',
+                true,
+            ),
+            array(
+                '<!doctype html>
+<html amp>',
+                true
+            ),
+            array(
+                '<!doctype html>
+<head>
+<meta charset=utf-8>',
+                false
+            )
+        );
+    }
 }
