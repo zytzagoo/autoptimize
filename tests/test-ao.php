@@ -146,7 +146,7 @@ MARKUP;
 <!--[if gt IE 8]><!--> <html class="no-svg no-js"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <!--<![endif]-->
 <head>
 <meta charset="utf-8">
-<link type="text/css" media="all" href="http://cdn.example.org/wp-content/cache/autoptimize/css/autoptimize_b9843156b1fe2f085fab748c6666a2a5.css" rel="stylesheet" /><title>Mliječna juha od brokule &#9832; Kuhaj.hr</title><script type="text/javascript" src="http://cdn.example.org/wp-content/cache/autoptimize/js/autoptimize_47db61d1b156c88b4952aee1229599cc.js"></script>
+<link type="text/css" media="all" href="http://cdn.example.org/wp-content/cache/autoptimize/css/autoptimize_b9843156b1fe2f085fab748c6666a2a5.css" rel="stylesheet" /><title>Mliječna juha od brokule &#9832; Kuhaj.hr</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
     <!--[if lt IE 9]>
@@ -155,7 +155,7 @@ MARKUP;
     <!--[if (gte IE 6)&(lte IE 8)]>
         <script type="text/javascript" src="http://example.org/wp-content/themes/my-theme/js/vendor/respond.min.js"></script>
     <![endif]-->
-</head>
+<script type="text/javascript" src="http://cdn.example.org/wp-content/cache/autoptimize/js/autoptimize_47db61d1b156c88b4952aee1229599cc.js"></script></head>
 
 <body class="single single-post">
 
