@@ -103,6 +103,8 @@ class autoptimizeScripts extends autoptimizeBase
             $this->forcehead = false;
         }
 
+        $this->forcehead = apply_filters( 'autoptimize_filter_js_forcehead', $this->forcehead );
+
         // get cdn url
         $this->cdn_url = $options['cdn_url'];
 
