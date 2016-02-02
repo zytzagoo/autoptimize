@@ -393,7 +393,7 @@ class autoptimizeStyles extends autoptimizeBase
                     if ( has_filter( 'autoptimize_css_individual_style' ) && ! empty( $tmpstyle ) ) {
                         $css = $tmpstyle;
                         $this->alreadyminified = true;
-                    } else if ( $this->can_inject_late($css_path, $css) ) {
+                    } else if ( $this->can_inject_late($cssPath, $css) ) {
                         $css = '%%INJECTLATER%%' . base64_encode( $cssPath ) . '|' . md5( $css ) . '%%INJECTLATER%%';
                     }
                 } else {
