@@ -34,7 +34,7 @@ if ( ! defined( 'AUTOPTIMIZE_CACHE_CHILD_DIR' ) ) { define( 'AUTOPTIMIZE_CACHE_C
 if ( ! defined( 'AUTOPTIMIZE_CACHEFILE_PREFIX' ) ) { define( 'AUTOPTIMIZE_CACHEFILE_PREFIX', 'autoptimize_' ); }
 
 // Plugin dir constants (plugin url's defined later to accomodate domain mapped sites)
-if ( is_multisite() ) {
+if ( is_multisite() && apply_filters( 'autoptimize_separate_blog_caches' , true ) ) {
     $blog_id = get_current_blog_id();
     define( 'AUTOPTIMIZE_CACHE_DIR' , WP_CONTENT_DIR . AUTOPTIMIZE_CACHE_CHILD_DIR . $blog_id . '/' );
 } else {
@@ -285,7 +285,7 @@ function autoptimize_end_buffering($content) {
 
     // Enables calling this function many times in tests (otherwise the constant is already defined from earlier calls)
     if ( ! defined( 'AUTOPTIMIZE_CACHE_URL' ) ) {
-        if ( is_multisite() ) {
+        if ( is_multisite() && apply_filters( 'autoptimize_separate_blog_caches' , true ) ) {
             $blog_id = get_current_blog_id();
             define( 'AUTOPTIMIZE_CACHE_URL', AUTOPTIMIZE_WP_CONTENT_URL . AUTOPTIMIZE_CACHE_CHILD_DIR . $blog_id . '/' );
         } else {
@@ -355,7 +355,7 @@ function autoptimize_end_buffering($content) {
 
 function autoptimize_flush_pagecache($nothing) {
     if ( function_exists( 'wp_cache_clear_cache' ) ) {
-        if ( is_multisite() ) {
+        if ( is_multisite() && apply_filters( 'autoptimize_separate_blog_caches' , true ) ) {
             $blog_id = get_current_blog_id();
             wp_cache_clear_cache( $blog_id );
         } else {
@@ -379,7 +379,7 @@ function autoptimize_flush_pagecache($nothing) {
     } elseif ( file_exists ( WP_CONTENT_DIR . '/wp-cache-config.php' ) && function_exists( 'prune_super_cache' ) ) {
         // fallback for WP-Super-Cache
         global $cache_path;
-        if ( is_multisite() ) {
+        if ( is_multisite() && apply_filters( 'autoptimize_separate_blog_caches' , true ) ) {
             $blog_id = get_current_blog_id();
             prune_super_cache( get_supercache_dir( $blog_id ), true );
             prune_super_cache( $cache_path . 'blogs/', true );
