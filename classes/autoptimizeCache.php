@@ -119,54 +119,16 @@ class autoptimizeCache
 		@unlink( AUTOPTIMIZE_CACHE_DIR . '/.htaccess' );
         delete_transient( 'autoptimize_stats' );
 
-        // TODO/FIXME: Why is this a verbatim duplicate from autoptimize_flush_pagecache() ?
-        // and it then even schedules basically that same function for later
-
-		// Do we need to clean any caching plugins cache-files?
-        if ( function_exists( 'wp_cache_clear_cache' ) ) {
-            if (is_multisite()) {
-                $blog_id = get_current_blog_id();
-                wp_cache_clear_cache( $blog_id );
-            } else {
-                wp_cache_clear_cache();
-            }
-        } elseif ( has_action('cachify_flush_cache') ) {
-            do_action( 'cachify_flush_cache' );
-        } elseif ( function_exists( 'w3tc_pgcache_flush' ) ) {
-            w3tc_pgcache_flush(); // w3 total cache
-        } elseif ( function_exists( 'hyper_cache_invalidate' ) ) {
-            hyper_cache_invalidate(); // hypercache
-        } elseif ( function_exists( 'wp_fast_cache_bulk_delete_all' ) ) {
-            wp_fast_cache_bulk_delete_all(); // wp fast cache
-        } elseif ( class_exists( 'WpFastestCache' ) ) {
-            $wpfc = new WpFastestCache(); // wp fastest cache
-            $wpfc->deleteCache();
-        } elseif ( class_exists( 'c_ws_plugin__qcache_purging_routines' ) ) {
-            c_ws_plugin__qcache_purging_routines::purge_cache_dir(); // quick cache
-        } elseif ( class_exists( 'zencache' ) ) {
-            zencache::clear(); // zen cache, tbc
-        } elseif ( file_exists ( WP_CONTENT_DIR . '/wp-cache-config.php' ) && function_exists( 'prune_super_cache' ) ) {
-            // fallback for WP-Super-Cache
-            global $cache_path;
-            if (is_multisite()) {
-                $blog_id = get_current_blog_id();
-                prune_super_cache( get_supercache_dir( $blog_id ), true );
-                prune_super_cache( $cache_path . 'blogs/', true );
-            } else {
-                prune_super_cache( $cache_path . 'supercache/', true);
-                prune_super_cache( $cache_path, true );
-            }
-        } else {
-            // fallback; schedule event and try to clear there
-            wp_schedule_single_event( time() + 1, 'ao_flush_pagecache' , array( time() ) );
-        }
-
+        // add cachepurged action
         if ( ! function_exists( 'autoptimize_do_cachepurged_action ' ) ) {
             function autoptimize_do_cachepurged_action() {
                 do_action( 'autoptimize_action_cachepurged' );
             }
         }
-        add_action( 'after_setup_theme', 'autoptimize_do_cachepurged_action' );
+        add_action( 'plugins_loaded', 'autoptimize_do_cachepurged_action', 11 );
+
+        include_once AUTOPTIMIZE_PLUGIN_DIR . '/classlesses/autoptimizePageCacheFlush.php';
+        add_action( 'autoptimize_action_cachepurged', 'autoptimize_flush_pagecache', 10, 0 );
 
 		return true;
 	}
