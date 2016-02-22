@@ -385,6 +385,13 @@ CSS;
                 '<script type=template/javascript>var something=true</script>',
                 false
             ),
+            // type attribute checking should be constrained to actual script tag's type attribute
+            // only, regardless of any `type=` string present in the actual inline script contents
+            array(
+                // since there's no type attribute, it should be aggregate by default
+                '<script>var type=something;</script>',
+                true
+            ),
         );
     }
 

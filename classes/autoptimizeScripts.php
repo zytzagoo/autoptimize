@@ -228,11 +228,20 @@ class autoptimizeScripts extends autoptimizeBase
      */
     public function should_aggregate($tag)
     {
-        $has_type = ( strpos( $tag, 'type=' ) !== false );
+        // We're only interested in the type attribute of the <script> tag itself, not any possible
+        // inline code that might just contain the 'type=' string...
+        $tag_parts = array();
+        preg_match( '#<(script[^>]*)>#i', $tag, $tag_parts);
+        $tag_without_contents = null;
+        if ( ! empty( $tag_parts[1] ) ) {
+            $tag_without_contents = $tag_parts[1];
+        }
+
+        $has_type = ( strpos( $tag_without_contents, 'type=' ) !== false );
 
         $type_valid = false;
         if ( $has_type ) {
-            $type_valid = (bool) preg_match( '/type\s*=\s*[\'"]?(?:text|application)\/(?:javascript|ecmascript)[\'"]?/i', $tag );
+            $type_valid = (bool) preg_match( '/type\s*=\s*[\'"]?(?:text|application)\/(?:javascript|ecmascript)[\'"]?/i', $tag_without_contents );
         }
 
         $should_aggregate = false;
