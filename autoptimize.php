@@ -130,11 +130,12 @@ function autoptimize_cache_unavailable_notice() {
  *
  * @return bool
  */
-function autoptimize_do_buffering() {
+function autoptimize_do_buffering($doing_tests = false) {
     static $do_buffering = null;
 
-    // Only check once in case we're called multiple times by others
-    if ( null === $do_buffering ) {
+    // Only check once in case we're called multiple times by others but
+    // still allowiong multiple calls when doing tests
+    if ( null === $do_buffering || $doing_tests ) {
 
         $ao_noptimize = false;
         // check for DONOTMINIFY constant as used by e.g. WooCommerce POS
@@ -142,15 +143,16 @@ function autoptimize_do_buffering() {
             $ao_noptimize = true;
         }
 
-        // filter you can use to block autoptimization on your own terms
-        $ao_noptimize = (bool) apply_filters( 'autoptimize_filter_noptimize', $ao_noptimize );
-
-        // noptimize in qs to get non-optimized page for debugging
-        if ( array_key_exists( 'ao_noptimize', $_GET ) ) {
-            if ( '1' === $_GET['ao_noptimize'] ) {
+        // No need to check QS if the functionality is explicitly disabled via filter
+        if ( apply_filters( 'autoptimize_filter_honor_qs_noptimize', true ) ) {
+            // Check for `ao_noptimize` in qs to get non-optimized page for debugging
+            if ( isset( $_GET['ao_noptimize'] ) && '1' === $_GET['ao_noptimize'] ) {
                 $ao_noptimize = true;
             }
         }
+
+        // Allows blocking of autoptimization on your own terms regardless of above decisions
+        $ao_noptimize = (bool) apply_filters( 'autoptimize_filter_noptimize', $ao_noptimize );
 
         // We only buffer the frontend requests (and then only if not a feed and not turned off explicitly)
         // TODO/FIXME: Tests throw a notice here since we're calling is_feed() without the main query being ran
@@ -293,7 +295,10 @@ function autoptimize_end_buffering($content) {
         }
     }
 
-    define('AUTOPTIMIZE_WP_ROOT_URL', str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', AUTOPTIMIZE_WP_CONTENT_URL ) );
+    // Again, check if already defined to prevent errors in tests where this function is called multiple times
+    if ( ! defined( 'AUTOPTIMIZE_WP_ROOT_URL' ) ) {
+        define( 'AUTOPTIMIZE_WP_ROOT_URL', str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', AUTOPTIMIZE_WP_CONTENT_URL ) );
+    }
 
     // Config element
     $conf = autoptimizeConfig::instance();

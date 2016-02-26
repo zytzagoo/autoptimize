@@ -17,20 +17,7 @@ class AOTest extends WP_UnitTestcase
         return str_replace("\r\n", "\n", $str);
     }
 
-    /**
-     * @dataProvider provider_test_rewrite_markup_with_cdn
-     */
-    function test_rewrite_markup_with_cdn($input, $expected)
-    {
-        $actual = autoptimize_end_buffering($input);
-
-        // $this->markTestIncomplete('Full-blown rewrite test currently doesn\'t work on Windows (or with any custom WP-tests setup/location really).');
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function provider_test_rewrite_markup_with_cdn()
-    {
-        $in = <<<MARKUP
+    const TEST_MARKUP = <<<MARKUP
 <!DOCTYPE html>
 <!--[if lt IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8 lt-ie7"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
 <!--[if IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
@@ -138,7 +125,7 @@ class AOTest extends WP_UnitTestcase
 </html>
 MARKUP;
 
-        $out = <<<MARKUP
+    const TEST_MARKUP_OUTPUT = <<<MARKUP
 <!DOCTYPE html>
 <!--[if lt IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8 lt-ie7"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
 <!--[if IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
@@ -182,8 +169,8 @@ MARKUP;
 </html>
 MARKUP;
 
-        // When `is_multisite()` returns true, default path to files is different
-        $out_ms = <<<MARKUP
+    // When `is_multisite()` returns true, default path to files is different
+    const TEST_MARKUP_OUTPUT_MS = <<<MARKUP
 <!DOCTYPE html>
 <!--[if lt IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8 lt-ie7"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
 <!--[if IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
@@ -227,18 +214,27 @@ MARKUP;
 </html>
 MARKUP;
 
-        // TODO/FIXME: this seemed like the fastest way to get MS crude test to pass
-        if ( is_multisite() ) {
-            $out = $out_ms;
-        }
+    /**
+     * @dataProvider provider_test_rewrite_markup_with_cdn
+     */
+    function test_rewrite_markup_with_cdn($input, $expected)
+    {
+        $actual = autoptimize_end_buffering($input);
 
+        // $this->markTestIncomplete('Full-blown rewrite test currently doesn\'t work on Windows (or with any custom WP-tests setup/location really).');
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function provider_test_rewrite_markup_with_cdn()
+    {
         return array(
 
             array(
                 // input
-                $in,
+                self::TEST_MARKUP,
                 // expected output
-                $out
+                // TODO/FIXME: this seemed like the fastest way to get MS crude test to pass
+                ( is_multisite() ? self::TEST_MARKUP_OUTPUT_MS : self::TEST_MARKUP_OUTPUT )
             ),
 
         );
@@ -464,5 +460,78 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
                 false
             )
         );
+    }
+
+    /**
+     * Test various conditions that can/should prevent autoptimize from buffering content.
+     */
+
+// This is causing testability issues due to the use of the constant, which,
+// once defined, interferes with other tests because `autoptimize_do_buffering()` is
+// checking it again and again... And we cannot test stuff in isolation any more.
+/*
+    public function test_skips_buffering_with_DONOTMINIFY_constant_defined()
+    {
+        define( 'DONOTMINIFY', true );
+
+        // buffering should not run due to te constant above being defined
+        $expected = false;
+        $actual = autoptimize_do_buffering($doing_tests = true);
+
+        $this->assertEquals($expected, $actual);
+    }
+//*/
+    public function test_skips_buffering_when_ao_noptimize_filter_is_true()
+    {
+        // true => disable autoptimize
+        add_filter( 'autoptimize_filter_noptimize', '__return_true' );
+
+        // buffering should not run due to the above filter
+        $expected = false;
+        $actual = autoptimize_do_buffering($doing_tests = true);
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_does_buffering_when_ao_noptimize_filter_is_false()
+    {
+        // false => disable noptimize, aka, run normally (weird, yes...)
+        add_filter( 'autoptimize_filter_noptimize', '__return_false' );
+
+        // buffering should run because of above
+        $expected = true;
+        $actual = autoptimize_do_buffering($doing_tests = true);
+
+        $this->assertEquals($expected, $actual);
+    }
+
+/*
+    public function test_skips_buffering_with_ao_noptimize_qs_set()
+    {
+        // Simulating `ao_noptimize=1` qs by using 'autoptimize_filter_noptimize' because superglobals...
+        $this->test_skips_buffering_when_ao_noptimize_filter_is_true();
+    }
+//*/
+
+    public function test_ignores_ao_noptimize_qs_when_instructed()
+    {
+        // Should skip checking for the qs completely due to filter
+        add_filter( 'autoptimize_filter_honor_qs_noptimize', '__return_false' );
+
+        // Which should then result in the "current" value being `false` when passed to 'autoptimize_filter_noptimize'
+        // unless the DONOTMINIFY constant is defined, which changes the result... Which
+        // basically means this test changes its' expected result depending on the order of tests
+        // execution and/or the environment, which is AAAARGGGGGGHHH...
+
+        add_filter( 'autoptimize_filter_noptimize', function ($current_value) {
+            $expected = false;
+            if ( defined( 'DONOTMINIFY' ) && DONOTMINIFY ) {
+                $expected = true;
+            }
+
+            $this->assertEquals($expected, $current_value);
+        });
+
+        autoptimize_do_buffering($doing_tests = true);
     }
 }
