@@ -523,13 +523,14 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
         // basically means this test changes its' expected result depending on the order of tests
         // execution and/or the environment, which is AAAARGGGGGGHHH...
 
-        add_filter( 'autoptimize_filter_noptimize', function ($current_value) {
+        $that = $this; // Make it work on 5.3
+        add_filter( 'autoptimize_filter_noptimize', function ($current_value) use ($that) {
             $expected = false;
             if ( defined( 'DONOTMINIFY' ) && DONOTMINIFY ) {
                 $expected = true;
             }
 
-            $this->assertEquals($expected, $current_value);
+            $that->assertEquals($expected, $current_value);
         });
 
         autoptimize_do_buffering($doing_tests = true);
