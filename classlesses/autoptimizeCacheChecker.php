@@ -18,7 +18,7 @@ if ( is_admin() ) {
 }
 
 function ao_cachechecker_setup() {
-	$doCacheCheck = (bool) apply_filters( 'autoptimize_filter_cachecheck_do', true);
+	$doCacheCheck = (bool) apply_filters( 'autoptimize_filter_cachecheck_do', true );
 	$cacheCheckSchedule = wp_get_schedule( 'ao_cachechecker' );
 	if ( ! $cacheCheckSchedule && $doCacheCheck ) {
 		$AOCCfreq = apply_filters( 'autoptimize_filter_cachecheck_frequency', 'daily' );
@@ -44,7 +44,7 @@ function ao_cachechecker_cronjob() {
 
 add_action( 'admin_notices', 'autoptimize_cachechecker_notice' );
 function autoptimize_cachechecker_notice() {
-	if ((bool) get_option('autoptimize_cachesize_notice', false ) ) {
+	if ( (bool) get_option('autoptimize_cachesize_notice', false ) ) {
 		$statArr = autoptimizeCache::stats();
 		$cacheSize = round( $statArr[1] / 1024 );
 		echo '<div class="update-nag">';
