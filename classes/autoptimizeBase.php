@@ -99,7 +99,20 @@ abstract class autoptimizeBase
 
     // needed for WPML-filter
     protected function ao_getDomain($in) {
-        return ( parse_url( $in, PHP_URL_HOST ) );
+        // make sure the url starts with something vaguely resembling a protocol
+        if ( ( strpos( $in, 'http' ) !== 0 ) && (strpos($in, '//') !== 0 ) ) {
+            $in = 'http://' . $in;
+        }
+
+        // do the actual parse_url
+        $out = parse_url( $in, PHP_URL_HOST );
+
+        // fallback if parse_url does not understand the url is in fact a url
+        if (empty($out)) {
+            $out = in;
+        }
+
+        return $out;
     }
 
 	// hide everything between noptimize-comment tags

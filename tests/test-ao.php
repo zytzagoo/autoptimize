@@ -535,4 +535,59 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
 
         autoptimize_do_buffering($doing_tests = true);
     }
+
+    public function test_wpengine_cache_flush()
+    {
+        include_once AUTOPTIMIZE_PLUGIN_DIR . '/classlesses/autoptimizePageCacheFlush.php';
+
+        // Creating a mock so that we can get past class_exists() and method_exists() checks `autoptimize_flush_pagecache()`...
+        $stub = $this->getMockBuilder('WpeCommon')->disableAutoload()
+                ->disableOriginalConstructor()->setMethods(array(
+                    'purge_varnish_cache'))
+                ->getMock();
+
+        $that = $this;
+        add_filter( 'autoptimize_flush_wpengine_methods', function($methods) use ($that) {
+            $expected_methods = array('purge_varnish_cache');
+            $that->assertEquals($methods, $expected_methods);
+
+            return $methods;
+        });
+
+        autoptimize_flush_pagecache();
+    }
+
+    // Test with the `autoptimize_flush_wpengine_aggressive` filter
+    public function test_wpengine_cache_flush_agressive()
+    {
+        include_once AUTOPTIMIZE_PLUGIN_DIR . '/classlesses/autoptimizePageCacheFlush.php';
+
+        // Creating a mock so that we can get past class_exists() and method_exists() checks `autoptimize_flush_pagecache()`...
+        $stub = $this->getMockBuilder('WpeCommon')->disableAutoload()
+                ->disableOriginalConstructor()->setMethods(array(
+                    'purge_varnish_cache',
+                    'purge_memcached',
+                    'clear_maxcdn_cache'))
+                ->getMock();
+
+        add_filter( 'autoptimize_flush_wpengine_aggressive', function(){
+            return true;
+        });
+
+        $that = $this;
+        add_filter( 'autoptimize_flush_wpengine_methods', function($methods) use ($that) {
+            $expected_methods = array(
+                'purge_varnish_cache',
+                'purge_memcached',
+                'clear_maxcdn_cache'
+            );
+
+            $that->assertEquals($methods, $expected_methods);
+
+            return $methods;
+        });
+
+        autoptimize_flush_pagecache();
+    }
+
 }
