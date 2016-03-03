@@ -329,6 +329,12 @@ abstract class autoptimizeBase
             $is_css_file = ( '.css' === substr( $filepath, -4, 4 ) );
         }
 
+        // Upstream nukes BOM here, although not really sure why...
+        // It doesn't seem like something AO should be doing... And if it should, it shouldn't
+        // just blindly strip all occurences of those three bytes in the entire file, no?
+        // (but rather strip the first three bytes [if those first three bytes are the BOM])
+        // $filecontent = preg_replace( "#\x{EF}\x{BB}\x{BF}#", '', $filecontent );
+
         // Remove comments and blank lines
         if ( $is_js_file ) {
             $filecontent = preg_replace( '#^\s*\/\/.*$#Um', '', $filecontent );
