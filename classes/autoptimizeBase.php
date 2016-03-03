@@ -366,7 +366,7 @@ abstract class autoptimizeBase
         if ( false !== strpos( $in, '%%INJECTLATER%%' ) ) {
             $out = preg_replace_callback(
                 '#%%INJECTLATER%%(.*?)%%INJECTLATER%%#is',
-                array($this, 'inject_minified_callback'),
+                array( $this, 'inject_minified_callback' ),
                 $in
             );
         } else {
