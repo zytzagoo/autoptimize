@@ -283,7 +283,7 @@ class autoptimizeCache
     </Files>
 </IfModule>';
 			}
-			@file_put_contents($htAccess, $htAccessContent);
+			@file_put_contents( $htAccess, $htAccessContent );
 		}
 
         // All OK
