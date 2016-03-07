@@ -20,7 +20,7 @@ class autoptimizeScripts extends autoptimizeBase
         'intensedebate.com','scripts.chitika.net/','_gaq.push','jotform.com/',
         'admin-bar.min.js','GoogleAnalyticsObject','plupload.full.min.js',
         'syntaxhighlighter','adsbygoogle','gist.github.com','_stq','nonce',
-        'post_id'
+        'post_id', 'data-noptimize'
     );
     private $domove     = array(
         'gaJsHost','load_cmc','jd.gallery.transitions.js','swfobject.embedSWF(','tiny_mce.js','tinyMCEPreInit.go'
@@ -425,7 +425,7 @@ class autoptimizeScripts extends autoptimizeBase
     // Checks agains the blacklist
     private function ismovable($tag)
     {
-        if (true !== $this->include_inline) {
+        if ( true !== $this->include_inline || apply_filters( 'autoptimize_filter_js_unmovable', false ) ) {
             return false;
         }
 
