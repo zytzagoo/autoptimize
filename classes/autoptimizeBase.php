@@ -236,13 +236,14 @@ abstract class autoptimizeBase
 
     public function url_replace_cdn($url)
     {
-        if ( ! empty( apply_filters( 'autoptimize_filter_base_cdnurl', $this->cdn_url ) ) ) {
+        $cdn_url = apply_filters( 'autoptimize_filter_base_cdnurl', $this->cdn_url );
+        if ( ! empty( $cdn_url ) ) {
         	$this->debug_log('before=' . $url);
 
             // Simple str_replace-based approach fails when $url is protocol-or-host-relative.
             $is_protocol_relative = ( '/' === $url{1} ); // second char is '/'
             $is_host_relative     = ( ! $is_protocol_relative && ( '/' === $url{0} ) );
-            $cdn_url              = rtrim( $this->cdn_url, '/' );
+            $cdn_url              = rtrim( $cdn_url, '/' );
 
             // $this->debug_log('is_protocol_relative=' . $is_protocol_relative);
             // $this->debug_log('is_host_relative=' . $is_host_relative);
