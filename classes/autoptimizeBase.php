@@ -236,7 +236,7 @@ abstract class autoptimizeBase
 
     public function url_replace_cdn($url)
     {
-        if ( ! empty( $this->cdn_url ) ) {
+        if ( ! empty( apply_filters( 'autoptimize_filter_base_cdnurl', $this->cdn_url ) ) ) {
         	$this->debug_log('before=' . $url);
 
             // Simple str_replace-based approach fails when $url is protocol-or-host-relative.

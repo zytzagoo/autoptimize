@@ -590,4 +590,101 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
         autoptimize_flush_pagecache();
     }
 
+    /**
+     * @dataProvider provider_test_url_replace_cdn
+     * @covers autoptimizeBase::url_replace_cdn
+     */
+    public function test_url_replace_cdn($cdn_url, $input, $expected)
+    {
+        $mock = $this->getMockBuilder('autoptimizeBase')->disableOriginalConstructor()->getMockForAbstractClass();
+        $mock->cdn_url = $cdn_url;
+
+        $actual = $mock->url_replace_cdn($input);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function provider_test_url_replace_cdn()
+    {
+        return array(
+            // host-relative links get properly transformed
+            array(
+                // cdn base url, url, expected result
+                'http://cdn-test.example.org',
+                '/a.jpg',
+                'http://cdn-test.example.org/a.jpg',
+            ),
+            // full link with a matching AUTOPTIMIZE_WP_SITE_URL gets properly replaced
+            array(
+                'http://cdn-test.example.org',
+                'http://example.org/wp-content/themes/something/example.svg',
+                'http://cdn-test.example.org/wp-content/themes/something/example.svg'
+            ),
+            // www.example.org does not match example.org (AUTOPTIMIZE_WP_SITE_URL) so it's left alone
+            array(
+                'http://cdn-test.example.org',
+                'http://www.example.org/wp-content/themes/something/example.svg',
+                'http://www.example.org/wp-content/themes/something/example.svg'
+            ),
+            // ssl cdn url + host-relative link
+            array(
+                'https://cdn.example.org',
+                '/a.jpg',
+                'https://cdn.example.org/a.jpg'
+            ),
+            // ssl cdn url + http site url that matches AUTOPTIMIZE_WP_SITE_URL is properly replaced
+            array(
+                'https://cdn.example.org',
+                'http://example.org/wp-content/themes/something/example.svg',
+                'https://cdn.example.org/wp-content/themes/something/example.svg'
+            ),
+            // protocol-relative cdn url given with protocol relative link that matches AUTOPTIMIZE_WP_SITE_URL host
+            array(
+                '//cdn.example.org',
+                '//example.org/something.jpg',
+                '//cdn.example.org/something.jpg'
+            ),
+            // protocol-relative cdn url given a http link that matches AUTOPTIMIZE_WP_SITE_URL host
+            array(
+                '//cdn.example.org',
+                'http://example.org/something.png',
+                '//cdn.example.org/something.png',
+            ),
+            // protocol-relative cdn url with a host-relative link
+            array(
+                '//cdn.example.org',
+                '/a.jpg',
+                '//cdn.example.org/a.jpg',
+            )
+        );
+    }
+
+    // test `autoptimize_filter_base_cdnurl` filtering as described here: https://wordpress.org/support/topic/disable-cdn-of-ssl-pages
+    public function test_autoptimize_filter_base_cdnurl()
+    {
+        $test_link = '/a.jpg';
+        $cdn_url = '//cdn.example.org';
+
+        $with_ssl = function($cdn) {
+            return '';
+        };
+        $expected_with_ssl = '/a.jpg';
+
+        $without_ssl = function($cdn) {
+            return $cdn;
+        };
+        $expected_without_ssl = '//cdn.example.org/a.jpg';
+
+        // with a filter that returns something considered "empty", cdn replacement shouldn't occur
+        add_filter( 'autoptimize_filter_base_cdnurl', $with_ssl );
+        $mock = $this->getMockBuilder('autoptimizeBase')->disableOriginalConstructor()->getMockForAbstractClass();
+        $mock->cdn_url = $cdn_url;
+        $actual_with_ssl = $mock->url_replace_cdn($test_link);
+        $this->assertEquals($expected_with_ssl, $actual_with_ssl);
+        remove_filter( 'autoptimize_filter_base_cdnurl', $with_ssl );
+
+        // with a filter that returns an actual cdn url, cdn replacement should occur
+        add_filter( 'autoptimize_filter_base_cdnurl', $without_ssl );
+        $actual_without_ssl = $mock->url_replace_cdn($test_link);
+        $this->assertEquals($expected_without_ssl, $actual_without_ssl);
+    }
 }
