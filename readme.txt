@@ -4,7 +4,7 @@ Tags: css, html, javascript, js, optimize, speed, cache, aggregate, minimize, mi
 Donate link: http://blog.futtta.be/2013/10/21/do-not-donate-to-me/
 Requires at least: 2.7
 Tested up to: 4.5
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 
 Autoptimize speeds up your website and helps you save bandwidth by aggregating and minimizing JS, CSS and HTML.
 
@@ -220,7 +220,7 @@ Just [fork Autoptimize on Github](https://github.com/futtta/autoptimize) and cod
 * Bugfix: Better support for renamed wp-content directories
 * Bugfix: Multiple fixes for late-injected CSS/ JS (changes in those files were not always picked up, fonts or background images were not being CDN’ed, …)
 * Misc. other fixes & improvements, go read [the commit-log on GitHub](https://github.com/futtta/autoptimize/commits/master) if you’re that curious
-* Tested & confirmed working with WordPress 4.5 (beta 2)
+* Tested & confirmed working with WordPress 4.5 (beta 3)
 
 = 2.0.0 =
 * On average 30% faster minification (more info [in this blogpost](http://blog.futtta.be/2015/12/22/making-autoptimize-faster/))!
