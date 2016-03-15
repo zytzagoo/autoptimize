@@ -125,7 +125,7 @@ class autoptimizeCache
                 do_action( 'autoptimize_action_cachepurged' );
             }
         }
-        add_action( 'plugins_loaded', 'autoptimize_do_cachepurged_action', 11 );
+        add_action( 'after_theme_setup', 'autoptimize_do_cachepurged_action', 11 );
 
         include_once AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizePageCacheFlush.php';
         add_action( 'autoptimize_action_cachepurged', 'autoptimize_flush_pagecache', 10, 0 );
