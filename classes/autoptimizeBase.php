@@ -249,8 +249,6 @@ abstract class autoptimizeBase
             // $this->debug_log('is_host_relative=' . $is_host_relative);
             // $this->debug_log('cdn_url=' . $cdn_url);
 
-            // TODO/FIXME: check if things work with an explicit port specified in cdn url
-
             // TODO/FIXME: This relies on the `AUTOPTIMIZE_WP_SITE_URL` constant being defined, which
             // might be fine when everything is being called through `autoptimize_end_buffering()`, but
             // we really can't easily unit test things that way... So much coupling...

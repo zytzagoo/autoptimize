@@ -654,6 +654,27 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
                 '//cdn.example.org',
                 '/a.jpg',
                 '//cdn.example.org/a.jpg',
+            ),
+            // Testing cdn urls with an explicit port number
+            array(
+                'http://cdn.com:8080',
+                '/a.jpg',
+                'http://cdn.com:8080/a.jpg'
+            ),
+            array(
+                '//cdn.com:4433',
+                '/a.jpg',
+                '//cdn.com:4433/a.jpg'
+            ),
+            array(
+                '//cdn.com:4433',
+                'http://example.org/something.jpg',
+                '//cdn.com:4433/something.jpg'
+            ),
+            array(
+                '//cdn.com:1234',
+                '//example.org/something.jpg',
+                '//cdn.com:1234/something.jpg'
             )
         );
     }
