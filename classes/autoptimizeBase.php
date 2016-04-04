@@ -340,7 +340,7 @@ abstract class autoptimizeBase
         }
 
         // Nuke un-important comments
-        $filecontent = preg_replace( '#^\s*\/\*[^!].*\*\/\s?#Us', '', $filecontent );
+        $filecontent = preg_replace( '#^\s*\/\*[^!].*\*\/\s?#Um', '', $filecontent );
 
         // Normalize newlines
         $filecontent = preg_replace( '#(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+#', "\n", $filecontent );
