@@ -425,7 +425,31 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
                 '<!doctype html>
 <html>',
                 false
-            )
+            ),
+            array(
+                '<html dir="ltr" amp>',
+                true
+            ),
+            array(
+                '<html dir="ltr" ⚡>',
+                true
+            ),
+            array(
+                '<html amp dir="ltr">',
+                true
+            ),
+            array(
+                '<html ⚡ dir="ltr">',
+                true
+            ),
+            array(
+                '<HTML ⚡ DIR="LTR">',
+                true
+            ),
+            array(
+                '<HTML AMP DIR="LTR">',
+                true
+            ),
         );
     }
 

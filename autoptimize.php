@@ -225,15 +225,9 @@ function autoptimize_start_buffering() {
  * This is far from actual validation againts AMP spec, but it'll do for now.
  */
 function autoptimize_is_amp_markup($content) {
-    $is_amp_markup = false;
+    $is_amp_markup = preg_match( '/<html[^>]*(?:amp|⚡)/i', $content );
 
-    if ( false === stripos( $content, '<html amp' ) && false === stripos( $content, '<html ⚡' ) ) {
-        $is_amp_markup = false;
-    } else {
-        $is_amp_markup = true;
-    }
-
-    return $is_amp_markup;
+    return (bool) $is_amp_markup;
 }
 
 /**
