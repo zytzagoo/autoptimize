@@ -33,6 +33,10 @@ class autoptimizeConfig
             }
 
             $this->settings_screen_do_remote_http = apply_filters( 'autoptimize_settingsscreen_remotehttp', $this->settings_screen_do_remote_http );
+
+        +  //Add the Autoptimize Toolbar to the Admin bar
+ +         //(we loaded outside the verification of is_admin to also be displayed on the frontend toolbar)
+ +         $toolbar = new autoptimizeToolbar();
         }
     }
 
