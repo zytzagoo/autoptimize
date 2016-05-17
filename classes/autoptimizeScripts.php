@@ -127,7 +127,7 @@ class autoptimizeScripts extends autoptimizeBase
                     continue;
                 }
 
-                if ( preg_match( '#src=("|\')(.*)("|\')#Usmi', $tag, $source ) ) {
+                if ( preg_match( '#<script[^>]*src=("|\')([^>]*)("|\')#Usmi', $tag, $source ) ) {
                     if ( $this->isremovable($tag, $this->jsremovables) ) {
                         $this->content = str_replace( $tag, '', $this->content );
                         continue;
