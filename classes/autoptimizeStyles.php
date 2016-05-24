@@ -763,28 +763,28 @@ class autoptimizeStyles extends autoptimizeBase
 
     private function ismovable($tag)
     {
-		if ( ! empty( $this->whitelist ) ) {
-			foreach ( $this->whitelist as $match) {
-				if ( false !== strpos( $tag, $match ) ) {
-					return true;
-				}
-			}
-			// no match with whitelist
-			return false;
-		} else {
-			if ( is_array( $this->dontmove ) ) {
-				foreach ( $this->dontmove as $match ) {
-					if (false !== strpos( $tag, $match ) ) {
-						//Matched something
-						return false;
-					}
-				}
-			}
+        if ( ! empty( $this->whitelist ) ) {
+            foreach ( $this->whitelist as $match) {
+                if ( false !== strpos( $tag, $match ) ) {
+                    return true;
+                }
+            }
+            // no match with whitelist
+            return false;
+        } else {
+            if ( is_array( $this->dontmove ) ) {
+                foreach ( $this->dontmove as $match ) {
+                    if (false !== strpos( $tag, $match ) ) {
+                        //Matched something
+                        return false;
+                    }
+                }
+            }
 
-			//If we're here it's safe to move
-			return true;
-		}
-	}
+            //If we're here it's safe to move
+            return true;
+        }
+    }
 
     private function can_inject_late($cssPath, $css)
     {
