@@ -103,9 +103,14 @@ class autoptimizeToolbar
 
 	public function delete_cache()
 	{
-		// We call the function for cleaning the Autoptimize cache
-		autoptimizeCache::clearall();
+		check_ajax_referer( 'ao_delcache_nonce', 'nonce' );
+		if( current_user_can( 'manage_options' ))
+		{
+			// We call the function for cleaning the Autoptimize cache
+			autoptimizeCache::clearall();
+		}
 
+		wp_die();
 		// NOTE: Remember that any return values of this function must be in JSON format
 	}
 
@@ -119,7 +124,8 @@ class autoptimizeToolbar
 
 		// Localizes a registered script with data for a JavaScript variable. (We need this for the AJAX work properly in the front-end mode)
 		wp_localize_script( 'autoptimize-toolbar', 'autoptimize_ajax_object', array(
-			'ajaxurl' => admin_url( 'admin-ajax.php' )
+			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			'nonce' => wp_create_nonce( 'ao_delcache_nonce' )
 		) );
 	}
 }

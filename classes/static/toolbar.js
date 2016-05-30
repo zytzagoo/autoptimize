@@ -31,18 +31,30 @@ jQuery( document ).ready(function()
 		jQuery.ajax({
 			type	: 'GET',
 			url	: autoptimize_ajax_object.ajaxurl,
-			data	: {'action':action},
+			data    : {'action':action, 'nonce':autoptimize_ajax_object.nonce},
 			dataType: 'json',
-			cache	: false, 
+			cache	: false,
 			success	: function( data )
 			{
 				// Remove the Autoptimize Loading Modal
 				modal_loading.remove();
 
-				// Change the output values of size cache and files to zero
-				jQuery( '#wp-admin-bar-autoptimize-cache-info .size' ).html( '0.00 B' );
+				// Reset output values & class names of cache info
+				jQuery( '#wp-admin-bar-autoptimize-cache-info .size' ).attr( 'class', 'size green' ).html( '0.00 B' );
 				jQuery( '#wp-admin-bar-autoptimize-cache-info .files' ).html( '0' );
-			}
+				jQuery( '#wp-admin-bar-autoptimize-cache-info .percentage .numbers' ).attr( 'class', 'numbers green' ).html( '0%' );
+ 				jQuery( '#wp-admin-bar-autoptimize-cache-info .autoptimize-radial-bar .fill' ).attr( 'class', 'fill bg-green' );
+
+ 				// Reset the class names of bullet icon
+ 				jQuery( '#wp-admin-bar-autoptimize' ).attr( 'class', 'menupop bullet-green' );
+
+ 				// Reset the Radial Bar progress
+ 				jQuery( '#wp-admin-bar-autoptimize-cache-info .autoptimize-radial-bar .mask.full, #wp-admin-bar-autoptimize-cache-info .autoptimize-radial-bar .fill' ).css({
+ 					'-webkit-transform'    : 'rotate(0deg)',
+ 					'-ms-transform'        : 'rotate(0deg)',
+ 					'transform'            : 'rotate(0deg)'
+ 				});
+ 			}
 		});
 	});
 });
