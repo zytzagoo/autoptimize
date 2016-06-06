@@ -46,7 +46,12 @@ abstract class autoptimizeBase
                 $url = 'http:' . $url;
             }
         } elseif ( ( false === strpos($url, '//' ) ) && ( false === strpos( $url, $site_host ) ) ) {
-            $url = AUTOPTIMIZE_WP_SITE_URL . $url;
+            if ( AUTOPTIMIZE_WP_SITE_URL === $site_host ) {
+                $url = AUTOPTIMIZE_WP_SITE_URL . $url;
+            } else {
+                $subdir_levels = substr_count( preg_replace( '/https?:\/\//', '', AUTOPTIMIZE_WP_SITE_URL ), '/' );
+                $url = AUTOPTIMIZE_WP_SITE_URL . str_repeat( '/..', $subdir_levels ) . $url;
+            }
         }
 
         // First check; hostname wp site should be hostname of url
@@ -83,8 +88,8 @@ abstract class autoptimizeBase
         }
 
         // Try to remove "wp root url" from url while not minding http<>https
-        $tmp_ao_root = preg_replace( '/https?/', '', AUTOPTIMIZE_WP_ROOT_URL );
-        $tmp_url     = preg_replace( '/https?/', '', $url );
+        $tmp_ao_root = preg_replace( '/https?:/', '', AUTOPTIMIZE_WP_ROOT_URL );
+        $tmp_url     = preg_replace( '/https?:/', '', $url );
         $path        = str_replace( $tmp_ao_root, '', $tmp_url );
 
         // Final check; if path starts with :// or //, this is not a URL in the WP context and we have to assume we can't aggregate
