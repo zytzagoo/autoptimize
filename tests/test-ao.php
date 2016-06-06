@@ -450,6 +450,11 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
                 '<HTML AMP DIR="LTR">',
                 true
             ),
+            // https://github.com/futtta/autoptimize/commit/54385939db06f725fcafe68598cce6ed148ef6c1
+            array(
+                '<!doctype html>',
+                false
+            ),
         );
     }
 

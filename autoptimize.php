@@ -244,6 +244,7 @@ function autoptimize_should_bail_from_processing_buffer($content) {
 
     $has_no_html_tag = ( false === stripos( $content, '<html' ) );
     $has_xsl_stylesheet = ( false !== stripos( $content, '<xsl:stylesheet' ) );
+    $has_html5_doctype = ( preg_match( '/^<!DOCTYPE.+html>/i', $content ) > 0 );
 
     if ( $has_no_html_tag ) {
         // Can't be valid amp markup without an html tag preceding it
@@ -252,7 +253,7 @@ function autoptimize_should_bail_from_processing_buffer($content) {
         $is_amp_markup = autoptimize_is_amp_markup( $content );
     }
 
-    if ( $has_no_html_tag || $is_amp_markup || $has_xsl_stylesheet ) {
+    if ( $has_no_html_tag && ! $has_html5_doctype || $is_amp_markup || $has_xsl_stylesheet ) {
         $bail = true;
     }
 
