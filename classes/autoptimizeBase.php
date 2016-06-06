@@ -6,50 +6,50 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 abstract class autoptimizeBase
 {
-	protected $content = '';
+    protected $content = '';
 
     public $debug_log = false;
 
-	public function __construct($content)
-	{
-		$this->content = $content;
-	}
+    public function __construct($content)
+    {
+        $this->content = $content;
+    }
 
-	// Reads the page and collects tags
-	abstract public function read($justhead);
+    // Reads the page and collects tags
+    abstract public function read($justhead);
 
-	// Joins and optimizes collected things
-	abstract public function minify();
+    // Joins and optimizes collected things
+    abstract public function minify();
 
-	// Caches the things
-	abstract public function cache();
+    // Caches the things
+    abstract public function cache();
 
-	// Returns the content
-	abstract public function getcontent();
+    // Returns the content
+    abstract public function getcontent();
 
-	// Converts an URL to a full path
-	protected function getpath($url)
-	{
-		$url = apply_filters( 'autoptimize_filter_cssjs_alter_url', $url);
+    // Converts an URL to a full path
+    protected function getpath($url)
+    {
+        $url = apply_filters( 'autoptimize_filter_cssjs_alter_url', $url);
 
-		if ( false !== strpos( $url, '%' ) ) {
-			$url = urldecode( $url );
-		}
+        if ( false !== strpos( $url, '%' ) ) {
+            $url = urldecode( $url );
+        }
 
         $site_host = parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST );
 
-		// Normalize
-		if (0 === strpos( $url, '//' ) ) {
-			if ( is_ssl() ) {
-				$url = 'https:' . $url;
-			} else {
-				$url = 'http:' . $url;
-			}
-		} elseif ( ( false === strpos($url, '//' ) ) && ( false === strpos( $url, $site_host ) ) ) {
-			$url = AUTOPTIMIZE_WP_SITE_URL . $url;
-		}
+        // Normalize
+        if (0 === strpos( $url, '//' ) ) {
+            if ( is_ssl() ) {
+                $url = 'https:' . $url;
+            } else {
+                $url = 'http:' . $url;
+            }
+        } elseif ( ( false === strpos($url, '//' ) ) && ( false === strpos( $url, $site_host ) ) ) {
+            $url = AUTOPTIMIZE_WP_SITE_URL . $url;
+        }
 
-		// First check; hostname wp site should be hostname of url
+        // First check; hostname wp site should be hostname of url
         $url_host = @parse_url($url, PHP_URL_HOST);
         if ( $url_host !== $site_host ) {
             /*
@@ -82,19 +82,19 @@ abstract class autoptimizeBase
             }
         }
 
-		// Try to remove "wp root url" from url while not minding http<>https
-		$tmp_ao_root = preg_replace( '/https?/', '', AUTOPTIMIZE_WP_ROOT_URL );
-		$tmp_url     = preg_replace( '/https?/', '', $url );
-    	$path        = str_replace( $tmp_ao_root, '', $tmp_url );
+        // Try to remove "wp root url" from url while not minding http<>https
+        $tmp_ao_root = preg_replace( '/https?/', '', AUTOPTIMIZE_WP_ROOT_URL );
+        $tmp_url     = preg_replace( '/https?/', '', $url );
+        $path        = str_replace( $tmp_ao_root, '', $tmp_url );
 
-		// Final check; if path starts with :// or //, this is not a URL in the WP context and we have to assume we can't aggregate
-		if ( preg_match( '#^:?//#', $path ) ) {
-     		/** External script/css (adsense, etc) */
-			return false;
-   		}
+        // Final check; if path starts with :// or //, this is not a URL in the WP context and we have to assume we can't aggregate
+        if ( preg_match( '#^:?//#', $path ) ) {
+            /** External script/css (adsense, etc) */
+            return false;
+        }
 
-    	$path = str_replace( '//', '/', WP_ROOT_DIR . $path );
-    	return $path;
+        $path = str_replace( '//', '/', WP_ROOT_DIR . $path );
+        return $path;
 	}
 
     // needed for WPML-filter
@@ -115,75 +115,75 @@ abstract class autoptimizeBase
         return $out;
     }
 
-	// hide everything between noptimize-comment tags
-	protected function hide_noptimize($noptimize_in)
-	{
-		if ( preg_match( '/<!--\s?noptimize\s?-->/', $noptimize_in ) ) {
-			$noptimize_out = preg_replace_callback(
-				'#<!--\s?noptimize\s?-->.*?<!--\s?/\s?noptimize\s?-->#is',
-				create_function(
-					'$matches',
-					'return "%%NOPTIMIZE%%".base64_encode($matches[0])."%%NOPTIMIZE%%";'
-				),
-				$noptimize_in
-			);
-		} else {
-			$noptimize_out = $noptimize_in;
-		}
-		return $noptimize_out;
-	}
+    // hide everything between noptimize-comment tags
+    protected function hide_noptimize($noptimize_in)
+    {
+        if ( preg_match( '/<!--\s?noptimize\s?-->/', $noptimize_in ) ) {
+            $noptimize_out = preg_replace_callback(
+                '#<!--\s?noptimize\s?-->.*?<!--\s?/\s?noptimize\s?-->#is',
+                create_function(
+                    '$matches',
+                    'return "%%NOPTIMIZE%%".base64_encode($matches[0])."%%NOPTIMIZE%%";'
+                ),
+                $noptimize_in
+            );
+        } else {
+            $noptimize_out = $noptimize_in;
+        }
+        return $noptimize_out;
+    }
 
-	// Unhide noptimize-tags
-	protected function restore_noptimize($noptimize_in)
-	{
-		if ( false !== strpos( $noptimize_in, '%%NOPTIMIZE%%' ) ) {
-			$noptimize_out = preg_replace_callback(
-				'#%%NOPTIMIZE%%(.*?)%%NOPTIMIZE%%#is',
-				create_function(
-					'$matches',
-					'return base64_decode($matches[1]);'
-				),
-				$noptimize_in
-			);
-		} else {
-			$noptimize_out = $noptimize_in;
-		}
-		return $noptimize_out;
-	}
+    // Unhide noptimize-tags
+    protected function restore_noptimize($noptimize_in)
+    {
+        if ( false !== strpos( $noptimize_in, '%%NOPTIMIZE%%' ) ) {
+            $noptimize_out = preg_replace_callback(
+                '#%%NOPTIMIZE%%(.*?)%%NOPTIMIZE%%#is',
+                create_function(
+                    '$matches',
+                    'return base64_decode($matches[1]);'
+                ),
+                $noptimize_in
+            );
+        } else {
+            $noptimize_out = $noptimize_in;
+        }
+        return $noptimize_out;
+    }
 
-	protected function hide_iehacks($iehacks_in)
-	{
-		if ( false !== strpos( $iehacks_in, '<!--[if' ) ) {
-			$iehacks_out = preg_replace_callback(
-				'#<!--\[if.*?\[endif\]-->#is',
-				create_function(
-					'$matches',
-					'return "%%IEHACK%%".base64_encode($matches[0])."%%IEHACK%%";'
-				),
-				$iehacks_in
-			);
-		} else {
-			$iehacks_out = $iehacks_in;
-		}
-		return $iehacks_out;
-	}
+    protected function hide_iehacks($iehacks_in)
+    {
+        if ( false !== strpos( $iehacks_in, '<!--[if' ) ) {
+            $iehacks_out = preg_replace_callback(
+                '#<!--\[if.*?\[endif\]-->#is',
+                create_function(
+                    '$matches',
+                    'return "%%IEHACK%%".base64_encode($matches[0])."%%IEHACK%%";'
+                ),
+                $iehacks_in
+            );
+        } else {
+            $iehacks_out = $iehacks_in;
+        }
+        return $iehacks_out;
+    }
 
-	protected function restore_iehacks($iehacks_in)
-	{
-		if ( false !== strpos( $iehacks_in, '%%IEHACK%%' ) ) {
-			$iehacks_out = preg_replace_callback(
-				'#%%IEHACK%%(.*?)%%IEHACK%%#is',
-				create_function(
-					'$matches',
-					'return base64_decode($matches[1]);'
-				),
-				$iehacks_in
-			);
-		} else {
-			$iehacks_out = $iehacks_in;
-		}
-		return $iehacks_out;
-	}
+    protected function restore_iehacks($iehacks_in)
+    {
+        if ( false !== strpos( $iehacks_in, '%%IEHACK%%' ) ) {
+            $iehacks_out = preg_replace_callback(
+                '#%%IEHACK%%(.*?)%%IEHACK%%#is',
+                create_function(
+                    '$matches',
+                    'return base64_decode($matches[1]);'
+                ),
+                $iehacks_in
+            );
+        } else {
+            $iehacks_out = $iehacks_in;
+        }
+        return $iehacks_out;
+    }
 
     /**
      * "Hides" content within HTML comments using a regex-based replacement
@@ -238,7 +238,7 @@ abstract class autoptimizeBase
     {
         $cdn_url = apply_filters( 'autoptimize_filter_base_cdnurl', $this->cdn_url );
         if ( ! empty( $cdn_url ) ) {
-        	$this->debug_log('before=' . $url);
+            $this->debug_log('before=' . $url);
 
             // Simple str_replace-based approach fails when $url is protocol-or-host-relative.
             $is_protocol_relative = ( '/' === $url{1} ); // second char is '/'
@@ -278,26 +278,26 @@ abstract class autoptimizeBase
         return $url;
     }
 
-	protected function inject_in_html($payload, $replaceTag)
-	{
-		$warned = false;
-		if ( false !== strpos( $this->content, $replaceTag[0] ) ) {
-			if ( 'after' === $replaceTag[1] ) {
-				$replaceBlock = $replaceTag[0] . $payload;
-			} else if ( 'replace' === $replaceTag[1] ){
-				$replaceBlock = $payload;
-			} else {
-				$replaceBlock = $payload . $replaceTag[0];
-			}
+    protected function inject_in_html($payload, $replaceTag)
+    {
+        $warned = false;
+        if ( false !== strpos( $this->content, $replaceTag[0] ) ) {
+            if ( 'after' === $replaceTag[1] ) {
+                $replaceBlock = $replaceTag[0] . $payload;
+            } else if ( 'replace' === $replaceTag[1] ){
+                $replaceBlock = $payload;
+            } else {
+                $replaceBlock = $payload . $replaceTag[0];
+            }
             $this->content = substr_replace( $this->content, $replaceBlock, strpos( $this->content, $replaceTag[0] ), strlen( $replaceTag[0] ) );
-		} else {
-			$this->content .= $payload;
-			if ( ! $warned ) {
-				$this->content .= "<!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `" . $replaceTag[0] . "` missing --><!--/noptimize-->";
-				$warned = true;
-			}
-		}
-	}
+        } else {
+            $this->content .= $payload;
+            if ( ! $warned ) {
+                $this->content .= "<!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `" . $replaceTag[0] . "` missing --><!--/noptimize-->";
+                $warned = true;
+            }
+        }
+    }
 
     protected function isremovable($tag, $removables) {
         foreach ( $removables as $match ) {
