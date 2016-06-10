@@ -80,7 +80,7 @@ class autoptimizeStyles extends autoptimizeBase
 
         // Should we inline while deferring?
         // value: inlined CSS
-        $this->defer_inline = $options['defer_inline'];
+        $this->defer_inline = apply_filters( 'autoptimize_filter_css_defer_inline', $options['defer_inline'] );
 
         // Should we inline?
         // value: true / false
@@ -658,8 +658,6 @@ class autoptimizeStyles extends autoptimizeBase
                 $noScriptCssBlock = '<noscript>';
 
                 $defer_inline_code = $this->defer_inline;
-                $defer_inline_code = apply_filters( 'autoptimize_filter_css_defer_inline', $defer_inline_code );
-
                 if ( ! empty( $defer_inline_code ) ) {
                     if ( apply_filters( 'autoptimize_filter_css_critcss_minify', true ) ) {
                         $iCssHash = md5( $defer_inline_code );
