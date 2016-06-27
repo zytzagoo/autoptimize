@@ -388,6 +388,15 @@ CSS;
                 '<script>var type=something;</script>',
                 true
             ),
+            // application/ld+json should not be aggregated by default regardless of spacing around attr/values
+            array(
+                '<script type = "application/ld+json" >{   "@context": "" }',
+                false
+            ),
+            array(
+                '<script type="application/ld+json">{   "@context": "" }',
+                false
+            ),
         );
     }
 
