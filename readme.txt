@@ -12,8 +12,7 @@ Autoptimize speeds up your website and helps you save bandwidth by aggregating a
 
 Autoptimize makes optimizing your site really easy. It concatenates all scripts and styles, minifies and compresses them, adds expires headers, caches them, and moves styles to the page head and can move scripts to the footer. It also minifies the HTML code itself, making your page really lightweight. There are advanced options and an extensive API available to enable you to tailor Autoptimize to each and every site's specific needs.
 
-If you consider performance important, you really should use a caching-plugin such as e.g. [WP Super Cache](http://wordpress.org/extend/plugins/wp-super-cache/) or
-[HyperCache](http://wordpress.org/extend/plugins/hyper-cache/) to complement Autoptimize.
+If you consider performance important, you really should use one of the many caching plugins to do page caching. Some good candidates to complement Autoptimize that way are e.g. [WP Super Cache](http://wordpress.org/extend/plugins/wp-super-cache/), [HyperCache](http://wordpress.org/extend/plugins/hyper-cache/), [Comet Cache](https://wordpress.org/plugins/comet-cache/) or [KeyCDN's Cache Enabler](https://wordpress.org/plugins/cache-enabler).
 
 (Speed-surfing image under creative commons [by LL Twistiti](https://www.flickr.com/photos/twistiti/818552808/))
 
@@ -141,6 +140,7 @@ Autoptimize does a number of checks before actually optimizing. When one of the 
 * if the output is a WordPress administration page (is_admin() function)
 * if the page is requested with ?ao_noptimize=1 appended to the URL
 * if code hooks into Autoptimize to disable optimization (see topic on Visual Composer)
+* if other plugins use the output buffer in an incompatible manner (disable other plugins selectively to identify the culprit)
 
 = Visual Composer, Beaver Builder and similar page builder solutions are broken!! =
 
@@ -156,6 +156,15 @@ function pagebuilder_noptimize() {
   }
 }
 `
+
+= Revolution Slider is broken! =
+
+You can fix this by adding `js/jquery/jquery.js` to the comma-separated list of JS optimization exclusion.
+
+= I'm getting "jQuery is not defined" errors =
+
+In that case you have un-aggregated JavaScript that requires jQuery to be loaded, so you'll have to either aggregate that JavaScript (ticking the "also aggregate inline JS"-option) or add `js/jquery/jquery.js` to the comma-separated list of JS optimization exclusions.
+
 = My Autoptimized CSS/ JS is broken after upgrading from 1.9.4 to 2.0! =
 
 One of the bigger changes in Autoptimize 2.0 is that files that have "min.js" or "min.css" in their name are considered already minified and are only injected into the aggregated code after the actual minification, because this has an important performance-benefit. Although this has been tested rather thoroughly, it is possible that this approach does not always work. You can turn this behavior off by hooking into Autoptimize's API, like this;
@@ -210,6 +219,11 @@ You can report problems on the [wordpress.org support forum](http://wordpress.or
 Just [fork Autoptimize on Github](https://github.com/futtta/autoptimize) and code away!
 
 == Changelog ==
+
+= 2.0.3 =
+* new: Autoptimize now appears in admin-toolbar with an easy view on cache size and the possibility to purge the cache (pass `false` to `autoptimize_filter_toolbar_show` filter to disable), a big thanks to [Pablo Custo](https://github.com/pablocusto) for his hard work on this nice feature!
+* new: if cache size becomes too big, a mail will be sent to the site admin (pass `false` to `autoptimize_filter_cachecheck_sendmail` filter to disable or pass alternative email to the `autoptimize_filter_cachecheck_mailto` filter)
+* Misc. bugfixes & small improvements (see [commit-log on GitHub](https://github.com/futtta/autoptimize/commits/master))
 
   = 2.0.2 =
  * bugfix: disallow moving non-aggregated JS by default (can be re-enabled by passing false to the `autoptimize_filter_js_unmovable`)

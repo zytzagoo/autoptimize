@@ -199,12 +199,13 @@ class JSMin {
                     for(;;) {
                         $this->output .= $this->a;
                         $this->lastByteOut = $this->a;
-
                         $this->a = $this->get();
                         if ($this->a === $this->b) { // end quote
                             break;
                         }
-                        if ($this->isEOF($this->a)) {
+                        if ($delimiter === '`' && $this->a === "\n") {
+                            // leave the newline
+                        } elseif ($this->isEOF($this->a)) {
                             $byte = $this->inputIndex - 1;
                             throw new JSMin_UnterminatedStringException(
                                 "JSMin: Unterminated String at byte {$byte}: {$str}");
@@ -213,8 +214,7 @@ class JSMin {
                         if ($this->a === '\\') {
                             $this->output .= $this->a;
                             $this->lastByteOut = $this->a;
-
-                            $this->a       = $this->get();
+                            $this->a = $this->get();
                             $str .= $this->a;
                         }
                     }
