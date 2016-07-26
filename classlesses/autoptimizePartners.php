@@ -27,8 +27,8 @@ function ao_partners() {
     <style>
 	.itemDetail {
 		background: #fff;
-		width: 280px;
-		height: 250px;
+		width: 250px;
+		height: 270px;
 		border: 1px solid #ccc;
 		float: left;
 		padding: 15px;
@@ -53,7 +53,7 @@ function ao_partners() {
 	.itemButton a:hover {
 		text-decoration: none;
 		color: #23282d;
-	}	
+	}
     </style>
 	<div class="wrap">
 		<h1><?php _e('Autoptimize Settings','autoptimize'); ?></h1>
@@ -76,7 +76,7 @@ function getAOPartnerFeed() {
 		$maxitems = 0;
 
 		if ( ! is_wp_error( $rss ) ) {
-			$maxitems = $rss->get_item_quantity( 10 ); 
+			$maxitems = $rss->get_item_quantity( 10 );
 			$rss_items = $rss->get_items( 0, $maxitems );
 		} ?>
 		<ul>
