@@ -53,7 +53,8 @@ class autoptimizeConfig
     public function show()
     {
 ?>
-<style>input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weight:100;} #futtta_feed ul{list-style:outside;} #futtta_feed {font-size:medium; margin:0px 20px;}</style>
+<style>input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weight:100;} #futtta_feed ul{list-style:outside;} #futtta_feed {font-size:medium; margin:0px 20px;} #ao_hide_adv,#ao_show_adv{float:right;margin-top:-35px;margin-right:10px;}@media (min-width: 961px) {#autoptimize_main {float:left;width:69%;}#autoptimize_admin_feed{float:right;width:30%;}
+}@media (max-width: 960px) {#autoptimize_admin_feed {width:0%;}#autoptimize_main {width:100%;}}@media (max-width: 782px) and (min-width: 601px){#ao_hide_adv,#ao_show_adv {margin-top:-42px; }}</style>
 
 <div class="wrap">
 
@@ -63,13 +64,12 @@ class autoptimizeConfig
 <div class="notice-error notice"><?php _e('<p><strong>You are using a very old version of PHP</strong> (5.2.x or older) which has <a href="http://blog.futtta.be/2016/03/15/why-would-you-still-be-on-php-5-2/" target="_blank">serious security and performance issues</a>. Please ask your hoster to provide you with an upgrade path to 5.6 or 7.0</p>','autoptimize'); ?></div>
 <?php } ?>
 
-<div style="float:left;width:70%;">
+<div id="autoptimize_main">
 <?php
 if (get_option('autoptimize_show_adv','0')=='1') {
     ?>
     <a href="javascript:void(0);" id="ao_show_adv" class="button" style="display:none;"><?php _e("Show advanced settings","autoptimize") ?></a>
     <a href="javascript:void(0);" id="ao_hide_adv" class="button"><?php _e("Hide advanced settings","autoptimize") ?></a>
-    <style>.ao_adv {display:table-row};</style>
     <?php
 } else {
     ?>
@@ -82,7 +82,10 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 <form method="post" action="options.php">
 <?php settings_fields('autoptimize'); ?>
 
-<h2><?php _e('HTML Options','autoptimize'); ?></h2>
+<ul>
+
+<li class="itemDetail">
+<h2 class="itemTitle"><?php _e('HTML Options','autoptimize'); ?></h2>
 <table class="form-table">
 <tr valign="top">
 <th scope="row"><?php _e('Optimize HTML Code?','autoptimize'); ?></th>
@@ -95,7 +98,10 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 </tr>
 </table>
 
-<h2><?php _e('JavaScript Options','autoptimize'); ?></h2>
+</li>
+
+<li class="itemDetail">
+<h2 class="itemTitle"><?php _e('JavaScript Options','autoptimize'); ?></h2>
 <table class="form-table">
 <tr valign="top">
 <th scope="row"><?php _e('Optimize JavaScript Code?','autoptimize'); ?></th>
@@ -130,7 +136,10 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 </tr>
 </table>
 
-<h2><?php _e('CSS Options','autoptimize'); ?></h2>
+</li>
+
+<li class="itemDetail">
+<h2 class="itemTitle"><?php _e('CSS Options','autoptimize'); ?></h2>
 <table class="form-table">
 <tr valign="top">
 <th scope="row"><?php _e('Optimize CSS Code?','autoptimize'); ?></th>
@@ -179,7 +188,10 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 </tr>
 </table>
 
-<h2><?php _e('CDN Options','autoptimize'); ?></h2>
+</li>
+
+<li class="itemDetail">
+<h2 class="itemTitle"><?php _e('CDN Options','autoptimize'); ?></h2>
 <table class="form-table">
 <tr valign="top">
 <th scope="row"><?php _e('CDN Base URL','autoptimize'); ?></th>
@@ -188,7 +200,10 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 </tr>
 </table>
 
-<h2 class="hidden ao_adv"><?php _e('Cache Info','autoptimize'); ?></h2>
+</li>
+
+<li class="itemDetail hidden ao_adv">
+<h2 class="itemTitle"><?php _e('Cache Info','autoptimize'); ?></h2>
 <table class="form-table" >
 <tr valign="top" class="hidden ao_adv">
 <th scope="row"><?php _e('Cache folder','autoptimize'); ?></th>
@@ -218,6 +233,10 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 <?php _e('By default files saved are static css/js, uncheck this option if your webserver doesn\'t properly handle the compression and expiry.','autoptimize'); ?></label></td>
 </tr>
 </table>
+</li>
+
+</ul>
+
 <input type="hidden" id="autoptimize_show_adv" name="autoptimize_show_adv" value="<?php echo get_option('autoptimize_show_adv','0'); ?>">
 
 <p class="submit">
@@ -235,6 +254,15 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 .autoptimize_banner ul li {
     font-size:medium;
     text-align:center;
+}
+.itemDetail {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin: 15px 10px 10px 0;
+}
+.itemTitle {
+    margin-top: 0;
 }
 .unslider {
     position:relative;
@@ -262,6 +290,9 @@ if (get_option('autoptimize_show_adv','0')=='1') {
 .unslider-arrow.prev {
     padding: 3px 4px 3px 2px;
 }
+.unslider-arrow.next {
+    right: 0px;
+}
 .unslider-arrow.prev::before {
     content: "\f341";
 }
@@ -269,7 +300,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
     content: "\f345";
 }
 </style>
-<div style="float:right;width:30%" id="autoptimize_admin_feed" class="hidden">
+<div id="autoptimize_admin_feed" class="hidden">
     <div class="autoptimize_banner hidden">
       <ul>
     <?php
@@ -326,7 +357,7 @@ if (get_option('autoptimize_show_adv','0')=='1') {
         check_ini_state();
 
         jQuery('#autoptimize_admin_feed').fadeTo("slow",1).show();
-        jQuery('.autoptimize_banner').unslider({autoplay:true, delay:5000, infinite: true, arrows:{prev:'<a class="unslider-arrow prev"></a>', next:'<a class="unslider-arrow next"></a>'}}).fadeTo("slow",1).show();
+        jQuery('.autoptimize_banner').unslider({autoplay:true, delay:3500, infinite: false, arrows:{prev:'<a class="unslider-arrow prev"></a>', next:'<a class="unslider-arrow next"></a>'}}).fadeTo("slow",1).show();
 
         jQuery( "#feed_dropdown" ).change(function() {
             jQuery("#futtta_feed").fadeTo(0,0);
@@ -429,6 +460,13 @@ if (get_option('autoptimize_show_adv','0')=='1') {
         jQuery("#feed_dropdown").val(id);
         jQuery.cookie(cookiename,id,{ expires: 365 });
     }
+<?php
+if (get_option('autoptimize_show_adv','0')=='1') {
+    ?>
+    jQuery( ".ao_adv" ).show();
+<?php
+}
+?>
 </script>
 </div>
 
