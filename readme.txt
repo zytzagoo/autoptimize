@@ -69,7 +69,7 @@ While "look only in head" still works, it is now (since Autoptimize 2.0.0) no lo
 
 = So should I aggregate inline CSS/ JS? =
 
- Before Autoptimize 2.0.0, inline code was always optimized with all CSS pushed in the head-section and all JS at the end with a defer-flag. This often caused 2 problems; the priority of inline CSS got lost and inline JS could contain page- or request-specific code which broke Autoptimize's caching mechanism leading to too many cached files and the minification running over and over. This is why as from 2.0.0 by default inline code is not optimized (except for those upgrading from previous versions). Additionally, to avoid inline JS breaking because the optimized JS is not available, JS is forced in head by default. If you want to squeeze out as much performance as possible, you should indeed tick the "aggregate inline"-options and disable "force JS into head", while off course keeping an eye out for the disadvantages listed above.
+Before Autoptimize 2.0.0, inline code was always optimized with all CSS pushed in the head-section and all JS at the end with a defer-flag. This often caused 2 problems; the priority of inline CSS got lost and inline JS could contain page- or request-specific code which broke Autoptimize's caching mechanism leading to too many cached files and the minification running over and over. This is why as from 2.0.0 by default inline code is not optimized (except for those upgrading from previous versions). Additionally, to avoid inline JS breaking because the optimized JS is not available, JS is forced in head by default. If you want to squeeze out as much performance as possible, you should indeed tick the "aggregate inline"-options and disable "force JS into head", while off course keeping an eye out for the disadvantages listed above.
 
 = What can I do with the API? =
 
@@ -77,7 +77,7 @@ A whole lot; there are filters you can use to conditionally disable Autoptimize 
 
 = How can I use the code in autoptimize_helper.php_example? =
 
- Although you could add the code to your theme's functions.php, it would get overwritten with your next theme update. Therefor it is better to either create a helper plugin of your own or to simply use [the Code Snippets plugin](https://wordpress.org/plugins/code-snippets/) to manage any custom code.
+Although you could add the code to your theme's functions.php, it would get overwritten with your next theme update. Therefor it is better to either create a helper plugin of your own or to simply use [the Code Snippets plugin](https://wordpress.org/plugins/code-snippets/) to manage any custom code.
 
 = How does CDN work? =
 
@@ -133,6 +133,7 @@ If you are running Apache, the htaccess file written by Autoptimize can in some 
 = I get no error, but my pages are not optimized at all? =
 
 Autoptimize does a number of checks before actually optimizing. When one of the following is true, your pages won't be optimized:
+* when in the customizer
 * if there is no opening `<html` tag
 * if there is `<xsl:stylesheet` in the response (indicating the output is not HTML but XML)
 * if there is `<html amp` in the response (as AMP-pages are optimized already)
@@ -152,7 +153,7 @@ function pagebuilder_noptimize() {
   if (is_user_logged_in()) {
     return true;
   } else {
-	return false;
+    return false;
   }
 }
 `
@@ -223,14 +224,15 @@ Just [fork Autoptimize on Github](https://github.com/futtta/autoptimize) and cod
 = 2.1.0 =
 * new: Autoptimize now appears in admin-toolbar with an easy view on cache size and the possibility to purge the cache (pass `false` to `autoptimize_filter_toolbar_show` filter to disable), a big thanks to [Pablo Custo](https://github.com/pablocusto) for his hard work on this nice feature!
 * new: An extra "More Optimization"-tab is shown (can be hidden with ´autoptimize_filter_show_partner_tabs´-filter) with information about related optimization tools- and services.
-* new: If cache size becomes too big, a mail will be sent to the site admin (pass `false` to `autoptimize_filter_cachecheck_sendmail` filter to disable or pass alternative email to the `autoptimize_filter_cachecheck_mailto` filter)
+* new: If cache size becomes too big, a mail will be sent to the site admin (pass `false` to `autoptimize_filter_cachecheck_sendmail` filter to disable or pass alternative email to the `autoptimize_filter_cachecheck_mailto` filter to change email-address)
+* improvement: admin GUI updated (again; thanks Pablo!) with some responsiveness added in the mix (not showing the right hand column on smaller screen-sizes)
 * Misc. bugfixes & small improvements (see [commit-log on GitHub](https://github.com/futtta/autoptimize/commits/master))
 * Tested and confirmed working on WordPress 4.6 beta 4
 
-  = 2.0.2 =
- * bugfix: disallow moving non-aggregated JS by default (can be re-enabled by passing false to the `autoptimize_filter_js_unmovable`)
- * bugfix: hook autoptimize_action_cachepurged into init to avoid ugly error-message for ZenCache (Comet Cache) users
- * bugfix to allow for Autoptimize to work with PHP 5.2 (although [you really should upgrade](http://blog.futtta.be/2016/03/15/why-would-you-still-be-on-php-5-2/))
+= 2.0.2 =
+* bugfix: disallow moving non-aggregated JS by default (can be re-enabled by passing false to the `autoptimize_filter_js_unmovable`)
+* bugfix: hook autoptimize_action_cachepurged into init to avoid ugly error-message for ZenCache (Comet Cache) users
+* bugfix to allow for Autoptimize to work with PHP 5.2 (although [you really should upgrade](http://blog.futtta.be/2016/03/15/why-would-you-still-be-on-php-5-2/))
 
 = 2.0.1 =
 * Improvement: Autoptimize now also tries to purge WP Engine cache when AO's cache is cleared
@@ -295,7 +297,7 @@ First of all; Happy holidays, all the best for 2015!!
 * "Inline and defer CSS" allows one to specify which "above the fold CSS" should be inlined, while the normal optimized CSS is deferred.
 * Inlined Base64-encoded background Images will now be cached as well and the threshold for inlining these images has been bumped up to 4096 bytes (from 2560).
 * Separate cache-directories for CSS and JS in /wp-content/cache/autoptimize, which should result in faster cache pruning (and in some cases possibly faster serving of individual aggregated files).
-* CSS is now added before the <title>-tag, JS before </body> (and after </title> when forced in head). This can be overridden in the API.
+* Autoptimized CSS is now injected before the <title>-tag, JS before </body> (and after </title> when forced in head). This can be overridden in the API.
 * Some usability improvements of the administration-page
 * Multiple hooks added to the API a.o. filters to not aggregate inline CSS or JS and filters to aggregate but not minify CSS or JS.
 * Updated translations for Dutch, French, German, Persian and Polish and new translations for Brazilian Portuguese (thanks to [Leonardo Antonioli](http://tobeguarany.com/)) and Turkish (kudo's [Baris Unver](http://beyn.org/))
