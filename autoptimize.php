@@ -162,9 +162,16 @@ function autoptimize_do_buffering($doing_tests = false) {
         // Allows blocking of autoptimization on your own terms regardless of above decisions
         $ao_noptimize = (bool) apply_filters( 'autoptimize_filter_noptimize', $ao_noptimize );
 
-        // We only buffer the frontend requests (and then only if not a feed and not turned off explicitly)
+        // Check for site being previewed in the Customizer (available since WP 4.0)
+        $is_customize_preview = false;
+        if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
+            $is_customize_preview = is_customize_preview();
+        }
+
+        // We only buffer the frontend requests (and then only if not a feed and not turned off explicitly and not when
+        // being previewed in Customizer)
         // TODO/FIXME: Tests throw a notice here since we're calling is_feed() without the main query being ran
-        $do_buffering = ( ! is_admin() && ! is_feed() && ! $ao_noptimize );
+        $do_buffering = ( ! is_admin() && ! is_feed() && ! $ao_noptimize && ! $is_customize_preview );
     }
 
     return $do_buffering;
