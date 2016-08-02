@@ -169,10 +169,10 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
         <?php if (get_option('autoptimize_show_adv','0')=='1') { ?>
             <a href="javascript:void(0);" id="ao_show_adv" class="button" style="display:none;"><span><?php _e("Show advanced settings","autoptimize") ?></span></a>
             <a href="javascript:void(0);" id="ao_hide_adv" class="button"><span><?php _e("Hide advanced settings","autoptimize") ?></span></a>
+            <style>tr.ao_adv{display:table-row;} li.ao_adv{display:list-item;}</style>
         <?php } else { ?>
             <a href="javascript:void(0);" id="ao_show_adv" class="button"><span><?php _e("Show advanced settings","autoptimize") ?></span></a>
             <a href="javascript:void(0);" id="ao_hide_adv" class="button" style="display:none;"><span><?php _e("Hide advanced settings","autoptimize") ?></span></a>
-            <style>tr.ao_adv{display:table-row;} li.ao_adv{display:list-item;}</style>
         <?php } ?>
         </span>
         </h1>
