@@ -1,5 +1,4 @@
 <?php
-
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /*
@@ -20,11 +19,11 @@ if ( is_admin() ) {
 function ao_cachechecker_setup() {
 	$doCacheCheck = (bool) apply_filters( 'autoptimize_filter_cachecheck_do', true );
 	$cacheCheckSchedule = wp_get_schedule( 'ao_cachechecker' );
-	if ( ! $cacheCheckSchedule && $doCacheCheck ) {
-		$AOCCfreq = apply_filters( 'autoptimize_filter_cachecheck_frequency', 'daily' );
-		if ( ! in_array( $AOCCfreq, array( 'hourly', 'daily', 'monthly' ) ) ) {
-			$AOCCfreq = 'daily';
-		}
+	$AOCCfreq = apply_filters( 'autoptimize_filter_cachecheck_frequency', 'daily' );
+	if ( ! in_array( $AOCCfreq, array( 'hourly', 'daily', 'monthly' ) ) ) {
+		$AOCCfreq = 'daily';
+	}
+	if ( $doCacheCheck && ( ! $cacheCheckSchedule || $cacheCheckSchedule !== $AOCCfreq ) ) {
 		wp_schedule_event( time(), $AOCCfreq, 'ao_cachechecker' );
 	} else if ( $cacheCheckSchedule && ! $doCacheCheck ) {
 		wp_clear_scheduled_hook( 'ao_cachechecker' );
@@ -37,18 +36,30 @@ function ao_cachechecker_cronjob() {
 	$doCacheCheck = (bool) apply_filters( 'autoptimize_filter_cachecheck_do', true );
 	$statArr = autoptimizeCache::stats();
 	$cacheSize = round( $statArr[1] / 1024 );
-	if ( ( $cacheSize > $maxSize ) && $doCacheCheck ) {
+	if ( ( $cacheSize > $maxSize ) && ( $doCacheCheck ) ) {
 		update_option( 'autoptimize_cachesize_notice', true );
+		if ( apply_filters( 'autoptimize_filter_cachecheck_sendmail', true ) ) {
+			$ao_mailto = apply_filters( 'autoptimize_filter_cachecheck_mailto', get_option( 'admin_email', '' ) );
+			$ao_mailsubject = __( 'Autoptimize cache size warning', 'autoptimize' );
+			$ao_mailbody = __('Autoptimize\'s cache size is getting big, consider purging the cache. Have a look at https://wordpress.org/plugins/autoptimize/faq/ to see how you can keep the cache size under control.', 'autoptimize' );
+
+			if ( ! empty( $ao_mailto ) ) {
+				$ao_mailresult = wp_mail( $ao_mailto, $ao_mailsubject, $ao_mailbody );
+				if ( ! $ao_mailresult ) {
+					error_log( 'Autoptimize could not send cache size warning mail.' );
+				}
+			}
+		}
 	}
 }
 
 add_action( 'admin_notices', 'autoptimize_cachechecker_notice' );
 function autoptimize_cachechecker_notice() {
-	if ( (bool) get_option('autoptimize_cachesize_notice', false ) ) {
+	if ( (bool) get_option( 'autoptimize_cachesize_notice', false ) ) {
 		$statArr = autoptimizeCache::stats();
 		$cacheSize = round( $statArr[1] / 1024 );
 		echo '<div class="update-nag">';
-		_e('Autoptimize\'s cache size is getting big, consider purging the cache.<br /><br />Have a look at <a href="https://wordpress.org/plugins/autoptimize/faq/" target="_blank">the Autoptimize FAQ</a> to see how you can keep the cache size under control.', 'autoptimize' );
+		_e( 'Autoptimize\'s cache size is getting big, consider purging the cache.<br /><br />Have a look at <a href="https://wordpress.org/plugins/autoptimize/faq/" target="_blank">the Autoptimize FAQ</a> to see how you can keep the cache size under control.', 'autoptimize' );
 		echo '</div>';
 		update_option( 'autoptimize_cachesize_notice', false );
 	}
