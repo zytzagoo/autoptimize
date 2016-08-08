@@ -67,7 +67,7 @@ if ($autoptimize_db_version !== $autoptimize_version) {
         add_action( 'admin_notices', 'autoptimize_install_config_notice' );
     } else {
         // updating, include the update-code
-        include AUTOPTIMIZE_PLUGIN_DIR . '/classlesses/autoptimizeUpdateCode.php';
+        include AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizeUpdateCode.php';
     }
 
     update_option( 'autoptimize_version', $autoptimize_version );

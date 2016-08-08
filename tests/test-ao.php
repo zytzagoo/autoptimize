@@ -576,7 +576,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
 
     public function test_wpengine_cache_flush()
     {
-        include_once AUTOPTIMIZE_PLUGIN_DIR . '/classlesses/autoptimizePageCacheFlush.php';
+        include_once AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizePageCacheFlush.php';
 
         // Creating a mock so that we can get past class_exists() and method_exists() checks `autoptimize_flush_pagecache()`...
         $stub = $this->getMockBuilder('WpeCommon')->disableAutoload()
@@ -598,7 +598,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
     // Test with the `autoptimize_flush_wpengine_aggressive` filter
     public function test_wpengine_cache_flush_agressive()
     {
-        include_once AUTOPTIMIZE_PLUGIN_DIR . '/classlesses/autoptimizePageCacheFlush.php';
+        include_once AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizePageCacheFlush.php';
 
         // Creating a mock so that we can get past class_exists() and method_exists() checks `autoptimize_flush_pagecache()`...
         $stub = $this->getMockBuilder('WpeCommon')->disableAutoload()
