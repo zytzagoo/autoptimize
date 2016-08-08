@@ -75,8 +75,11 @@ if ($autoptimize_db_version !== $autoptimize_version) {
 }
 
 // Load translations
-$plugin_dir = AUTOPTIMIZE_PLUGIN_DIR . '/localization';
-load_plugin_textdomain( 'autoptimize', false, $plugin_dir );
+function autoptimize_load_plugin_textdomain() {
+    $plugin_dir = AUTOPTIMIZE_PLUGIN_DIR . 'localization';
+    load_plugin_textdomain( 'autoptimize', false, $plugin_dir );
+}
+add_action( 'init', 'autoptimize_load_plugin_textdomain' );
 
 function autoptimize_uninstall(){
     autoptimizeCache::clearall();
