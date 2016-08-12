@@ -22,7 +22,7 @@ class autoptimizeCache
             if ( in_array( $ext, array( 'js', 'css' ) ) ) {
                 $this->filename = $ext . '/' . AUTOPTIMIZE_CACHEFILE_PREFIX . $md5 . '.' . $ext;
             } else {
-                $this->filename = '/' . AUTOPTIMIZE_CACHEFILE_PREFIX . $md5 . '.' . $ext;
+                $this->filename = AUTOPTIMIZE_CACHEFILE_PREFIX . $md5 . '.' . $ext;
             }
         }
     }
