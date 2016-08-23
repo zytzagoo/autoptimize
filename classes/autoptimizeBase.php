@@ -298,7 +298,8 @@ abstract class autoptimizeBase
         } else {
             $this->content .= $payload;
             if ( ! $warned ) {
-                $this->content .= "<!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `" . $replaceTag[0] . "` missing --><!--/noptimize-->";
+                $tag_display = str_replace( array( '<', '>', '', $replaceTag[0] ) );
+                $this->content .= "<!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `" . $tag_display . "` missing --><!--/noptimize-->";
                 $warned = true;
             }
         }
