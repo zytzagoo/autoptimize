@@ -142,7 +142,7 @@ MARKUP;
     <!--[if (gte IE 6)&(lte IE 8)]>
         <script type="text/javascript" src="http://example.org/wp-content/themes/my-theme/js/vendor/respond.min.js"></script>
     <![endif]-->
-<script type="text/javascript" src="http://cdn.example.org/wp-content/cache/autoptimize/js/autoptimize_47db61d1b156c88b4952aee1229599cc.js"></script></head>
+</head>
 
 <body class="single single-post">
 
@@ -165,7 +165,7 @@ MARKUP;
 
 
 
-</body>
+<script type="text/javascript" defer src="http://cdn.example.org/wp-content/cache/autoptimize/js/autoptimize_47db61d1b156c88b4952aee1229599cc.js"></script></body>
 </html>
 MARKUP;
 
@@ -187,7 +187,7 @@ MARKUP;
     <!--[if (gte IE 6)&(lte IE 8)]>
         <script type="text/javascript" src="http://example.org/wp-content/themes/my-theme/js/vendor/respond.min.js"></script>
     <![endif]-->
-<script type="text/javascript" src="http://cdn.example.org/wp-content/cache/autoptimize/1/js/autoptimize_47db61d1b156c88b4952aee1229599cc.js"></script></head>
+</head>
 
 <body class="single single-post">
 
@@ -210,7 +210,7 @@ MARKUP;
 
 
 
-</body>
+<script type="text/javascript" defer src="http://cdn.example.org/wp-content/cache/autoptimize/1/js/autoptimize_47db61d1b156c88b4952aee1229599cc.js"></script></body>
 </html>
 MARKUP;
 
