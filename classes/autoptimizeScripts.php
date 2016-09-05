@@ -388,39 +388,39 @@ class autoptimizeScripts extends autoptimizeBase
     }
 
     // Checks against the white- and blacklists
-	private function ismergeable($tag)
+    private function ismergeable($tag)
     {
-		if ( ! empty( $this->whitelist ) ) {
-			foreach ( $this->whitelist as $match ) {
-				if (false !== strpos( $tag, $match ) ) {
-					return true;
-				}
-			}
-			// no match with whitelist
-			return false;
-		} else {
-			foreach($this->domove as $match) {
-				if ( false !== strpos( $tag, $match ) )	{
-					// Matched something
-					return false;
-				}
-			}
-
-			if ( $this->movetolast($tag) ) {
-				return false;
+        if ( ! empty( $this->whitelist ) ) {
+            foreach ( $this->whitelist as $match ) {
+                if (false !== strpos( $tag, $match ) ) {
+                    return true;
+                }
+            }
+            // no match with whitelist
+            return false;
+        } else {
+            foreach($this->domove as $match) {
+                if ( false !== strpos( $tag, $match ) ) {
+                    // Matched something
+                    return false;
+                }
             }
 
-			foreach( $this->dontmove as $match ) {
-				if ( false !== strpos( $tag, $match ) )	{
-					// Matched something
-					return false;
-				}
-			}
+            if ( $this->movetolast($tag) ) {
+                return false;
+            }
 
-			// If we're here it's safe to merge
-			return true;
-		}
-	}
+            foreach( $this->dontmove as $match ) {
+                if ( false !== strpos( $tag, $match ) ) {
+                    // Matched something
+                    return false;
+                }
+            }
+
+            // If we're here it's safe to merge
+            return true;
+        }
+    }
 
     // Checks agains the blacklist
     private function ismovable($tag)

@@ -78,7 +78,7 @@ function ao_partners() {
             <?php getAOPartnerFeed(); ?>
         </div>
     </div>
-	<?php
+    <?php
 }
 
 function getAOPartnerFeed() {
