@@ -51,9 +51,9 @@ switch ( $autoptimize_major_version ) {
         $majorUp = true;
     case '1.9':
         /*
- +		* 2.0 will not aggregate inline CSS/JS by default, but we want users
- +		* upgrading from 1.9 to keep their inline code aggregated by default.
-  		*/
+        * 2.0 will not aggregate inline CSS/JS by default, but we want users
+        * upgrading from 1.9 to keep their inline code aggregated by default.
+        */
         if ( ! is_multisite() ) {
             update_option( 'autoptimize_css_include_inline', 'on' );
             update_option( 'autoptimize_js_include_inline', 'on' );

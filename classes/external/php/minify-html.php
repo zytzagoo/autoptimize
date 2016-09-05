@@ -33,7 +33,7 @@ class Minify_HTML {
      *
      * 'xhtml' : (optional boolean) should content be treated as XHTML1.0? If
      * unset, minify will sniff for an XHTML doctype.
-	 *
+     *
      * 'keepComments' : (optional boolean) should the HTML comments be kept
      * in the HTML Code?
      *
@@ -60,7 +60,7 @@ class Minify_HTML {
      *
      * 'xhtml' : (optional boolean) should content be treated as XHTML1.0? If
      * unset, minify will sniff for an XHTML doctype.
-	 *
+     *
      * 'xhtml' : (optional boolean) should content be treated as XHTML1.0? If
      * unset, minify will sniff for an XHTML doctype.
      *
@@ -111,11 +111,11 @@ class Minify_HTML {
             ,$this->_html);
 
         // remove HTML comments (not containing IE conditional comments).
-		if  ($this->_keepComments == false) {
-			$this->_html = preg_replace_callback(
-				'/<!--([\\s\\S]*?)-->/'
-				,array($this, '_commentCB')
-				,$this->_html);
+        if  ($this->_keepComments == false) {
+            $this->_html = preg_replace_callback(
+                '/<!--([\\s\\S]*?)-->/'
+                ,array($this, '_commentCB')
+                ,$this->_html);
         }
 
         // replace PREs with placeholders
@@ -129,7 +129,7 @@ class Minify_HTML {
             ,array($this, '_removeTextareaCB')
             ,$this->_html);
 
-		// replace data: URIs with placeholders
+        // replace data: URIs with placeholders
         $this->_html = preg_replace_callback(
             '/(=("|\')data:.*\\2)/Ui'
             ,array($this, '_removeDataURICB')
@@ -183,7 +183,7 @@ class Minify_HTML {
     protected $_placeholders = array();
     protected $_cssMinifier = null;
     protected $_jsMinifier = null;
-	protected $_keepComments = false;
+    protected $_keepComments = false;
 
     protected function _outsideTagCB($m)
     {
@@ -200,7 +200,7 @@ class Minify_HTML {
         return $this->_reservePlace($m[1]);
     }
 
-	protected function _removeDataURICB($m)
+    protected function _removeDataURICB($m)
     {
         return $this->_reservePlace($m[1]);
     }

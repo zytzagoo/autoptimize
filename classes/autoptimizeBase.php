@@ -100,7 +100,7 @@ abstract class autoptimizeBase
 
         $path = str_replace( '//', '/', WP_ROOT_DIR . $path );
         return $path;
-	}
+    }
 
     // needed for WPML-filter
     protected function ao_getDomain($in) {
@@ -237,7 +237,7 @@ abstract class autoptimizeBase
             $comments_out = $comments_in;
         }
         return $comments_out;
-	}
+    }
 
     public function url_replace_cdn($url)
     {

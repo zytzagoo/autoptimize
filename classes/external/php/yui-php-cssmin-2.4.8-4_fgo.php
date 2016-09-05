@@ -344,8 +344,8 @@ class CSSmin
         // <percentage> data type: https://developer.mozilla.org/en-US/docs/Web/CSS/percentage
         $css = preg_replace('/([^\\\\]\:|\s)0(?:em|ex|ch|rem|vw|vh|vm|vmin|cm|mm|in|px|pt|pc|%)/iS', '${1}0', $css);
 
-		// 0% step in a keyframe? restore the % unit
-		$css = preg_replace_callback('/(@[a-z\-]*?keyframes[^\{]+\{)(.*?)(\}\})/iS', array($this, 'replace_keyframe_zero'), $css);
+        // 0% step in a keyframe? restore the % unit
+        $css = preg_replace_callback('/(@[a-z\-]*?keyframes[^\{]+\{)(.*?)(\}\})/iS', array($this, 'replace_keyframe_zero'), $css);
 
         // Replace 0 0; or 0 0 0; or 0 0 0 0; with 0.
         $css = preg_replace('/\:0(?: 0){1,3}(;|\}| \!)/', ':0$1', $css);
@@ -384,7 +384,7 @@ class CSSmin
         // Add "/" back to fix Opera -o-device-pixel-ratio query
         $css = preg_replace('/'. self::QUERY_FRACTION .'/', '/', $css);
 
-		// Replace multiple semi-colons in a row by a single one
+        // Replace multiple semi-colons in a row by a single one
         // See SF bug #1980989
         $css = preg_replace('/;;+/', ';', $css);
 
@@ -411,8 +411,8 @@ class CSSmin
 
         // restore preserved comments and strings in reverse order
         for ($i = count($this->preserved_tokens) - 1; $i >= 0; $i--) {
-			  $css = preg_replace('/' . self::TOKEN . $i . '___/', $this->preserved_tokens[$i], $css, 1);
-			  // $css.=$this->preserved_tokens[$i];
+            $css = preg_replace('/' . self::TOKEN . $i . '___/', $this->preserved_tokens[$i], $css, 1);
+            // $css .= $this->preserved_tokens[$i];
         }
 
         // Trim the final string (for any leading or trailing white spaces)
@@ -470,8 +470,8 @@ class CSSmin
             if ($found_terminator) {
                 $token = $this->str_slice($css, $start_index, $end_index);
                 if (strpos($token,"<svg")===false && strpos($token,'svg+xml')===false) {
-					$token = preg_replace('/\s+/', '', $token);
-				}
+                    $token = preg_replace('/\s+/', '', $token);
+                }
                 $this->preserved_tokens[] = $token;
 
                 $preserver = 'url(' . self::TOKEN . (count($this->preserved_tokens) - 1) . '___)';
@@ -602,13 +602,13 @@ class CSSmin
         return 'flex:'.self::TOKEN . (count($this->preserved_tokens) - 1) . '___';
     }
 
-	private function preserve_old_IE_specific_matrix_definition($matches)
-	{
-		$this->preserved_tokens[] = $matches[1];
-		return 'filter:progid:DXImageTransform.Microsoft.Matrix(' . self::TOKEN . (count($this->preserved_tokens) - 1) . '___' . ')';
+    private function preserve_old_IE_specific_matrix_definition($matches)
+    {
+        $this->preserved_tokens[] = $matches[1];
+        return 'filter:progid:DXImageTransform.Microsoft.Matrix(' . self::TOKEN . (count($this->preserved_tokens) - 1) . '___' . ')';
     }
 
-	private function replace_keyframe_zero($matches)
+    private function replace_keyframe_zero($matches)
     {
         return $matches[1] . preg_replace('/0(\{|,[^\)\{]+\{)/', '0%$1', $matches[2]) . $matches[3];
     }

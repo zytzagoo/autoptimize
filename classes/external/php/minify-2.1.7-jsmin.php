@@ -273,12 +273,12 @@ class JSMin {
             return true;
         }
 
-	// we have to check for a preceding keyword, and we don't need to pattern
-	// match over the whole output.
-	$recentOutput = substr($this->output, -10);
+    // we have to check for a preceding keyword, and we don't need to pattern
+    // match over the whole output.
+    $recentOutput = substr($this->output, -10);
 
-	// check if return/typeof directly precede a pattern without a space
-	foreach (array('return', 'typeof') as $keyword) {
+    // check if return/typeof directly precede a pattern without a space
+    foreach (array('return', 'typeof') as $keyword) {
             if ($this->a !== substr($keyword, -1)) {
                 // certainly wasn't keyword
                 continue;
@@ -290,13 +290,13 @@ class JSMin {
             }
         }
 
-	// check all keywords
-	if ($this->a === ' ' || $this->a === "\n") {
-		if (preg_match('~(^|[\\s\\S])(?:case|else|in|return|typeof)$~', $recentOutput, $m)) {
-			if ($m[1] === '' || !$this->isAlphaNum($m[1])) {
-				return true;
-			}
-		}
+    // check all keywords
+    if ($this->a === ' ' || $this->a === "\n") {
+        if (preg_match('~(^|[\\s\\S])(?:case|else|in|return|typeof)$~', $recentOutput, $m)) {
+            if ($m[1] === '' || !$this->isAlphaNum($m[1])) {
+                return true;
+            }
+        }
     }
 
         return false;
