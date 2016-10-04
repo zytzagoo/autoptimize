@@ -52,6 +52,8 @@ function autoptimize_flush_pagecache() {
                 WpeCommon::$wpe_method();
             }
         }
+    } elseif ( function_exists( 'sg_cachepress_purge_cache' ) ) {
+        sg_cachepress_purge_cache();
     } elseif ( file_exists ( WP_CONTENT_DIR . '/wp-cache-config.php' ) && function_exists( 'prune_super_cache' ) ) {
         // fallback for WP-Super-Cache
         global $cache_path;
