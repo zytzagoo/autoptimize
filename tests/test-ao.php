@@ -746,4 +746,39 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
         $actual_without_ssl = $mock->url_replace_cdn($test_link);
         $this->assertEquals($expected_without_ssl, $actual_without_ssl);
     }
+
+    public function provider_cssmin_issues()
+    {
+        return array(
+            // https://wordpress.org/support/topic/css-minify-breaks-calc-subtract-operation-in-css/?replies=2#post-6610027
+            array(
+                // input
+                'width: calc(33.33333% - ((0.75em*2)/3));',
+                // expected output
+                'width:calc(33.33333% - ((0.75em*2)/3));'
+            ),
+            // https://github.com/tubalmartin/YUI-CSS-compressor-PHP-port/issues/22#issuecomment-251401341
+            array(
+                'input { width: calc(100% - (1em*1.5) - 2em); }',
+                'input{width:calc(100% - (1em*1.5) - 2em)}'
+            ),
+            // https://github.com/tubalmartin/YUI-CSS-compressor-PHP-port/issues/26
+            array(
+                '.px { flex: 1 1 0px; }, .percent {flex: 1 1 0%}',
+                '.px{flex:1 1 0px},.percent{flex:1 1 0%}'
+            )
+        );
+    }
+
+    /**
+     * @dataProvider provider_cssmin_issues
+     * @covers CSSmin::replace_calc
+     */
+    public function test_cssmin_issues($input, $expected)
+    {
+        $minifier = new CSSmin(false); // no need to raise limits for now
+
+        $actual = $minifier->run($input);
+        $this->assertEquals($expected, $actual);
+    }
 }
