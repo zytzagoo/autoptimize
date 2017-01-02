@@ -722,7 +722,8 @@ class autoptimizeStyles extends autoptimizeBase
         // Loosened the regex to fix certain edge cases (spaces around `url`)
         if ( preg_match_all( self::ASSETS_REGEX, $code, $matches ) ) {
             $file = str_replace( WP_ROOT_DIR, '/', $file );
-            $dir  = dirname( $file ); // Like /wp-content
+            $file = str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', $file );
+            $dir = dirname( $file ); // Like /themes/expound/css
 
             // $dir should not contain backslashes, since it's used to replace
             // urls, but it can contain them when running on Windows because
@@ -746,7 +747,7 @@ class autoptimizeStyles extends autoptimizeBase
                     continue;
                 } else {
                     // Relative URL
-                    $newurl = preg_replace( '/https?:/', '', str_replace( ' ', '%20', AUTOPTIMIZE_WP_ROOT_URL . str_replace( '//', '/', $dir . '/' . $url ) ) );
+                    $newurl = preg_replace( '/https?:/', '', str_replace( ' ', '%20', AUTOPTIMIZE_WP_CONTENT_URL . str_replace( '//', '/', $dir . '/' . $url ) ) );
 
                     $hash = md5( $url );
                     $code = str_replace( $matches[0][$k], $hash, $code );
