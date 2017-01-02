@@ -144,6 +144,7 @@ class autoptimizeScripts extends autoptimizeBase
                         continue;
                     }
 
+                    $origTag = null;
                     $url = current( explode( '?', $source[2], 2 ) );
                     $path = $this->getpath($url);
                     if ( false !== $path && preg_match( '#\.js$#', $path ) && $this->ismergeable($tag) ) {
@@ -151,7 +152,7 @@ class autoptimizeScripts extends autoptimizeBase
                         $this->scripts[] = $path;
                     } else {
                         // non-mergeable script (excluded or dynamic or external)
-                        if (is_array( $excludeJS ) ) {
+                        if ( is_array( $excludeJS ) ) {
                             // should we add flags?
                             $origTag = $tag;
                             foreach ( $excludeJS as $exclTag => $exclFlags) {
