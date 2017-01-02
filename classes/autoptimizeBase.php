@@ -37,7 +37,6 @@ abstract class autoptimizeBase
         }
 
         $site_host = parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST );
-        $content_host = parse_url( AUTOPTIMIZE_WP_ROOT_URL, PHP_URL_HOST );
 
         // Normalize
         if (0 === strpos( $url, '//' ) ) {
@@ -55,12 +54,8 @@ abstract class autoptimizeBase
             }
         }
 
-        if ($site_host !== $content_host) {
-            $url = str_replace( AUTOPTIMIZE_WP_CONTENT_URL, AUTOPTIMIZE_WP_SITE_URL . AUTOPTIMIZE_WP_CONTENT_NAME, $url );
-        }
-
         // First check; hostname wp site should be hostname of url
-        $url_host = @parse_url( $url, PHP_URL_HOST );
+        $url_host = @parse_url($url, PHP_URL_HOST);
         if ( $url_host !== $site_host ) {
             /*
             * first try to get all domains from WPML (if available)
@@ -94,30 +89,17 @@ abstract class autoptimizeBase
 
         // Try to remove "wp root url" from url while not minding http<>https
         $tmp_ao_root = preg_replace( '/https?:/', '', AUTOPTIMIZE_WP_ROOT_URL );
-
-        if ($site_host !== $content_host) {
-            // as we replaced the content-domain with the site-domain, we should match against that
-            $tmp_ao_root = preg_replace( '/https?:/', '', AUTOPTIMIZE_WP_SITE_URL );
-        }
-
         $tmp_url     = preg_replace( '/https?:/', '', $url );
         $path        = str_replace( $tmp_ao_root, '', $tmp_url );
 
-        // if path starts with :// or //, this is not a URL in the WP context and we have to assume we can't aggregate
+        // Final check; if path starts with :// or //, this is not a URL in the WP context and we have to assume we can't aggregate
         if ( preg_match( '#^:?//#', $path ) ) {
             /** External script/css (adsense, etc) */
             return false;
         }
 
-        // prepend with WP_ROOT_DIR to have full path to file
         $path = str_replace( '//', '/', WP_ROOT_DIR . $path );
-
-        // final check: does file exist and is it readable
-        if ( file_exists( $path ) && is_readable( $path ) ) {
-            return $path;
-        } else {
-            return false;
-        }
+        return $path;
     }
 
     // needed for WPML-filter
