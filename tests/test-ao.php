@@ -781,4 +781,46 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
         $actual = $minifier->run($input);
         $this->assertEquals($expected, $actual);
     }
+
+    public function provider_getpath()
+    {
+        return array(
+            // These all don't really exist, and getpath() returns
+            // false for non-existing files since upstream's 1386e4fe1d commit
+            array(
+                'img/something.svg',
+                false
+            ),
+            array(
+                '../../somewhere-else/svg.svg',
+                false
+            ),
+            array(
+                '//something/somewhere/example.png',
+                false
+            ),
+            // This file comes with core, so should exist...
+            array(
+                '/wp-includes/js/jquery/jquery.js',
+                WP_ROOT_DIR . '/wp-includes/js/jquery/jquery.js'
+            ),
+            // Is this an edge case? Look into it at some point...
+            array(
+                '',
+                WP_ROOT_DIR
+            )
+        );
+    }
+
+    /**
+     * @dataProvider provider_getpath
+     * @covers autoptimizeBase::getpath
+     */
+    public function test_getpath($input, $expected)
+    {
+        $mock = $this->getMockBuilder('autoptimizeBase')->disableOriginalConstructor()->getMockForAbstractClass();
+
+        $actual = $mock->getpath($input);
+        $this->assertEquals($expected, $actual);
+    }
 }

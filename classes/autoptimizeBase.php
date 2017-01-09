@@ -28,7 +28,7 @@ abstract class autoptimizeBase
     abstract public function getcontent();
 
     // Converts an URL to a full path
-    protected function getpath($url)
+    public function getpath($url)
     {
         $url = apply_filters( 'autoptimize_filter_cssjs_alter_url', $url );
 
