@@ -30,7 +30,7 @@ abstract class autoptimizeBase
     // Converts an URL to a full path
     protected function getpath($url)
     {
-        $url = apply_filters( 'autoptimize_filter_cssjs_alter_url', $url);
+        $url = apply_filters( 'autoptimize_filter_cssjs_alter_url', $url );
 
         if ( false !== strpos( $url, '%' ) ) {
             $url = urldecode( $url );
@@ -131,7 +131,7 @@ abstract class autoptimizeBase
         $out = parse_url( $in, PHP_URL_HOST );
 
         // fallback if parse_url does not understand the url is in fact a url
-        if (empty($out)) {
+        if ( empty( $out ) ) {
             $out = in;
         }
 
