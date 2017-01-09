@@ -804,10 +804,22 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
                 '/wp-includes/js/jquery/jquery.js',
                 WP_ROOT_DIR . '/wp-includes/js/jquery/jquery.js'
             ),
-            // Is this an edge case? Look into it at some point...
+            // Empty $url should return false
             array(
                 '',
-                WP_ROOT_DIR
+                false
+            ),
+            array(
+                false,
+                false
+            ),
+            array(
+                null,
+                false
+            ),
+            array(
+                0,
+                false
             )
         );
     }

@@ -32,6 +32,11 @@ abstract class autoptimizeBase
     {
         $url = apply_filters( 'autoptimize_filter_cssjs_alter_url', $url );
 
+        // "Empty" urls should return false
+        if ( empty( $url ) ) {
+            return false;
+        }
+
         if ( false !== strpos( $url, '%' ) ) {
             $url = urldecode( $url );
         }
