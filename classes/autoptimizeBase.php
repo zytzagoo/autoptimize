@@ -32,11 +32,6 @@ abstract class autoptimizeBase
     {
         $url = apply_filters( 'autoptimize_filter_cssjs_alter_url', $url );
 
-        // "Empty" urls should return false
-        if ( empty( $url ) ) {
-            return false;
-        }
-
         if ( false !== strpos( $url, '%' ) ) {
             $url = urldecode( $url );
         }
@@ -118,7 +113,7 @@ abstract class autoptimizeBase
         $path = str_replace( '//', '/', WP_ROOT_DIR . $path );
 
         // final check: does file exist and is it readable
-        if ( file_exists( $path ) && is_readable( $path ) ) {
+        if ( file_exists( $path ) && is_file( $path ) && is_readable( $path ) ) {
             return $path;
         } else {
             return false;
