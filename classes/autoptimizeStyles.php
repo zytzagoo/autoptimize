@@ -741,6 +741,11 @@ class autoptimizeStyles extends autoptimizeBase
                 } else {
                     $removedQuotes = false;
                 }
+
+                if ( '' === $noQurl ) { 
+                    continue;
+                }
+
                 $url = $noQurl;
                 if ( '/' === $url{0} || preg_match( '#^(https?://|ftp://|data:)#i', $url ) ) {
                     // URL is protocol-relative, host-relative or something we don't touch
