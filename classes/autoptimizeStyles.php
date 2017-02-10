@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class autoptimizeStyles extends autoptimizeBase
 {
-    const ASSETS_REGEX = '/url\s*\(\s*(?!["\']?data:)([^)]+)\s*\)/i';
+    const ASSETS_REGEX = '/url\s*\(\s*(?!["\']?data:)(?!"\#)([^)]+)\s*\)/i';
 
     private $css             = array();
     private $csscode         = array();
@@ -742,7 +742,7 @@ class autoptimizeStyles extends autoptimizeBase
                     $removedQuotes = false;
                 }
 
-                if ( '' === $noQurl ) { 
+                if ( '' === $noQurl ) {
                     continue;
                 }
 
