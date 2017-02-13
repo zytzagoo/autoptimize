@@ -835,4 +835,22 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
         $actual = $mock->getpath($input);
         $this->assertEquals($expected, $actual);
     }
+
+    // https://github.com/futtta/autoptimize/pull/81#issuecomment-278935307
+    public function test_fixurls_with_hash_only_urls()
+    {
+        $css_orig = <<<CSS
+section.clipped.clippedTop {clip-path:url("#clipPolygonTop")}
+section.clipped.clippedBottom {clip-path:url("#clipPolygonBottom")}
+.myimg {background-image: url("images/under-left-leaf.png"), url("images/over-blue-bird.png"), url("images/under-top.png"), url("images/bg-top-grunge.png");}
+CSS;
+        $css_expected = <<<CSS
+section.clipped.clippedTop {clip-path:url("#clipPolygonTop")}
+section.clipped.clippedBottom {clip-path:url("#clipPolygonBottom")}
+.myimg {background-image: url(//example.org/wp-content/themes/my-theme/images/under-left-leaf.png), url(//example.org/wp-content/themes/my-theme/images/over-blue-bird.png), url(//example.org/wp-content/themes/my-theme/images/under-top.png), url(//example.org/wp-content/themes/my-theme/images/bg-top-grunge.png);}
+CSS;
+
+        $fixurls_result = autoptimizeStyles::fixurls(ABSPATH . 'wp-content/themes/my-theme/style.css', $css_orig);
+        $this->assertEquals($css_expected, $fixurls_result);
+    }
 }
