@@ -71,9 +71,7 @@ function ao_partners() {
     <div class="wrap">
         <h1><?php _e('Autoptimize Settings','autoptimize'); ?></h1>
         <?php echo autoptimizeConfig::ao_admin_tabs(); ?>
-        <?php
-                _e("<h2>These Autoptimize power-ups and related services will improve your site's performance even more!</h2>","autoptimize");
-        ?>
+        <?php echo '<h2>' . __( "These Autoptimize power-ups and related services will improve your site's performance even more!", 'autoptimize' ) . '</h2>'; ?>
         <div>
             <?php getAOPartnerFeed(); ?>
         </div>
