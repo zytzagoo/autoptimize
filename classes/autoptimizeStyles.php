@@ -719,8 +719,8 @@ class autoptimizeStyles extends autoptimizeBase
 
     static function fixurls($file, $code)
     {
-        // Quick fix for import-troubles in e.g. arras theme
-        $code = preg_replace( '#@import ("|\')(.+?)\.css("|\')#', '@import url("${2}.css")', $code );
+        // Switch all imports to the url() syntax
+        $code = preg_replace( '#@import ("|\')(.+?)\.css.*("|\')#', '@import url("${2}.css")', $code );
 
         // Loosened the regex to fix certain edge cases (spaces around `url`)
         if ( preg_match_all( self::ASSETS_REGEX, $code, $matches ) ) {
