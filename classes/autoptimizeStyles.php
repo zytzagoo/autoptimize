@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class autoptimizeStyles extends autoptimizeBase
 {
-    const ASSETS_REGEX = '/url\s*\(\s*(?!["\']?data:)(?![\'|\"]?[\#|\%])([^)]+)\s*\)/i';
+    const ASSETS_REGEX = '/url\s*\(\s*(?!["\']?data:)(?![\'|\"]?[\#|\%|])([^)]+)\s*\)([^;},]*)/i';
 
     private $css             = array();
     private $csscode         = array();
@@ -313,6 +313,10 @@ class autoptimizeStyles extends autoptimizeBase
         // Matches and captures anything specified within the literal `url()` and excludes those containing data: URIs
         preg_match_all( self::ASSETS_REGEX, $code, $url_src_matches );
         if ( is_array( $url_src_matches ) && ! empty( $url_src_matches ) ) {
+            $mhtmlcount = 0;
+            if ( $this->datauris ) {
+                error_log(var_export($url_src_matches, true));
+            }
             foreach ( $url_src_matches[1] as $count => $original_url ) {
                 // Removes quotes and other cruft
                 $url = trim( $original_url, " \t\n\r\0\x0B\"'" );
@@ -335,7 +339,15 @@ class autoptimizeStyles extends autoptimizeBase
                             $base64data  = $datauri['base64data'];
 
                             // Add it to the list for replacement
-                            $imgreplace[$url_src_matches[1][$count]] = str_replace( $original_url, $datauri['full'], $url_src_matches[1][$count] ) . ";\n*" . str_replace( $original_url, 'mhtml:%%MHTML%%!' . $mhtmlcount, $url_src_matches[1][$count] ) . ";\n_" . $url_src_matches[1][$count] . ';';
+                            // $imgreplace[$url_src_matches[1][$count]] = str_replace( $original_url, $datauri['full'], $url_src_matches[1][$count] ) . $url_src_matches[2][$count] . ";\n*" . str_replace( $original_url, 'mhtml:%%MHTML%%!' . $mhtmlcount, $url_src_matches[1][$count] ) . $url_src_matches[2][$count] . ";\n_" . $url_src_matches[1][$count] . $url_src_matches[2][$count] . ';';
+/*
+                            error_log( $original_url );
+                            error_log( $datauri['full'] );
+                            error_log( $url_src_matches[1][$count] );
+                            error_log( $url_src_matches[2][$count] );
+ */
+                            // $imgreplace[$url_src_matches[1][$count]] = str_replace( $original_url, $datauri['full'], $url_src_matches[1][$count] ) . $url_src_matches[2][$count];
+                            $imgreplace[$url_src_matches[1][$count]] = str_replace( $original_url, $datauri['full'], $url_src_matches[1][$count] );
 
                             // Store image on the mhtml document
                             $this->mhtml .= "--_\r\nContent-Location:{$mhtmlcount}\r\nContent-Transfer-Encoding:base64\r\n\r\n{$base64data}\r\n";
@@ -722,7 +734,6 @@ class autoptimizeStyles extends autoptimizeBase
         // Switch all imports to the url() syntax
         $code = preg_replace( '#@import ("|\')(.+?)\.css.*("|\')#', '@import url("${2}.css")', $code );
 
-        // Loosened the regex to fix certain edge cases (spaces around `url`)
         if ( preg_match_all( self::ASSETS_REGEX, $code, $matches ) ) {
             $file = str_replace( WP_ROOT_DIR, '/', $file );
             $file = str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', $file );
@@ -761,9 +772,9 @@ class autoptimizeStyles extends autoptimizeBase
                     $code = str_replace( $matches[0][$k], $hash, $code );
 
                     if ( $removedQuotes ) {
-                        $replace[$hash] = "url('" . $newurl . "')";
+                        $replace[$hash] = "url('" . $newurl . "')" . $matches[2][$k];
                     } else {
-                        $replace[$hash] = 'url(' . $newurl . ')';
+                        $replace[$hash] = 'url(' . $newurl . ')' . $matches[2][$k];
                     }
                 }
             }
