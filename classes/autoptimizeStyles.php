@@ -12,7 +12,6 @@ class autoptimizeStyles extends autoptimizeBase
     private $csscode         = array();
     private $url             = array();
     private $restofcontent   = '';
-    private $mhtml           = '';
     private $datauris        = false;
     private $hashmap         = array();
     private $alreadyminified = false;
@@ -313,10 +312,6 @@ class autoptimizeStyles extends autoptimizeBase
         // Matches and captures anything specified within the literal `url()` and excludes those containing data: URIs
         preg_match_all( self::ASSETS_REGEX, $code, $url_src_matches );
         if ( is_array( $url_src_matches ) && ! empty( $url_src_matches ) ) {
-            $mhtmlcount = 0;
-            if ( $this->datauris ) {
-                error_log(var_export($url_src_matches, true));
-            }
             foreach ( $url_src_matches[1] as $count => $original_url ) {
                 // Removes quotes and other cruft
                 $url = trim( $original_url, " \t\n\r\0\x0B\"'" );
@@ -337,21 +332,12 @@ class autoptimizeStyles extends autoptimizeBase
                         if ( $is_datauri_candidate ) {
                             $datauri     = $this->build_or_get_datauri_image($ipath);
                             $base64data  = $datauri['base64data'];
-
                             // Add it to the list for replacement
-                            // $imgreplace[$url_src_matches[1][$count]] = str_replace( $original_url, $datauri['full'], $url_src_matches[1][$count] ) . $url_src_matches[2][$count] . ";\n*" . str_replace( $original_url, 'mhtml:%%MHTML%%!' . $mhtmlcount, $url_src_matches[1][$count] ) . $url_src_matches[2][$count] . ";\n_" . $url_src_matches[1][$count] . $url_src_matches[2][$count] . ';';
-/*
-                            error_log( $original_url );
-                            error_log( $datauri['full'] );
-                            error_log( $url_src_matches[1][$count] );
-                            error_log( $url_src_matches[2][$count] );
- */
-                            // $imgreplace[$url_src_matches[1][$count]] = str_replace( $original_url, $datauri['full'], $url_src_matches[1][$count] ) . $url_src_matches[2][$count];
-                            $imgreplace[$url_src_matches[1][$count]] = str_replace( $original_url, $datauri['full'], $url_src_matches[1][$count] );
-
-                            // Store image on the mhtml document
-                            $this->mhtml .= "--_\r\nContent-Location:{$mhtmlcount}\r\nContent-Transfer-Encoding:base64\r\n\r\n{$base64data}\r\n";
-                            $mhtmlcount++;
+                            $imgreplace[ $url_src_matches[1][ $count ] ] = str_replace(
+                                    $original_url,
+                                    $datauri['full'],
+                                    $url_src_matches[1][$count]
+                            );
                             $inlined = true;
                         }
                     }
@@ -374,7 +360,7 @@ class autoptimizeStyles extends autoptimizeBase
         }
 
         if ( ! empty( $imgreplace ) ) {
-            $this->debug_log( $imgreplace );
+            $this->debug_log($imgreplace);
             $code = str_replace( array_keys( $imgreplace ), array_values( $imgreplace ), $code );
         }
 
@@ -507,7 +493,6 @@ class autoptimizeStyles extends autoptimizeBase
         unset( $thiscss );
 
         // $this->csscode has all the uncompressed code now.
-        $mhtmlcount = 0;
         foreach ( $this->csscode as &$code ) {
             // Check for already-minified code
             $hash = md5( $code );
@@ -596,27 +581,9 @@ class autoptimizeStyles extends autoptimizeBase
     // Caches the CSS in uncompressed, deflated and gzipped form
     public function cache()
     {
-        if ( $this->datauris ) {
-            // MHTML Preparation
-            $this->mhtml = "/*\r\nContent-Type: multipart/related; boundary=\"_\"\r\n\r\n" . $this->mhtml . "*/\r\n";
-            $md5 = md5( $this->mhtml );
-            $cache = new autoptimizeCache($md5, 'txt');
-            if(!$cache->check()) {
-                // Cache our images for IE
-                $cache->cache($this->mhtml, 'text/plain');
-            }
-            $mhtml = AUTOPTIMIZE_CACHE_URL . $cache->getname();
-        }
-
         // CSS cache
         foreach ( $this->csscode as $media => $code ) {
             $md5 = $this->hashmap[md5( $code )];
-
-            if ( $this->datauris ) {
-                // Images for ie! Get the right url
-                $code = str_replace( '%%MHTML%%', $mhtml, $code );
-            }
-
             $cache = new autoptimizeCache($md5, 'css');
             if( ! $cache->check() ) {
                 // Cache our code
@@ -768,7 +735,10 @@ class autoptimizeStyles extends autoptimizeBase
                     // Relative URL
                     $newurl = preg_replace( '/https?:/', '', str_replace( ' ', '%20', AUTOPTIMIZE_WP_CONTENT_URL . str_replace( '//', '/', $dir . '/' . $url ) ) );
 
-                    $hash = md5( $url );
+                    // Hash the url + whatever was behind potentially for replacement
+                    // We must do this, or different css classes referencing the same bg image (but
+                    // different parts of it, say, in sprites and such) loose their stuff...
+                    $hash = md5( $url . $matches[2][$k] );
                     $code = str_replace( $matches[0][$k], $hash, $code );
 
                     if ( $removedQuotes ) {
@@ -779,8 +749,10 @@ class autoptimizeStyles extends autoptimizeBase
                 }
             }
 
-            // Replace URLs found within $code
-            $code = str_replace( array_keys( $replace ), array_values( $replace ), $code );
+            if ( ! empty( $replace ) ) {
+                // Replace URLs found within $code
+                $code = str_replace( array_keys( $replace ), array_values( $replace ), $code );
+            }
         }
 
         return $code;
