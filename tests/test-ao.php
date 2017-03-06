@@ -855,4 +855,158 @@ CSS;
         $fixurls_result = autoptimizeStyles::fixurls(ABSPATH . 'wp-content/themes/my-theme/style.css', $css_orig);
         $this->assertEquals($css_expected, $fixurls_result);
     }
+
+    public function test_background_datauri_sprites_with_fixurls()
+    {
+        $css_orig = <<<CSS
+.shadow { background:url(img/1x1.png) top center; }
+.shadow1 { background-image:url(img/1x1.png) 0 -767px repeat-x; }
+.shadow2 {background:url(img/1x1.png) top center}
+
+.test { background:url(img/1x1.png) top center; }
+.test1 { background-image:url('img/1x1.png') 0 -767px repeat-x; }
+.test2 {background:url("img/1x1.png") top center}
+
+header{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90px' height='110px' viewBox='0 0 90 110'%3E%3Cstyle%3E.a%7Bstop-color:%23FFF;%7D.b%7Bstop-color:%23B2D235;%7D.c%7Bstop-color:%23BEE7FA;%7D.d%7Bfill:%23590C15;%7D%3C/style%3E%3ClinearGradient id='c' y2='135.4' gradientUnits='userSpaceOnUse' x2='209.1' gradientTransform='rotate(-1.467 -4082.888 7786.794)' y1='205.8' x1='262'%3E%3Cstop class='b' offset='0'/%3E%3Cstop class='b' offset='.48'/%3E%3Cstop stop-color='%23829D25' offset='1'/%3E%3C/linearGradient%3E%3Cpath stroke-width='.3' d='M77.3 45.4c-3-3.5-7.1-6.5-11.6-7.8-5.1-1.5-10-.1-14.9 1.5C52 35.4 54.3 29 60 24l-4.8-5.5c-3.4 3-5.8 6.3-7.5 9.4-1.7-4.3-4.1-8.4-7.5-12C33.4 8.6 24.3 4.7 15.1 4.2c-.2 9.3 3.1 18.6 9.9 25.9 5.2 5.6 11.8 9.2 18.7 10.8-2.5.2-4.9-.1-7.7-.9-5.2-1.4-10.5-2.8-15.8-1C10.6 42.3 4.5 51.9 4 61.7c-.5 11.6 3.8 23.8 9.9 33.5 3.9 6.3 9.6 13.7 17.7 13.4 3.8-.1 7-2.1 10.7-2.7 5.2-.8 9.1 1.2 14.1 1.8 16.4 2 24.4-23.6 26.4-35.9 1.2-9.1.8-19.1-5.5-26.4z' stroke='%233E6D1F' fill='url(%23c)'/%3E%3C/svg%3E")}
+
+/*
+section.clipped.clippedTop {clip-path:url("#clipPolygonTop")}
+section.clipped.clippedBottom {clip-path:url("#clipPolygonBottom")}
+.myimg {background-image: url("images/under-left-leaf.png"), url("images/over-blue-bird.png"), url("images/under-top.png"), url("images/bg-top-grunge.png");}
+.something {
+    background:url(http://example.org/wp-content/themes/my-theme/images/nothing.png);
+}
+.something-else {background:url(wp-content/themes/my-theme/images/shadow.png) -100px 0 repeat-y;}
+.another-thing { background:url(/wp-content/themes/my-theme/images/shadow.png) 0 -767px repeat-x; }
+#whatevz {background:url(wp-content/themes/my-theme/images/shadow.png) center top no-repeat;}
+
+.widget ul li { background:url(img/shadow.png) top center; }
+*/
+CSS;
+        $css_expected = <<<CSS
+.shadow { background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center; }
+.shadow1 { background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) 0 -767px repeat-x; }
+.shadow2 {background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center}
+
+.test { background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center; }
+.test1 { background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) 0 -767px repeat-x; }
+.test2 {background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center}
+
+header{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90px' height='110px' viewBox='0 0 90 110'%3E%3Cstyle%3E.a%7Bstop-color:%23FFF;%7D.b%7Bstop-color:%23B2D235;%7D.c%7Bstop-color:%23BEE7FA;%7D.d%7Bfill:%23590C15;%7D%3C/style%3E%3ClinearGradient id='c' y2='135.4' gradientUnits='userSpaceOnUse' x2='209.1' gradientTransform='rotate(-1.467 -4082.888 7786.794)' y1='205.8' x1='262'%3E%3Cstop class='b' offset='0'/%3E%3Cstop class='b' offset='.48'/%3E%3Cstop stop-color='%23829D25' offset='1'/%3E%3C/linearGradient%3E%3Cpath stroke-width='.3' d='M77.3 45.4c-3-3.5-7.1-6.5-11.6-7.8-5.1-1.5-10-.1-14.9 1.5C52 35.4 54.3 29 60 24l-4.8-5.5c-3.4 3-5.8 6.3-7.5 9.4-1.7-4.3-4.1-8.4-7.5-12C33.4 8.6 24.3 4.7 15.1 4.2c-.2 9.3 3.1 18.6 9.9 25.9 5.2 5.6 11.8 9.2 18.7 10.8-2.5.2-4.9-.1-7.7-.9-5.2-1.4-10.5-2.8-15.8-1C10.6 42.3 4.5 51.9 4 61.7c-.5 11.6 3.8 23.8 9.9 33.5 3.9 6.3 9.6 13.7 17.7 13.4 3.8-.1 7-2.1 10.7-2.7 5.2-.8 9.1 1.2 14.1 1.8 16.4 2 24.4-23.6 26.4-35.9 1.2-9.1.8-19.1-5.5-26.4z' stroke='%233E6D1F' fill='url(%23c)'/%3E%3C/svg%3E")}
+
+/*
+section.clipped.clippedTop {clip-path:url("#clipPolygonTop")}
+section.clipped.clippedBottom {clip-path:url("#clipPolygonBottom")}
+.myimg {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=);}
+.something {
+    background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=);
+}
+.something-else {background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) -100px 0 repeat-y;}
+.another-thing { background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) 0 -767px repeat-x; }
+#whatevz {background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) center top no-repeat;}
+
+.widget ul li { background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center; }
+*/
+CSS;
+
+        // For test purposes, ALL images in the css are being inline with a 1x1 trans png string/datauri
+        add_filter( 'autoptimize_filter_css_is_datauri_candidate', function($is_candidate, $path) {
+            return true;
+        }, 10, 2);
+
+        // For test purposes, ALL images in the css are being inline with a 1x1 trans png string/datauri
+        add_filter( 'autoptimize_filter_css_datauri_image', function($base64array, $path) {
+            $head = 'data:image/png;base64,';
+            $data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+            $result['full'] = $head . $data;
+            $result['base64data'] = $data;
+            return $result;
+        }, 10, 2);
+
+        $instance = new autoptimizeStyles($css_orig);
+        $instance->setOption('datauris', true);
+
+        $fixurls_result = autoptimizeStyles::fixurls(ABSPATH . 'wp-content/themes/my-theme/style.css', $css_orig);
+        $css_actual = $instance->rewrite_assets($fixurls_result);
+
+        $this->assertEquals($css_expected, $css_actual);
+    }
+
+    /**
+     * Doing rewrite_assets() without calling fixurls() beforehand could cause wrong results if/when there's a
+     * (same) image referenced via root-relative and relative urls, i.e., `/wp-content/themes/my-theme/images/shadow.png` and
+     * `wp-content/themes/my-theme/images/shadow.png` in test code below.
+     * That's because urls are not really "normalized" in rewrite_assets() at all, and replacements are done
+     * using simple string keys (based on url), so whenever the shorter url ends up being spotted first, the replacement
+     * was done in a way that leaves the first `/` character in place. Which could mean trouble, especially when
+     * doing inlining of smaller images.
+     * After sorting the replacements array in rewrite_assets() by string length in descending order, the problem
+     * goes away.
+     */
+    public function test_background_datauri_sprites_without_fixurls()
+    {
+        $css_orig = <<<CSS
+.shadow { background:url(img/1x1.png) top center; }
+.shadow1 { background-image:url(img/1x1.png) 0 -767px repeat-x; }
+.shadow2 {background:url(img/1x1.png) top center}
+
+.test { background:url(img/1x1.png) top center; }
+.test1 { background-image:url('img/1x1.png') 0 -767px repeat-x; }
+.test2 {background:url("img/1x1.png") top center}
+
+section.clipped.clippedTop {clip-path:url("#clipPolygonTop")}
+section.clipped.clippedBottom {clip-path:url("#clipPolygonBottom")}
+.myimg {background-image: url("images/under-left-leaf.png"), url("images/over-blue-bird.png"), url("images/under-top.png"), url("images/bg-top-grunge.png");}
+.something {
+    background:url(http://example.org/wp-content/themes/my-theme/images/nothing.png);
+}
+.something-else {background:url(wp-content/themes/my-theme/images/shadow.png) -100px 0 repeat-y;}
+.another-thing { background:url(/wp-content/themes/my-theme/images/shadow.png) 0 -767px repeat-x; }
+#whatevz {background:url(wp-content/themes/my-theme/images/shadow.png) center top no-repeat;}
+
+.widget ul li { background:url(img/shadow.png) top center; }
+CSS;
+        $css_expected = <<<CSS
+.shadow { background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center; }
+.shadow1 { background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) 0 -767px repeat-x; }
+.shadow2 {background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center}
+
+.test { background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center; }
+.test1 { background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) 0 -767px repeat-x; }
+.test2 {background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center}
+
+section.clipped.clippedTop {clip-path:url("#clipPolygonTop")}
+section.clipped.clippedBottom {clip-path:url("#clipPolygonBottom")}
+.myimg {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=);}
+.something {
+    background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=);
+}
+.something-else {background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) -100px 0 repeat-y;}
+.another-thing { background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) 0 -767px repeat-x; }
+#whatevz {background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) center top no-repeat;}
+
+.widget ul li { background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) top center; }
+CSS;
+
+        // For test purposes, ALL images in the css are being inline with a 1x1 trans png string/datauri
+        add_filter( 'autoptimize_filter_css_is_datauri_candidate', function($is_candidate, $path) {
+            return true;
+        }, 10, 2);
+
+        // For test purposes, ALL images in the css are being inline with a 1x1 trans png string/datauri
+        add_filter( 'autoptimize_filter_css_datauri_image', function($base64array, $path) {
+            $head = 'data:image/png;base64,';
+            $data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+            $result['full'] = $head . $data;
+            $result['base64data'] = $data;
+            return $result;
+        }, 10, 2);
+
+        $instance = new autoptimizeStyles($css_orig);
+        $instance->setOption('datauris', true);
+        $css_actual = $instance->rewrite_assets($css_orig);
+        $this->assertEquals($css_expected, $css_actual);
+    }
 }

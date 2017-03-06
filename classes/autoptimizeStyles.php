@@ -198,11 +198,13 @@ class autoptimizeStyles extends autoptimizeBase
             file_exists( $path ) && is_readable( $path ) && filesize( $path ) <= $max_size ) {
 
             // Seems we have a candidate
-            return true;
+            $is_candidate = true;
+        } else {
+            // Filter allows overriding default decision (which checks for local file existence)
+            $is_candidate = apply_filters( 'autoptimize_filter_css_is_datauri_candidate', false, $path );
         }
 
-        // Noup, anything else ain't a candidate
-        return false;
+        return $is_candidate;
     }
 
     /**
@@ -258,6 +260,18 @@ class autoptimizeStyles extends autoptimizeBase
 
     private function build_or_get_datauri_image($path)
     {
+        // TODO/FIXME: document the required return array format, or better yet,
+        // use a string, since we don't really need an array for this. That would, however,
+        // require changing even more code, which is not happening right now...
+
+        // Allows short-circuiting datauri generation for an image
+        $result = apply_filters( 'autoptimize_filter_css_datauri_image', array(), $path );
+        if ( ! empty( $result ) ) {
+            if ( is_array( $result) && isset( $result['full'] ) && isset( $result['base64data'] ) ) {
+                return $result;
+            }
+        }
+
         $hash = md5( $path );
         $check = new autoptimizeCache($hash, 'img');
         if ( $check->check() ) {
@@ -360,6 +374,10 @@ class autoptimizeStyles extends autoptimizeBase
         }
 
         if ( ! empty( $imgreplace ) ) {
+            // Sort the replacements array by key length in desc order (so that the longest strings are replaced first)
+            $keys = array_map( 'strlen', array_keys( $imgreplace) );
+            array_multisort( $keys, SORT_DESC, $imgreplace );
+
             $this->debug_log($imgreplace);
             $code = str_replace( array_keys( $imgreplace ), array_values( $imgreplace ), $code );
         }
@@ -750,6 +768,10 @@ class autoptimizeStyles extends autoptimizeBase
             }
 
             if ( ! empty( $replace ) ) {
+                // Sort the replacements array by key length in desc order (so that the longest strings are replaced first)
+                $keys = array_map( 'strlen', array_keys( $replace ) );
+                array_multisort( $keys, SORT_DESC, $replace );
+
                 // Replace URLs found within $code
                 $code = str_replace( array_keys( $replace ), array_values( $replace ), $code );
             }
