@@ -365,9 +365,10 @@ class autoptimizeStyles extends autoptimizeBase
                  */
                 if ( ! $inlined  && ! empty( $this->cdn_url ) ) {
                     // Just do the "simple" CDN replacement
-                    $cdn_url = $this->url_replace_cdn($url);
+                    // $cdn_url = $this->url_replace_cdn($url);
+                    $replacement_url = $this->maybe_url_replace_cdn($url);
                     $imgreplace[ $url_src_matches[1][ $count ] ] = str_replace(
-                        $original_url, $cdn_url, $url_src_matches[1][$count]
+                        $original_url, $replacement_url, $url_src_matches[1][$count]
                     );
                 }
             }
@@ -383,6 +384,20 @@ class autoptimizeStyles extends autoptimizeBase
         }
 
         return $code;
+    }
+
+    public function maybe_url_replace_cdn($url)
+    {
+        $url = trim( $url, " \t\n\r\0\x0B\"'" );
+
+        // Exclude fonts from CDN except if filter returns true
+        // https://github.com/futtta/autoptimize/commit/65cd2d1c865cffe3a925d8988cc0cc28d67160c9#commitcomment-21395064
+        // Note that this means regular urls ending in .svg will not be CDNed unless fonts are CDNed too
+        if ( ! preg_match('#\.(woff2?|eot|ttf|otf|svg)$#i', $url ) || apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) ) {
+            $url = $this->url_replace_cdn($url);
+        }
+
+        return $url;
     }
 
     // Joins and optimizes CSS
@@ -561,34 +576,6 @@ class autoptimizeStyles extends autoptimizeBase
                 if ( ! empty( $tmp_code ) ) {
                     $code = $tmp_code;
                     unset( $tmp_code );
-                }
-            }
-        }
-
-        return $code;
-    }
-
-    public function cdn_fonts($code)
-    {
-        // CDN the fonts!
-        if (
-                ! empty( $this->cdn_url )
-                && ( apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) )
-                && ( version_compare( PHP_VERSION, '5.3.0' ) >= 0 )
-            ) {
-
-            $fontreplace = array();
-            include_once AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizeFontRegex.php';
-
-            preg_match_all( $fonturl_regex, $code, $matches );
-            if ( is_array( $matches ) ) {
-                foreach ( $matches[8] as $count => $quotedurl ) {
-                    $url = trim($quotedurl, " \t\n\r\0\x0B\"'");
-                    $cdn_url = $this->url_replace_cdn($url);
-                    $fontreplace[$matches[8][$count]] = str_replace( $quotedurl, $cdn_url, $matches[8][$count] );
-                }
-                if ( ! empty( $fontreplace ) ) {
-                    $code = str_replace( array_keys( $fontreplace ), array_values( $fontreplace ), $code );
                 }
             }
         }

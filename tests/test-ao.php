@@ -289,6 +289,8 @@ CSS;
 }
 CSS;
 
+        add_filter( 'autoptimize_filter_css_fonts_cdn', '__return_true' );
+
         $instance = new autoptimizeStyles($css_in);
         $instance->setOption('cdn_url', 'http://cdn.example.org');
 
