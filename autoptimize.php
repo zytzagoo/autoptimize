@@ -93,7 +93,7 @@ function autoptimize_uninstall(){
         'autoptimize_js_trycatch', 'autoptimize_version', 'autoptimize_show_adv',
         'autoptimize_cdn_url', 'autoptimize_cachesize_notice',
         'autoptimize_css_include_inline', 'autoptimize_js_include_inline',
-        'autoptimize_css_nogooglefont'
+        'autoptimize_css_nogooglefont', 'autoptimize_optimize_logged'
     );
 
     if ( ! is_multisite() ) {
@@ -160,6 +160,11 @@ function autoptimize_do_buffering($doing_tests = false) {
             if ( isset( $_GET['ao_noptimize'] ) && '1' === $_GET['ao_noptimize'] ) {
                 $ao_noptimize = true;
             }
+        }
+
+        // If setting says not to optimize logged in user and user is logged in
+        if ( 'on' !== get_option( 'autoptimize_optimize_logged', 'on' ) && is_user_logged_in() ) {
+            $ao_noptimize = true;
         }
 
         // Allows blocking of autoptimization on your own terms regardless of above decisions
