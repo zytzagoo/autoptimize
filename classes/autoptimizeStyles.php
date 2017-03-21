@@ -393,7 +393,7 @@ class autoptimizeStyles extends autoptimizeBase
         // Exclude fonts from CDN except if filter returns true
         // https://github.com/futtta/autoptimize/commit/65cd2d1c865cffe3a925d8988cc0cc28d67160c9#commitcomment-21395064
         // Note that this means regular urls ending in .svg will not be CDNed unless fonts are CDNed too
-        if ( ! preg_match('#\.(woff2?|eot|ttf|otf|svg)$#i', $url ) || apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) ) {
+        if ( ! preg_match('#\.(woff2?|eot|ttf|otf)$#i', $url ) || apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) ) {
             $url = $this->url_replace_cdn($url);
         }
 
