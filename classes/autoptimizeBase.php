@@ -392,15 +392,16 @@ abstract class autoptimizeBase
 
     // Inject already minified code in optimized JS/CSS
     protected function inject_minified($in) {
+        $out = $in;
+
         if ( false !== strpos( $in, '%%INJECTLATER%%' ) ) {
             $out = preg_replace_callback(
-                '#%%INJECTLATER%%(.*?)%%INJECTLATER%%#is',
+                '#\/\*\!%%INJECTLATER%%(.*?)%%INJECTLATER%%\*\/#is',
                 array( $this, 'inject_minified_callback' ),
                 $in
             );
-        } else {
-            $out = $in;
         }
+
         return $out;
     }
 

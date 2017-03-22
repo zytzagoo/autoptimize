@@ -425,7 +425,7 @@ class autoptimizeStyles extends autoptimizeBase
                         $css = $tmpstyle;
                         $this->alreadyminified = true;
                     } else if ( $this->can_inject_late($cssPath, $css) ) {
-                        $css = '%%INJECTLATER%%' . base64_encode( $cssPath ) . '|' . md5( $css ) . '%%INJECTLATER%%';
+                        $css = '/*!%%INJECTLATER%%' . base64_encode( $cssPath ) . '|' . md5( $css ) . '%%INJECTLATER%%*/';
                     }
                 } else {
                     // Couldn't read CSS. Maybe getpath isn't working?
@@ -488,7 +488,7 @@ class autoptimizeStyles extends autoptimizeBase
                                 $code = $tmpstyle;
                                 $this->alreadyminified = true;
                             } else if ( $this->can_inject_late($path, $code) ) {
-                                $code = '%%INJECTLATER%%' . base64_encode( $path ) . '|' . md5( $code ) . '%%INJECTLATER%%';
+                                $code = '/*!%%INJECTLATER%%' . base64_encode( $path ) . '|' . md5( $code ) . '%%INJECTLATER%%*/';
                             }
 
                             if ( ! empty( $code ) ) {
@@ -540,10 +540,18 @@ class autoptimizeStyles extends autoptimizeBase
             // Rewrite and/or inline referenced assets
             $code = $this->rewrite_assets($code);
 
-            // $code = $this->cdn_fonts($code);
-
             // Minify
             $code = $this->run_minifier_on($code);
+
+            // Bring back %%INJECTLATER%% stuff
+            $code = $this->inject_minified($code);
+
+            // Filter results
+            $tmp_code = apply_filters( 'autoptimize_css_after_minify', $code );
+            if ( ! empty( $tmp_code ) ) {
+                $code = $tmp_code;
+                unset( $tmp_code );
+            }
 
             $this->hashmap[md5( $code )] = $hash;
         }
@@ -570,9 +578,6 @@ class autoptimizeStyles extends autoptimizeBase
                     }
                 }
 
-                $tmp_code = $this->inject_minified($tmp_code);
-
-                $tmp_code = apply_filters( 'autoptimize_css_after_minify', $tmp_code );
                 if ( ! empty( $tmp_code ) ) {
                     $code = $tmp_code;
                     unset( $tmp_code );
