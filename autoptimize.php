@@ -3,7 +3,7 @@
 Plugin Name: Autoptimize
 Plugin URI: http://blog.futtta.be/autoptimize
 Description: Optimizes your website, concatenating the CSS and JavaScript code, and compressing it.
-Version: 2.1.0
+Version: 2.1.99
 Author: Frank Goossens (futtta)
 Author URI: http://blog.futtta.be/
 Domain Path: localization/
@@ -59,7 +59,7 @@ $conf = autoptimizeConfig::instance();
 /* Check if we're updating, in which case we might need to do stuff and flush the cache
 to avoid old versions of aggregated files lingering around */
 
-$autoptimize_version = '2.0.0';
+$autoptimize_version = '2.1.99';
 $autoptimize_db_version = get_option( 'autoptimize_version', 'none' );
 
 if ($autoptimize_db_version !== $autoptimize_version) {
@@ -188,6 +188,12 @@ function autoptimize_do_buffering($doing_tests = false) {
 // Set up the buffering
 function autoptimize_start_buffering() {
     if ( autoptimize_do_buffering() ) {
+
+        // load speedupper conditionally (true by default?)
+        if ( apply_filters( 'autoptimize_filter_speedupper', true ) ) {
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizeSpeedupper.php';
+        }
+
         // Config element
         $conf = autoptimizeConfig::instance();
 
@@ -230,7 +236,7 @@ function autoptimize_start_buffering() {
                 }
             } else {
                 if ( ! class_exists( 'CSSmin' ) ) {
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-2.4.8-4_fgo.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-2.4.8-p10/cssmin.php';
                 }
             }
             if ( ! defined( 'COMPRESS_CSS' ) ) {

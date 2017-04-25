@@ -51,13 +51,13 @@ class autoptimizeScripts extends autoptimizeBase
         }
 
         // only optimize known good JS?
-        $whitelistJS = apply_filters( 'autoptimize_filter_js_whitelist', '' );
+        $whitelistJS = apply_filters( 'autoptimize_filter_js_whitelist', '', $this->content );
         if ( ! empty( $whitelistJS ) ) {
             $this->whitelist = array_filter( array_map( 'trim', explode( ',', $whitelistJS ) ) );
         }
 
         // is there JS we should simply remove
-        $removableJS = apply_filters( 'autoptimize_filter_js_removables', '');
+        $removableJS = apply_filters( 'autoptimize_filter_js_removables', '', $this->content );
         if (!empty($removableJS)) {
             $this->jsremovables = array_filter( array_map( 'trim', explode( ',', $removableJS ) ) );
         }
@@ -84,7 +84,7 @@ class autoptimizeScripts extends autoptimizeBase
 
         // get extra exclusions settings or filter
         $excludeJS = $options['js_exclude'];
-        $excludeJS = apply_filters( 'autoptimize_filter_js_exclude', $excludeJS );
+        $excludeJS = apply_filters( 'autoptimize_filter_js_exclude', $excludeJS, $this->content );
 
         if ( '' !== $excludeJS ) {
             if ( is_array( $excludeJS ) ) {
@@ -295,7 +295,7 @@ class autoptimizeScripts extends autoptimizeBase
                     if ( has_filter( 'autoptimize_js_individual_script' ) && ! empty( $tmpscriptsrc ) ) {
                         $scriptsrc = $tmpscriptsrc;
                         $this->alreadyminified = true;
-                    } else if ( ( ( false !== strpos( $script, 'min.js' ) ) || ( false !== strpos( $script, 'wp-includes/js/jquery/jquery.js' ) ) ) && ( true === $this->inject_min_late ) ) {
+                    } else if ( $this->can_inject_late($script) ) {
                         $scriptsrc = '/*!%%INJECTLATER%%' . base64_encode( $script ) . '|' . md5( $scriptsrc ) . '%%INJECTLATER%%*/';
                     }
                     $this->jscode .= "\n" . $scriptsrc;
@@ -473,4 +473,29 @@ class autoptimizeScripts extends autoptimizeBase
         // Should be in 'first'
         return false;
     }
+
+    /**
+     * Determines wheter a <script> $tag can be excluded from minification (as already minified) based on:
+     * - inject_min_late being active
+     * - filename ending in `min.js`
+     * - filename matching `js/jquery/jquery.js` (wordpress core jquery, is minified)
+     * - filename matching one passed in the consider minified filter
+     *
+     * @param string $jsPath
+     * @return bool
+     */
+    private function can_inject_late($jsPath) {
+        $consider_minified_array = apply_filters( 'autoptimize_filter_js_consider_minified', false );
+        if ( true !== $this->inject_min_late ) {
+            // late-inject turned off
+            return false;
+        } else if ( ( false === strpos( $jsPath, 'min.js' ) ) && ( false === strpos( $jsPath, 'wp-includes/js/jquery/jquery.js') ) && ( str_replace( $consider_minified_array, '', $jsPath ) === $jsPath ) ) {
+            // file not minified based on filename & filter
+            return false;
+        } else {
+            // phew, all is safe, we can late-inject
+            return true;
+        }
+    }
+
 }

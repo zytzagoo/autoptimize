@@ -32,7 +32,7 @@ class autoptimizeStyles extends autoptimizeBase
             return false;
         }
 
-        $whitelistCSS = apply_filters( 'autoptimize_filter_css_whitelist', '' );
+        $whitelistCSS = apply_filters( 'autoptimize_filter_css_whitelist', '', $this->content );
         if ( ! empty( $whitelistCSS ) ) {
             $this->whitelist = array_filter( array_map( 'trim', explode(',', $whitelistCSS ) ) );
         }
@@ -65,7 +65,7 @@ class autoptimizeStyles extends autoptimizeBase
         }
 
         // List of CSS strings which are excluded from autoptimization
-        $excludeCSS = apply_filters( 'autoptimize_filter_css_exclude', $options['css_exclude'] );
+        $excludeCSS = apply_filters( 'autoptimize_filter_css_exclude', $options['css_exclude'], $this->content );
         if ( '' !== $excludeCSS ) {
             $this->dontmove = array_filter( array_map( 'trim', explode( ',', $excludeCSS ) ) );
         } else {
@@ -75,16 +75,16 @@ class autoptimizeStyles extends autoptimizeBase
         // Should we defer css?
         // value: true / false
         $this->defer = $options['defer'];
-        $this->defer = apply_filters( 'autoptimize_filter_css_defer', $this->defer );
+        $this->defer = apply_filters( 'autoptimize_filter_css_defer', $this->defer, $this->content );
 
         // Should we inline while deferring?
         // value: inlined CSS
-        $this->defer_inline = apply_filters( 'autoptimize_filter_css_defer_inline', $options['defer_inline'] );
+        $this->defer_inline = apply_filters( 'autoptimize_filter_css_defer_inline', $options['defer_inline'], $this->content );
 
         // Should we inline?
         // value: true / false
         $this->inline = $options['inline'];
-        $this->inline = apply_filters( 'autoptimize_filter_css_inline', $this->inline );
+        $this->inline = apply_filters( 'autoptimize_filter_css_inline', $this->inline, $this->content );
 
         // Store cdn url
         $this->cdn_url = $options['cdn_url'];
@@ -635,7 +635,7 @@ class autoptimizeStyles extends autoptimizeBase
 
         // Inject the new stylesheets
         $replaceTag = array( '<title', 'before' );
-        $replaceTag = apply_filters( 'autoptimize_filter_css_replacetag', $replaceTag );
+        $replaceTag = apply_filters( 'autoptimize_filter_css_replacetag', $replaceTag, $this->content );
 
         if ( $this->inline ) {
             foreach ( $this->csscode as $media => $code ) {
@@ -774,8 +774,10 @@ class autoptimizeStyles extends autoptimizeBase
 
     private function ismovable($tag)
     {
-        if ( ! empty( $this->whitelist ) ) {
-            foreach ( $this->whitelist as $match) {
+        if ( apply_filters( 'autoptimize_filter_css_dontaggregate', false ) ) {
+            return false;
+        } else if ( ! empty( $this->whitelist ) ) {
+            foreach ( $this->whitelist as $match ) {
                 if ( false !== strpos( $tag, $match ) ) {
                     return true;
                 }
@@ -785,7 +787,7 @@ class autoptimizeStyles extends autoptimizeBase
         } else {
             if ( is_array( $this->dontmove ) ) {
                 foreach ( $this->dontmove as $match ) {
-                    if (false !== strpos( $tag, $match ) ) {
+                    if ( false !== strpos( $tag, $match ) ) {
                         //Matched something
                         return false;
                     }
@@ -799,8 +801,12 @@ class autoptimizeStyles extends autoptimizeBase
 
     private function can_inject_late($cssPath, $css)
     {
-        if ( false === strpos( $cssPath, 'min.css' ) || ( true !== $this->inject_min_late ) ) {
-            // late-inject turned off or file not minified based on filename
+        $consider_minified_array = apply_filters( 'autoptimize_filter_css_consider_minified', false, $cssPath );
+        if ( true !== $this->inject_min_late ) {
+            // late-inject turned off
+            return false;
+        } else if ( ( false === strpos( $cssPath, 'min.css' ) ) && ( str_replace( $consider_minified_array, '', $cssPath ) === $cssPath ) ) {
+            // file not minified based on filename & filter
             return false;
         } else if ( false !== strpos( $css, '@import' ) ) {
             // can't late-inject files with imports as those need to be aggregated

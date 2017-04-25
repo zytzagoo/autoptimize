@@ -79,6 +79,14 @@ class autoptimizeConfig
     content: "\f108 \f140";
 }
 
+/* animate "show adv" button */
+#ao_show_adv { animation: watchmenow 3s linear 5s 10; }
+#ao_show_adv:hover { animation: none; }
+@keyframes watchmenow {
+  0% { box-shadow: unset; }
+  100% { box-shadow: 0px 0px 20px yellow; }
+}
+
 /* form */
 .itemDetail {
     background: #fff;
@@ -163,7 +171,7 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
 <div class="wrap">
 
 <?php if (version_compare(PHP_VERSION, '5.3.0') < 0) { ?>
-<div class="notice-error notice"><?php echo '<p>' . sprintf( __('<strong>You are using a very old version of PHP</strong> (5.2.x or older) which has <a href=%s>serious security and performance issues</a>. Please ask your hoster to provide you with an upgrade path to 5.6 or 7.0.','autoptimize'), '"http://blog.futtta.be/2016/03/15/why-would-you-still-be-on-php-5-2/" target="_blank"') . '</p>'; ?></div>
+<div class="notice-error notice"><?php echo '<p>' . sprintf( __('<strong>You are using a very old version of PHP</strong> (5.2.x or older) which has <a href=%s>serious security and performance issues</a>. Support for PHP 5.5 and below will be removed in one of the next AO released, please ask your hoster to provide you with an upgrade path to 7.x.','autoptimize'), '"http://blog.futtta.be/2016/03/15/why-would-you-still-be-on-php-5-2/" target="_blank"') . '</p>'; ?></div>
 <?php } ?>
 
 <div id="autoptimize_main">
@@ -298,7 +306,7 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
 <tr valign="top">
 <th scope="row"><?php _e('CDN Base URL','autoptimize'); ?></th>
 <td><label><input id="cdn_url" type="text" name="autoptimize_cdn_url" pattern="^(https?:)?\/\/([\da-z\.-]+)\.([\da-z\.]{2,6})([\/\w \.-]*)*(:\d{2,5})?\/?$" style="width:100%" value="<?php echo esc_url(get_option('autoptimize_cdn_url',''),array("http","https")); ?>" /><br />
-<?php _e('Enter your CDN root URL to enable CDN for Autoptimized files. The URL can be http, https or protocol-relative (e.g. <code>//cdn.example.com/</code>).','autoptimize'); ?></label></td>
+<?php _e('Enter your CDN root URL to enable CDN for Autoptimized files. The URL can be http, https or protocol-relative (e.g. <code>//cdn.example.com/</code>). This is not needed for Cloudflare.','autoptimize'); ?></label></td>
 </tr>
 </table>
 </li>
@@ -328,22 +336,22 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
     }
 ?></td>
 </tr>
-<tr valign="top" class="<?php echo $hiddenClass;?>ao_adv">
-<th scope="row"><?php _e('Save aggregated script/css as static files?','autoptimize'); ?></th>
-<td><label class="cb_label"><input type="checkbox" name="autoptimize_cache_nogzip" <?php echo get_option('autoptimize_cache_nogzip','1')?'checked="checked" ':''; ?>/>
-<?php _e('By default files saved are static css/js, uncheck this option if your webserver doesn\'t properly handle the compression and expiry.','autoptimize'); ?></label></td>
-</tr>
 </table>
 </li>
 
 <li class="<?php echo $hiddenClass;?>itemDetail ao_adv">
 <h2 class="itemTitle"><?php _e('Misc Options','autoptimize'); ?></h2>
 <table class="form-table">
-<tr valign="top" class="<?php echo $hiddenClass;?>ao_adv">
-<th scope="row"><?php _e('Also optimize for logged in users?','autoptimize'); ?></th>
-<td><label class="cb_label"><input type="checkbox" name="autoptimize_optimize_logged" <?php echo get_option('autoptimize_optimize_logged','1')?'checked="checked" ':''; ?>/>
-<?php _e('By default Autoptimize is also active for logged on users, uncheck not to optimize when logged in e.g. to use a pagebuilder.','autoptimize'); ?></label></td>
-</tr>
+    <tr valign="top" class="<?php echo $hiddenClass;?>ao_adv">
+    <th scope="row"><?php _e('Save aggregated script/css as static files?','autoptimize'); ?></th>
+    <td><label class="cb_label"><input type="checkbox" name="autoptimize_cache_nogzip" <?php echo get_option('autoptimize_cache_nogzip','1')?'checked="checked" ':''; ?>/>
+    <?php _e('By default files saved are static css/js, uncheck this option if your webserver doesn\'t properly handle the compression and expiry.','autoptimize'); ?></label></td>
+    </tr>
+    <tr valign="top" class="<?php echo $hiddenClass;?>ao_adv">
+    <th scope="row"><?php _e('Also optimize for logged in users?','autoptimize'); ?></th>
+    <td><label class="cb_label"><input type="checkbox" name="autoptimize_optimize_logged" <?php echo get_option('autoptimize_optimize_logged','1')?'checked="checked" ':''; ?>/>
+    <?php _e('By default Autoptimize is also active for logged on users, uncheck not to optimize when logged in e.g. to use a pagebuilder.','autoptimize'); ?></label></td>
+    </tr>
 </table>
 </li>
 
