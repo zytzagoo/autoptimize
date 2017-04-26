@@ -336,6 +336,7 @@ class autoptimizeScripts extends autoptimizeBase
             }
         }
 
+        $this->jscode = apply_filters( 'autoptimize_js_after_minify', $this->jscode );
         return true;
     }
 
