@@ -93,7 +93,7 @@ function autoptimize_uninstall(){
         'autoptimize_js_trycatch', 'autoptimize_version', 'autoptimize_show_adv',
         'autoptimize_cdn_url', 'autoptimize_cachesize_notice',
         'autoptimize_css_include_inline', 'autoptimize_js_include_inline',
-        'autoptimize_css_nogooglefont', 'autoptimize_optimize_logged'
+        'autoptimize_css_nogooglefont', 'autoptimize_optimize_logged', 'autoptimize_optimize_checkout'
     );
 
     if ( ! is_multisite() ) {
@@ -165,6 +165,17 @@ function autoptimize_do_buffering($doing_tests = false) {
         // If setting says not to optimize logged in user and user is logged in
         if ( 'on' !== get_option( 'autoptimize_optimize_logged', 'on' ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
             $ao_noptimize = true;
+        }
+
+        // if setting says not to optimize cart/ checkout
+        if ( 'on' !== get_option( 'autoptimize_optimize_checkout', 'on' ) ) {
+            // checking for woocommerce, easy digital downloads and wp ecommerce
+            foreach ( array( 'is_checkout', 'is_cart', 'edd_is_checkout', 'wpsc_is_cart', 'wpsc_is_checkout') as $shopCond ) {
+                if ( function_exists( $shopCond ) && $shopCond() ) {
+                    $ao_noptimize = true;
+                    break;
+                }
+            }
         }
 
         // Allows blocking of autoptimization on your own terms regardless of above decisions
