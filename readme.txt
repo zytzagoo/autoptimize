@@ -119,7 +119,7 @@ Both CSS and JS optimization can skip code from being aggregated and minimized b
 
 = Configuring & Troubleshooting Autoptimize =
 
-After having installed and activated the plugin, you'll have access to an admin page where you can to enable HTML, CSS and JavaScript optimization. According to your liking, you can start of just enabling all of them, or if you're more cautious one at a time. 
+After having installed and activated the plugin, you'll have access to an admin page where you can to enable HTML, CSS and JavaScript optimization. According to your liking, you can start of just enabling all of them, or if you're more cautious one at a time.
 
 If your blog doesn't function normally after having turned on Autoptimize, here are some pointers to identify & solve such issues using "advanced settings":
 
@@ -162,6 +162,10 @@ Autoptimize does a number of checks before actually optimizing. When one of the 
 
 Disable the option to have Autoptimize active for logged on users and go crazy dragging and dropping ;-)
 
+= Help, my shop checkout/ payment don't work!! =
+
+Disable the option to optimize cart/ checkout pages (works for WooCommerce, Easy Digital Downloads and WP eCommerce).
+
 = Revolution Slider is broken! =
 
 Make sure `js/jquery/jquery.js` is in the comma-separated list of JS optimization exclusions (this is excluded in the default configuration).
@@ -191,7 +195,7 @@ You can do this in your page/ post content, in widgets and in your theme files (
 
 = Can I change the directory & filename of cached autoptimize files? =
 
-Yes, if you want to serve files from e.g. /wp-content/resources/aggregated_12345.css instead of the default /wp-content/cache/autoptimize/autoptimize_12345.css, then add this to wp-config.php: 
+Yes, if you want to serve files from e.g. /wp-content/resources/aggregated_12345.css instead of the default /wp-content/cache/autoptimize/autoptimize_12345.css, then add this to wp-config.php:
 `
 define('AUTOPTIMIZE_CACHE_CHILD_DIR','/resources/');
 define('AUTOPTIMIZE_CACHEFILE_PREFIX','aggregated_');
@@ -219,7 +223,8 @@ Just [fork Autoptimize on Github](https://github.com/futtta/autoptimize) and cod
 
 = 2.2.0 =
 * new: Autoptimize minifies first (caching the individual snippets) and aggregrates the minified snippets, resulting in huge performance improvements for uncached JS/ CSS.
-* new: option to enable/ disable AO for logged in users
+* new: option to enable/ disable AO for logged in users (on by default)
+* new: option to enable/ disable AO on WooCommerce, Easy Digital Downloads or WP eCommerce cart/ checkout page (on by default)
 * improvement: switched to [rel=preload + Filamentgroup’s loadCSS for CSS deferring](http://blog.futtta.be/2017/02/24/autoptimize-css-defer-switching-to-loadcss-soon/)
 * improvement: switched to YUI CSS minifier PHP-port 2.8.4-p10 (so not to the 3.x branch yet)
 * improvements to the logic of which JS/ CSS can be optimized (getPath function) increasing reliability of the aggregation process
@@ -467,7 +472,7 @@ First of all; Happy holidays, all the best for 2015!!
 
 = 1.0 =
 * Add workaround for whos.among.us
-* Support preserving HTML Comments. 
+* Support preserving HTML Comments.
 * Implement "delayed cache compression"
 * French translation
 * Update Spanish translation
@@ -475,7 +480,7 @@ First of all; Happy holidays, all the best for 2015!!
 = 0.9 =
 * Add workaround for networkedblogs.
 * Add workarounds for histats and statscounter
-* Add workaround for smowtion and infolinks. 
+* Add workaround for smowtion and infolinks.
 * Add workaround for Featured Content Gallery
 * Simplified Chinese translation
 * Update Spanish Translation
@@ -496,7 +501,7 @@ First of all; Happy holidays, all the best for 2015!!
 * Add fix for DISQUS Comment System.
 
 = 0.6 =
-* Add workaround for mybloglog, blogcatalog, tweetmeme and Google CSE 
+* Add workaround for mybloglog, blogcatalog, tweetmeme and Google CSE
 
 = 0.5 =
 * Support localization
