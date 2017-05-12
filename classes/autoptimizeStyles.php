@@ -713,7 +713,8 @@ class autoptimizeStyles extends autoptimizeBase
 
         if ( preg_match_all( self::ASSETS_REGEX, $code, $matches ) ) {
             $file = str_replace( WP_ROOT_DIR, '/', $file );
-            $file = str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', $file );
+            // rollback as per https://github.com/futtta/autoptimize/issues/94
+            // $file = str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', $file );
             $dir = dirname( $file ); // Like /themes/expound/css
 
             // $dir should not contain backslashes, since it's used to replace
@@ -743,7 +744,9 @@ class autoptimizeStyles extends autoptimizeBase
                     continue;
                 } else {
                     // Relative URL
-                    $newurl = preg_replace( '/https?:/', '', str_replace( ' ', '%20', AUTOPTIMIZE_WP_CONTENT_URL . str_replace( '//', '/', $dir . '/' . $url ) ) );
+                    // rollback as per https://github.com/futtta/autoptimize/issues/94
+                    // $newurl = preg_replace( '/https?:/', '', str_replace( ' ', '%20', AUTOPTIMIZE_WP_CONTENT_URL . str_replace( '//', '/', $dir . '/' . $url ) ) );
+                    $newurl = preg_replace( '/https?:/', '', str_replace( ' ', '%20', AUTOPTIMIZE_WP_ROOT_URL . str_replace( '//', '/', $dir . '/' . $url ) ) );
 
                     // Hash the url + whatever was behind potentially for replacement
                     // We must do this, or different css classes referencing the same bg image (but
