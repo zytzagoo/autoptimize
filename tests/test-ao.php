@@ -17,6 +17,25 @@ class AOTest extends WP_UnitTestcase
         return str_replace("\r\n", "\n", $str);
     }
 
+    // Runs after each test method
+    public function tearDown()
+    {
+        // Making sure certain filters are removed after each test to ensure isolation
+        $filter_tags = array(
+            'autoptimize_filter_noptimize',
+            'autoptimize_filter_base_cdnurl',
+            'autoptimize_filter_css_is_datauri_candidate',
+            'autoptimize_filter_css_datauri_image',
+            'autoptimize_filter_css_inlinesize',
+            'autoptimize_filter_css_fonts_cdn'
+        );
+        foreach ( $filter_tags as $filter_tag ) {
+            remove_all_filters( $filter_tag );
+        }
+
+        parent::tearDown();
+    }
+
     const TEST_MARKUP = <<<MARKUP
 <!DOCTYPE html>
 <!--[if lt IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8 lt-ie7"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
@@ -279,13 +298,13 @@ CSS;
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 100;
-  src: url(../fonts/roboto-v15-latin-ext_latin-100.eot); /* IE9 Compat Modes */
+  src: url('../fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
   src: local('Roboto Thin'), local('Roboto-Thin'),
-       url(../fonts/roboto-v15-latin-ext_latin-100.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
-       url(../fonts/roboto-v15-latin-ext_latin-100.woff2) format('woff2'), /* Super Modern Browsers */
-       url(../fonts/roboto-v15-latin-ext_latin-100.woff) format('woff'), /* Modern Browsers */
-       url(../fonts/roboto-v15-latin-ext_latin-100.ttf) format('truetype'), /* Safari, Android, iOS */
-       url(../fonts/roboto-v15-latin-ext_latin-100.svg#Roboto) format('svg'); /* Legacy iOS */
+       url('../fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('../fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('../fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('../fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
 }
 CSS;
 
@@ -659,6 +678,14 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
                 'http://example.org/wp-content/themes/something/example.svg',
                 'http://cdn-test.example.org/wp-content/themes/something/example.svg'
             ),
+            // protocol-relative url without a hostname, combined with a cdn base url that has a protocol specified
+            // TODO/FIXME: is this really the behavior we should have? or should the result perhaps be
+            // `http://cdn-test.example.org/something/somewhere.jpg`?
+            array(
+                'http://cdn-test.example.org',
+                '//something/somewhere.jpg',
+                '//something/somewhere.jpg'
+            ),
             // www.example.org does not match example.org (AUTOPTIMIZE_WP_SITE_URL) so it's left alone
             array(
                 'http://cdn-test.example.org',
@@ -715,6 +742,25 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
                 '//cdn.com:1234',
                 '//example.org/something.jpg',
                 '//cdn.com:1234/something.jpg'
+            ),
+            // relative links should not be touched by url_replace_cdn() method
+            array(
+                // base cdn url
+                'http://cdn-test.example.org',
+                // url
+                'a.jpg',
+                // expected result
+                'a.jpg',
+            ),
+            array(
+                'http://cdn-test.example.org',
+                './a.jpg',
+                './a.jpg',
+            ),
+            array(
+                'http://cdn-test.example.org',
+                '../something/somewhere.svg',
+                '../something/somewhere.svg',
             )
         );
     }
@@ -1009,6 +1055,236 @@ CSS;
         $instance = new autoptimizeStyles($css_orig);
         $instance->setOption('datauris', true);
         $css_actual = $instance->rewrite_assets($css_orig);
+        $this->assertEquals($css_expected, $css_actual);
+    }
+
+    // Test css with fonts pointed to the CDN + cdn_url option is set
+    public function test_css_fonts_on_cdn_with_filter()
+    {
+        $css_in = <<<CSS
+/* these should not be touched except for quotes removal */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('../fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('../fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('../fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('../fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('../fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('//fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('//fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('//fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('//fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('//fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('//fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+/* these will be replaced and quotes gone */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('/fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('/fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('/fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('/fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('/fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('/fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+CSS;
+        $css_expected_fonts_cdn = <<<CSS
+/* these should not be touched except for quotes removal */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url(../fonts/roboto-v15-latin-ext_latin-100.eot); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url(../fonts/roboto-v15-latin-ext_latin-100.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
+       url(../fonts/roboto-v15-latin-ext_latin-100.woff2) format('woff2'), /* Super Modern Browsers */
+       url(../fonts/roboto-v15-latin-ext_latin-100.woff) format('woff'), /* Modern Browsers */
+       url(../fonts/roboto-v15-latin-ext_latin-100.ttf) format('truetype'), /* Safari, Android, iOS */
+       url(../fonts/roboto-v15-latin-ext_latin-100.svg#Roboto) format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url(//fonts/roboto-v15-latin-ext_latin-100.eot); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url(//fonts/roboto-v15-latin-ext_latin-100.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
+       url(//fonts/roboto-v15-latin-ext_latin-100.woff2) format('woff2'), /* Super Modern Browsers */
+       url(//fonts/roboto-v15-latin-ext_latin-100.woff) format('woff'), /* Modern Browsers */
+       url(//fonts/roboto-v15-latin-ext_latin-100.ttf) format('truetype'), /* Safari, Android, iOS */
+       url(//fonts/roboto-v15-latin-ext_latin-100.svg#Roboto) format('svg'); /* Legacy iOS */
+}
+/* these will be replaced and quotes gone */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url(http://cdn.example.org/fonts/roboto-v15-latin-ext_latin-100.eot); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url(http://cdn.example.org/fonts/roboto-v15-latin-ext_latin-100.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
+       url(http://cdn.example.org/fonts/roboto-v15-latin-ext_latin-100.woff2) format('woff2'), /* Super Modern Browsers */
+       url(http://cdn.example.org/fonts/roboto-v15-latin-ext_latin-100.woff) format('woff'), /* Modern Browsers */
+       url(http://cdn.example.org/fonts/roboto-v15-latin-ext_latin-100.ttf) format('truetype'), /* Safari, Android, iOS */
+       url(http://cdn.example.org/fonts/roboto-v15-latin-ext_latin-100.svg#Roboto) format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url(http://cdn.example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.eot); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url(http://cdn.example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
+       url(http://cdn.example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.woff2) format('woff2'), /* Super Modern Browsers */
+       url(http://cdn.example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.woff) format('woff'), /* Modern Browsers */
+       url(http://cdn.example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.ttf) format('truetype'), /* Safari, Android, iOS */
+       url(http://cdn.example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.svg#Roboto) format('svg'); /* Legacy iOS */
+}
+CSS;
+
+        // Test with fonts pointed to the CDN + cdn option is set
+        add_filter( 'autoptimize_filter_css_fonts_cdn', '__return_true' );
+        $instance = new autoptimizeStyles($css_in);
+        $instance->setOption('cdn_url', 'http://cdn.example.org');
+        $css_actual_fonts_cdn = $instance->rewrite_assets($css_in);
+
+        $this->assertEquals($css_expected_fonts_cdn, $css_actual_fonts_cdn);
+    }
+
+    // Test css fonts not moved to cdn by default even if cdn_url option is set
+    public function test_css_fonts_skipped_by_default_when_cdn_is_set()
+    {
+        $css_in = <<<CSS
+/* these should not be changed, not even quotes */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('../fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('../fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('../fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('../fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('../fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('//fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('//fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('//fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('//fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('//fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('//fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('/fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('/fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('/fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('/fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('/fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('/fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+CSS;
+        // Expected without cdning fonts but cdn option is set
+        $css_expected = <<<CSS
+/* these should not be changed, not even quotes */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('../fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('../fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('../fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('../fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('../fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('//fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('//fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('//fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('//fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('//fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('//fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('/fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('/fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('/fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('/fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('/fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('/fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  src: url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.eot'); /* IE9 Compat Modes */
+  src: local('Roboto Thin'), local('Roboto-Thin'),
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.woff2') format('woff2'), /* Super Modern Browsers */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.woff') format('woff'), /* Modern Browsers */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('http://example.org/wp-content/themes/mytheme/fonts/roboto-v15-latin-ext_latin-100.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+CSS;
+        // Test without moving fonts to CDN, but cdn option is set
+        $instance = new autoptimizeStyles($css_in);
+        $instance->setOption('cdn_url', 'http://cdn.example.org');
+        $css_actual = $instance->rewrite_assets($css_in);
         $this->assertEquals($css_expected, $css_actual);
     }
 }

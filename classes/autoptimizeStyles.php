@@ -8,6 +8,23 @@ class autoptimizeStyles extends autoptimizeBase
 {
     const ASSETS_REGEX = '/url\s*\(\s*(?!["\']?data:)(?![\'|\"]?[\#|\%|])([^)]+)\s*\)([^;},]*)/i';
 
+    /**
+     * Font-face regex-fu from HamZa at: https://stackoverflow.com/a/21395083
+     * ~
+     * @font-face\s* # Match @font-face and some spaces
+     * (             # Start group 1
+     * \{            # Match {
+     * (?:           # A non-capturing group
+     * [^{}]+        # Match anything except {} one or more times
+     * |             # Or
+     * (?1)          # Recurse/rerun the expression of group 1
+     * )*            # Repeat 0 or more times
+     * \}            # Match }
+     * )             # End group 1
+     * ~xs';
+     */
+    const FONT_FACE_REGEX = '~@font-face\s*(\{(?:[^{}]+|(?1))*\})~xsi'; // added `i` flag for case-insensitivity
+
     private $css             = array();
     private $csscode         = array();
     private $url             = array();
@@ -318,11 +335,146 @@ class autoptimizeStyles extends autoptimizeBase
         return array( 'full' => $headAndData, 'base64data' => $base64data );
     }
 
+    /**
+     * Given an array of key/value pairs to replace in $string,
+     * it does so in a way that the longest strings are replaced first.
+     *
+     * @param string $string
+     * @param array $replacements
+     *
+     * @return string
+     */
+    protected function replace_longest_matches_first($string, $replacements = array())
+    {
+        if ( ! empty( $replacements ) ) {
+            // Sort the replacements array by key length in desc order (so that the longest strings are replaced first)
+            $keys = array_map( 'strlen', array_keys( $replacements ) );
+            array_multisort( $keys, SORT_DESC, $replacements );
+            // $this->debug_log($replacements);
+            $string = str_replace( array_keys( $replacements ), array_values( $replacements ), $string );
+        }
+
+        return $string;
+    }
+
+    /**
+     * Rewrites/Replaces any ASSETS_REGEX-matching urls in a string.
+     * Removes quotes/cruft around each one and passes it through to
+     * `autoptimizeBase::url_replace_cdn()`.
+     * Replacements are performed in a `longest-match-replaced-first` way.
+     *
+     * @param string $code
+     * @return string
+     */
+    public function replace_urls($code = '')
+    {
+        preg_match_all( self::ASSETS_REGEX, $code, $url_src_matches );
+        if ( is_array( $url_src_matches ) && ! empty( $url_src_matches ) ) {
+            foreach ( $url_src_matches[1] as $count => $original_url ) {
+                // Removes quotes and other cruft
+                $url = trim( $original_url, " \t\n\r\0\x0B\"'" );
+
+                // TODO/FIXME: Add a way for other code / callable to be called here
+                // and provide it's own results for the $replacements array for the "current" key.
+                //
+                // If such a result is returned/provided, we sholud then avoid calling
+                // url_replace_cdn() here for the current iteration.
+                //
+                // This would maybe allow the inlining logic currently present in `rewrite_assets()` to be
+                // "pulled out" and given as a callable to this method or something... and then we
+                // could "just" call `replace_urls()` from within `rewrite_assets()` and avoid some
+                // (currently present) code/logic duplication.
+
+                // Do CDN replacement if needed
+                if ( ! empty( $this->cdn_url ) ) {
+                    $replacement_url = $this->url_replace_cdn($url);
+                    // Prepare replacements array
+                    $replacements[ $url_src_matches[1][ $count ] ] = str_replace(
+                        $original_url, $replacement_url, $url_src_matches[1][$count]
+                    );
+                }
+            }
+        }
+
+        $code = $this->replace_longest_matches_first($code, $replacements);
+
+        return $code;
+    }
+
+    /**
+     * "Hides" @font-face declarations by replacing them with `%%FONTFACE%%$base64encoded%%FONTFACE%%` markers.
+     * Also does CDN replacement of any font-urls within those declarations if the `autoptimize_filter_css_fonts_cdn`
+     * filter is used.
+     *
+     * @param string $code
+     * @return string
+     */
+    public function hide_fontface_and_maybe_cdn($code)
+    {
+        // Proceed only if @font-face declarations exist within $code
+        preg_match_all( self::FONT_FACE_REGEX, $code, $fontfaces );
+        if ( isset( $fontfaces[0] ) ) {
+            // Check if we need to cdn fonts or not
+            $do_font_cdn = apply_filters( 'autoptimize_filter_css_fonts_cdn', false );
+
+            foreach ( $fontfaces[0] as $full_match ) {
+                // Keep original match so we can search/replace it
+                $match_search = $full_match;
+
+                // Do font cdn if needed
+                if ( $do_font_cdn ) {
+                    $full_match = $this->replace_urls($full_match);
+                }
+
+                // Replace declaration with its base64 encoded string
+                $replacement = '%%FONTFACE%%' . base64_encode($full_match) . '%%FONTFACE%%';
+                $code = str_replace( $match_search, $replacement, $code);
+            }
+        }
+
+        return $code;
+    }
+
+    /**
+     * Restores original @font-face declarations that have been "hidden"
+     * using `hide_fontface_and_maybe_cdn()`.
+     *
+     * @param string $code
+     * @return string
+     */
+    public function restore_fontface($code)
+    {
+        if ( false !== strpos( $code, '%%FONTFACE%%' ) ) {
+            $code = preg_replace_callback(
+                '#%%FONTFACE%%(.*?)%%FONTFACE%%#is',
+                create_function(
+                    '$matches',
+                    'return base64_decode($matches[1]);'
+                ),
+                $code
+            );
+        }
+
+        return $code;
+    }
+
     // Re-write (and/or inline) referenced assets
     public function rewrite_assets($code)
     {
+        // Handle @font-face rules by hiding and processing them separately
+        $code = $this->hide_fontface_and_maybe_cdn($code);
+
+        // TODO/FIXME:
+        // Certain code parts below are kind-of repeated now in `replace_urls()`, which is not ideal.
+        // There is maybe a way to separate/refactor things and then be able to keep
+        // the ASSETS_REGEX rewriting/handling logic in a single place (along with removing quotes/cruft from matched urls).
+        // See comments in `replace_urls()` regarding this. The idea is to extract the inlining
+        // logic out (which is the only real difference between replace_urls() and the code below), but still
+        // achieve identical results as before.
+
         // Re-write (and/or inline) URLs to point them to the CDN host
         $url_src_matches = array();
+        $imgreplace = array();
         // Matches and captures anything specified within the literal `url()` and excludes those containing data: URIs
         preg_match_all( self::ASSETS_REGEX, $code, $url_src_matches );
         if ( is_array( $url_src_matches ) && ! empty( $url_src_matches ) ) {
@@ -365,8 +517,7 @@ class autoptimizeStyles extends autoptimizeBase
                  */
                 if ( ! $inlined  && ! empty( $this->cdn_url ) ) {
                     // Just do the "simple" CDN replacement
-                    // $cdn_url = $this->url_replace_cdn($url);
-                    $replacement_url = $this->maybe_url_replace_cdn($url);
+                    $replacement_url = $this->url_replace_cdn($url);
                     $imgreplace[ $url_src_matches[1][ $count ] ] = str_replace(
                         $original_url, $replacement_url, $url_src_matches[1][$count]
                     );
@@ -374,30 +525,12 @@ class autoptimizeStyles extends autoptimizeBase
             }
         }
 
-        if ( ! empty( $imgreplace ) ) {
-            // Sort the replacements array by key length in desc order (so that the longest strings are replaced first)
-            $keys = array_map( 'strlen', array_keys( $imgreplace) );
-            array_multisort( $keys, SORT_DESC, $imgreplace );
+        $code = $this->replace_longest_matches_first($code, $imgreplace);
 
-            $this->debug_log($imgreplace);
-            $code = str_replace( array_keys( $imgreplace ), array_values( $imgreplace ), $code );
-        }
+        // Replace back font-face markers with actual font-face declarations
+        $code = $this->restore_fontface($code);
 
         return $code;
-    }
-
-    public function maybe_url_replace_cdn($url)
-    {
-        $url = trim( $url, " \t\n\r\0\x0B\"'" );
-
-        // Exclude fonts from CDN except if filter returns true
-        // https://github.com/futtta/autoptimize/commit/65cd2d1c865cffe3a925d8988cc0cc28d67160c9#commitcomment-21395064
-        // Note that this means regular urls ending in .svg will not be CDNed unless fonts are CDNed too
-        if ( ! preg_match('#\.(woff2?|eot|ttf|otf)$#i', $url ) || apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) ) {
-            $url = $this->url_replace_cdn($url);
-        }
-
-        return $url;
     }
 
     // Joins and optimizes CSS
