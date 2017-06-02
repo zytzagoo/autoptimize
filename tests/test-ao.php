@@ -678,9 +678,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
                 'http://example.org/wp-content/themes/something/example.svg',
                 'http://cdn-test.example.org/wp-content/themes/something/example.svg'
             ),
-            // protocol-relative url without a hostname, combined with a cdn base url that has a protocol specified
-            // TODO/FIXME: is this really the behavior we should have? or should the result perhaps be
-            // `http://cdn-test.example.org/something/somewhere.jpg`?
+            // protocol-relative url with a "local" hostname that doesn't match example.org (AUTOPTIMIZE_WP_SITE_URL)
             array(
                 'http://cdn-test.example.org',
                 '//something/somewhere.jpg',
