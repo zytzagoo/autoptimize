@@ -309,6 +309,9 @@ function autoptimize_end_buffering($content) {
         return $content;
     }
 
+    // we need clean HTML before optimization
+    $content = preg_replace( '#%%(?:INJECTLATER|COMMENTS|IEHACK|NOPTIMIZE|FONTFACE)%%.*?%%(?:INJECTLATER|COMMENTS|IEHACK|NOPTIMIZE|FONTFACE)%%#is' , '', $content );
+
     // load URL constants as late as possible to allow domain mapper to kick in
     // (but do so only if they haven't been defined already)
     if ( ! defined( 'AUTOPTIMIZE_WP_SITE_URL' ) ) {

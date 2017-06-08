@@ -384,6 +384,8 @@ abstract class autoptimizeBase
             }
         } elseif ( $is_css_file ) {
             $filecontent = autoptimizeStyles::fixurls($filepath, $filecontent);
+        } else {
+            $filecontent = '';
         }
 
         // Return modified code
