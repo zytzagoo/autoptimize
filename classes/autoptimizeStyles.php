@@ -927,7 +927,7 @@ class autoptimizeStyles extends autoptimizeBase
             // don't late-inject CSS with font-src's if fonts are set to be CDN'ed
             return false;
         } else if ( ( ( $this->datauris == true ) || ( ! empty( $this->cdn_url ) ) ) && preg_match( '#background[^;}]*url\(#Ui', $css ) ) {
-            // don't late-inject CSS with images if CDN is set OR is image inlining is on
+            // don't late-inject CSS with images if CDN is set OR if image inlining is on
             return false;
         } else {
             // phew, all is safe, we can late-inject
