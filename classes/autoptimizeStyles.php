@@ -113,16 +113,12 @@ class autoptimizeStyles extends autoptimizeBase
         $this->content = $this->hide_noptimize($this->content);
 
         // Exclude (no)script, as those may contain CSS which should be left as is
-        if ( false !== strpos( $this->content, '<script' ) ) {
-            $this->content = preg_replace_callback(
+        $this->content = $this->replace_contents_with_marker_if_exists(
+                'SCRIPT',
+                '<script',
                 '#<(?:no)?script.*?<\/(?:no)?script>#is',
-                create_function(
-                    '$matches',
-                    'return "%%SCRIPT" . AUTOPTIMIZE_HASH . "%%".base64_encode($matches[0])."%%SCRIPT%%";'
-                ),
                 $this->content
-            );
-        }
+        );
 
         // Save IE hacks
         $this->content = $this->hide_iehacks($this->content);
@@ -402,7 +398,7 @@ class autoptimizeStyles extends autoptimizeBase
     }
 
     /**
-     * "Hides" @font-face declarations by replacing them with `%%FONTFACE%%$base64encoded%%FONTFACE%%` markers.
+     * "Hides" @font-face declarations by replacing them with `%%FONTFACE%%` markers.
      * Also does CDN replacement of any font-urls within those declarations if the `autoptimize_filter_css_fonts_cdn`
      * filter is used.
      *
@@ -427,8 +423,8 @@ class autoptimizeStyles extends autoptimizeBase
                 }
 
                 // Replace declaration with its base64 encoded string
-                $replacement = '%%FONTFACE' . AUTOPTIMIZE_HASH . '%%' . base64_encode($full_match) . '%%FONTFACE%%';
-                $code = str_replace( $match_search, $replacement, $code);
+                $replacement = self::build_marker('FONTFACE', $full_match);
+                $code = str_replace( $match_search, $replacement, $code );
             }
         }
 
@@ -444,18 +440,7 @@ class autoptimizeStyles extends autoptimizeBase
      */
     public function restore_fontface($code)
     {
-        if ( false !== strpos( $code, '%%FONTFACE%%' ) ) {
-            $code = preg_replace_callback(
-                '#%%FONTFACE' . AUTOPTIMIZE_HASH . '%%(.*?)%%FONTFACE%%#is',
-                create_function(
-                    '$matches',
-                    'return base64_decode($matches[1]);'
-                ),
-                $code
-            );
-        }
-
-        return $code;
+        return $this->restore_marked_content('FONTFACE', $code);
     }
 
     // Re-write (and/or inline) referenced assets
@@ -558,7 +543,7 @@ class autoptimizeStyles extends autoptimizeBase
                         $css = $tmpstyle;
                         $this->alreadyminified = true;
                     } else if ( $this->can_inject_late($cssPath, $css) ) {
-                        $css = '/*!%%INJECTLATER' . AUTOPTIMIZE_HASH . '%%' . base64_encode( $cssPath ) . '|' . md5( $css ) . '%%INJECTLATER%%*/';
+                        $css = self::build_injectlater_marker($cssPath, md5($css));
                     }
                 } else {
                     // Couldn't read CSS. Maybe getpath isn't working?
@@ -621,7 +606,7 @@ class autoptimizeStyles extends autoptimizeBase
                                 $code = $tmpstyle;
                                 $this->alreadyminified = true;
                             } else if ( $this->can_inject_late($path, $code) ) {
-                                $code = '/*!%%INJECTLATER' . AUTOPTIMIZE_HASH . '%%' . base64_encode( $path ) . '|' . md5( $code ) . '%%INJECTLATER%%*/';
+                                $code = self::build_injectlater_marker($path, md5($code));
                             }
 
                             if ( ! empty( $code ) ) {
@@ -676,7 +661,7 @@ class autoptimizeStyles extends autoptimizeBase
             // Minify
             $code = $this->run_minifier_on($code);
 
-            // Bring back %%INJECTLATER%% stuff
+            // Bring back INJECTLATER stuff
             $code = $this->inject_minified($code);
 
             // Filter results
@@ -746,16 +731,7 @@ class autoptimizeStyles extends autoptimizeBase
         $this->content = $this->restore_comments($this->content);
 
         // restore (no)script
-        if ( strpos( $this->content, '%%SCRIPT%%' ) !== false ) {
-            $this->content = preg_replace_callback(
-                '#%%SCRIPT' . AUTOPTIMIZE_HASH . '%%(.*?)%%SCRIPT%%#is',
-                create_function(
-                    '$matches',
-                    'return base64_decode($matches[1]);'
-                ),
-                $this->content
-            );
-        }
+        $this->content = $this->restore_marked_content('SCRIPT', $this->content);
 
         // Restore noptimize
         $this->content = $this->restore_noptimize($this->content);
@@ -947,11 +923,11 @@ class autoptimizeStyles extends autoptimizeBase
         } else if ( false !== strpos( $css, '@import' ) ) {
             // can't late-inject files with imports as those need to be aggregated
             return false;
-        } else if ( ( false !== strpos( $css, '@font-face') ) && ( apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) === true) && ( ! empty( $this->cdn_url ) ) ) {
+        } else if ( ( false !== strpos( $css, '@font-face') ) && ( apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) === true ) && ( ! empty( $this->cdn_url ) ) ) {
             // don't late-inject CSS with font-src's if fonts are set to be CDN'ed
             return false;
         } else if ( ( ( $this->datauris == true ) || ( ! empty( $this->cdn_url ) ) ) && preg_match( '#background[^;}]*url\(#Ui', $css ) ) {
-            // don't late-inject CSS with images if CDN is set OR is image inlining is on
+            // don't late-inject CSS with images if CDN is set OR if image inlining is on
             return false;
         } else {
             // phew, all is safe, we can late-inject

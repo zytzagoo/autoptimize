@@ -296,7 +296,7 @@ class autoptimizeScripts extends autoptimizeBase
                         $scriptsrc = $tmpscriptsrc;
                         $this->alreadyminified = true;
                     } else if ( $this->can_inject_late($script) ) {
-                        $scriptsrc = '/*!%%INJECTLATER' . AUTOPTIMIZE_HASH . '%%' . base64_encode( $script ) . '|' . md5( $scriptsrc ) . '%%INJECTLATER%%*/';
+                        $scriptsrc = self::build_injectlater_marker($script, md5($scriptsrc));
                     }
                     $this->jscode .= "\n" . $scriptsrc;
                 }/*else{
@@ -490,7 +490,7 @@ class autoptimizeScripts extends autoptimizeBase
         if ( true !== $this->inject_min_late ) {
             // late-inject turned off
             return false;
-        } else if ( ( false === strpos( $jsPath, 'min.js' ) ) && ( false === strpos( $jsPath, 'wp-includes/js/jquery/jquery.js') ) && ( str_replace( $consider_minified_array, '', $jsPath ) === $jsPath ) ) {
+        } else if ( ( false === strpos( $jsPath, 'min.js' ) ) && ( false === strpos( $jsPath, 'wp-includes/js/jquery/jquery.js' ) ) && ( str_replace( $consider_minified_array, '', $jsPath ) === $jsPath ) ) {
             // file not minified based on filename & filter
             return false;
         } else {
