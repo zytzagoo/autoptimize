@@ -113,16 +113,12 @@ class autoptimizeStyles extends autoptimizeBase
         $this->content = $this->hide_noptimize($this->content);
 
         // Exclude (no)script, as those may contain CSS which should be left as is
-        if ( false !== strpos( $this->content, '<script' ) ) {
-            $this->content = preg_replace_callback(
+        $this->content = $this->replace_contents_with_marker_if_exists(
+                'SCRIPT',
+                '<script',
                 '#<(?:no)?script.*?<\/(?:no)?script>#is',
-                create_function(
-                    '$matches',
-                    'return "%%SCRIPT" . AUTOPTIMIZE_HASH . "%%".base64_encode($matches[0])."%%SCRIPT%%";'
-                ),
                 $this->content
-            );
-        }
+        );
 
         // Save IE hacks
         $this->content = $this->hide_iehacks($this->content);
@@ -444,18 +440,7 @@ class autoptimizeStyles extends autoptimizeBase
      */
     public function restore_fontface($code)
     {
-        if ( false !== strpos( $code, '%%FONTFACE%%' ) ) {
-            $code = preg_replace_callback(
-                '#%%FONTFACE' . AUTOPTIMIZE_HASH . '%%(.*?)%%FONTFACE%%#is',
-                create_function(
-                    '$matches',
-                    'return base64_decode($matches[1]);'
-                ),
-                $code
-            );
-        }
-
-        return $code;
+        return $this->restore_marked_content('FONTFACE', $code);
     }
 
     // Re-write (and/or inline) referenced assets
@@ -746,16 +731,7 @@ class autoptimizeStyles extends autoptimizeBase
         $this->content = $this->restore_comments($this->content);
 
         // restore (no)script
-        if ( strpos( $this->content, '%%SCRIPT%%' ) !== false ) {
-            $this->content = preg_replace_callback(
-                '#%%SCRIPT' . AUTOPTIMIZE_HASH . '%%(.*?)%%SCRIPT%%#is',
-                create_function(
-                    '$matches',
-                    'return base64_decode($matches[1]);'
-                ),
-                $this->content
-            );
-        }
+        $this->content = $this->restore_marked_content('SCRIPT', $this->content);
 
         // Restore noptimize
         $this->content = $this->restore_noptimize($this->content);
