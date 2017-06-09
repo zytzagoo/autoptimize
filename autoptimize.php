@@ -309,9 +309,6 @@ function autoptimize_end_buffering($content) {
         return $content;
     }
 
-    // we need clean HTML before optimization
-    $content = preg_replace( '#%%(?:INJECTLATER|COMMENTS|IEHACK|NOPTIMIZE|FONTFACE)%%.*?%%(?:INJECTLATER|COMMENTS|IEHACK|NOPTIMIZE|FONTFACE)%%#is' , '', $content );
-
     // load URL constants as late as possible to allow domain mapper to kick in
     // (but do so only if they haven't been defined already)
     if ( ! defined( 'AUTOPTIMIZE_WP_SITE_URL' ) ) {
@@ -342,6 +339,10 @@ function autoptimize_end_buffering($content) {
     // Again, check if already defined to prevent errors in tests where this function is called multiple times
     if ( ! defined( 'AUTOPTIMIZE_WP_ROOT_URL' ) ) {
         define( 'AUTOPTIMIZE_WP_ROOT_URL', str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', AUTOPTIMIZE_WP_CONTENT_URL ) );
+    }
+
+    if ( ! defined( 'AUTOPTIMIZE_HASH' ) ) {
+        define( 'AUTOPTIMIZE_HASH', wp_hash( AUTOPTIMIZE_CACHE_URL . microtime(), 'nonce' ) );
     }
 
     // Config element
