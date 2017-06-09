@@ -337,7 +337,7 @@ abstract class autoptimizeBase
     public function inject_minified_callback($matches)
     {
         static $conf = null;
-        if (null === $conf) {
+        if ( null === $conf ) {
             $conf = autoptimizeConfig::instance();
         }
 

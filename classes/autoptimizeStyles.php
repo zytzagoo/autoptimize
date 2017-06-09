@@ -402,7 +402,7 @@ class autoptimizeStyles extends autoptimizeBase
     }
 
     /**
-     * "Hides" @font-face declarations by replacing them with `%%FONTFACE%%$base64encoded%%FONTFACE%%` markers.
+     * "Hides" @font-face declarations by replacing them with `%%FONTFACE%%` markers.
      * Also does CDN replacement of any font-urls within those declarations if the `autoptimize_filter_css_fonts_cdn`
      * filter is used.
      *
@@ -427,8 +427,8 @@ class autoptimizeStyles extends autoptimizeBase
                 }
 
                 // Replace declaration with its base64 encoded string
-                $replacement = '%%FONTFACE' . AUTOPTIMIZE_HASH . '%%' . base64_encode($full_match) . '%%FONTFACE%%';
-                $code = str_replace( $match_search, $replacement, $code);
+                $replacement = '%%FONTFACE' . AUTOPTIMIZE_HASH . '%%' . base64_encode( $full_match ) . '%%FONTFACE%%';
+                $code = str_replace( $match_search, $replacement, $code );
             }
         }
 
@@ -947,7 +947,7 @@ class autoptimizeStyles extends autoptimizeBase
         } else if ( false !== strpos( $css, '@import' ) ) {
             // can't late-inject files with imports as those need to be aggregated
             return false;
-        } else if ( ( false !== strpos( $css, '@font-face') ) && ( apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) === true) && ( ! empty( $this->cdn_url ) ) ) {
+        } else if ( ( false !== strpos( $css, '@font-face') ) && ( apply_filters( 'autoptimize_filter_css_fonts_cdn', false ) === true ) && ( ! empty( $this->cdn_url ) ) ) {
             // don't late-inject CSS with font-src's if fonts are set to be CDN'ed
             return false;
         } else if ( ( ( $this->datauris == true ) || ( ! empty( $this->cdn_url ) ) ) && preg_match( '#background[^;}]*url\(#Ui', $css ) ) {
