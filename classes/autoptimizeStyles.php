@@ -423,7 +423,7 @@ class autoptimizeStyles extends autoptimizeBase
                 }
 
                 // Replace declaration with its base64 encoded string
-                $replacement = '%%FONTFACE' . AUTOPTIMIZE_HASH . '%%' . base64_encode( $full_match ) . '%%FONTFACE%%';
+                $replacement = self::build_marker('FONTFACE', $full_match);
                 $code = str_replace( $match_search, $replacement, $code );
             }
         }
@@ -543,7 +543,7 @@ class autoptimizeStyles extends autoptimizeBase
                         $css = $tmpstyle;
                         $this->alreadyminified = true;
                     } else if ( $this->can_inject_late($cssPath, $css) ) {
-                        $css = '/*!%%INJECTLATER' . AUTOPTIMIZE_HASH . '%%' . base64_encode( $cssPath ) . '|' . md5( $css ) . '%%INJECTLATER%%*/';
+                        $css = self::build_injectlater_marker($cssPath, md5($css));
                     }
                 } else {
                     // Couldn't read CSS. Maybe getpath isn't working?
@@ -606,7 +606,7 @@ class autoptimizeStyles extends autoptimizeBase
                                 $code = $tmpstyle;
                                 $this->alreadyminified = true;
                             } else if ( $this->can_inject_late($path, $code) ) {
-                                $code = '/*!%%INJECTLATER' . AUTOPTIMIZE_HASH . '%%' . base64_encode( $path ) . '|' . md5( $code ) . '%%INJECTLATER%%*/';
+                                $code = self::build_injectlater_marker($path, md5($code));
                             }
 
                             if ( ! empty( $code ) ) {
@@ -661,7 +661,7 @@ class autoptimizeStyles extends autoptimizeBase
             // Minify
             $code = $this->run_minifier_on($code);
 
-            // Bring back %%INJECTLATER%% stuff
+            // Bring back INJECTLATER stuff
             $code = $this->inject_minified($code);
 
             // Filter results

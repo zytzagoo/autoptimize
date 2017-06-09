@@ -375,7 +375,8 @@ abstract class autoptimizeBase
     }
 
     // Inject already minified code in optimized JS/CSS
-    protected function inject_minified($in) {
+    protected function inject_minified($in)
+    {
         $out = $in;
 
         if ( false !== strpos( $in, '%%INJECTLATER%%' ) ) {
@@ -387,6 +388,54 @@ abstract class autoptimizeBase
         }
 
         return $out;
+    }
+
+    /**
+     * Specialized method to create the INJECTLATER marker.
+     * These are somewhat "special", in the sense that they're additionally wrapped
+     * within an "exclamation mark style" comment, so that they're not stripped out by minifiers.
+     * They also currently contain the hash of the file's contents too (unlike other markers).
+     *
+     * @param string $filepath
+     * @param string $hash
+     * @return string
+     */
+    public static function build_injectlater_marker($filepath, $hash)
+    {
+        $contents = '/*!' . self::build_marker('INJECTLATER', $filepath, $hash) . '*/';
+
+        return $contents;
+    }
+
+    /**
+     * Creates and returns a `%%`-style named marker which holds
+     * the base64 encoded `$data`.
+     * If `$hash` is provided, it's appended to the base64 encoded string
+     * using `|` as the separator (in order to support building the
+     * somewhat special/different INJECTLATER marker).
+     *
+     * @param string $name Marker name
+     * @param string $data Marker data which will be encoded in base64
+     * @param string|null $hash Optional.
+     *
+     * @return string
+     */
+    public static function build_marker($name, $data, $hash = null)
+    {
+        // $name = strtoupper($name);
+
+        // Start the marker, add the data
+        $marker = '%%' . $name . AUTOPTIMIZE_HASH . '%%' . base64_encode( $data );
+
+        // Add the hash if provided
+        if ( null !== $hash ) {
+            $marker .= '|' . $hash;
+        }
+
+        // Close the marker
+        $marker .= '%%' . $name . '%%';
+
+        return $marker;
     }
 
     /**
@@ -436,7 +485,7 @@ abstract class autoptimizeBase
                 $re_replace_pattern,
                 create_function(
                     '$matches',
-                    'return "%%' . $marker . AUTOPTIMIZE_HASH . '%%" . base64_encode($matches[0]) . "%%' . $marker . '%%";'
+                    'return autoptimizeBase::build_marker("' . $marker . '", $matches[0]);'
                 ),
                 $content
             );

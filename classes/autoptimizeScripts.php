@@ -296,7 +296,7 @@ class autoptimizeScripts extends autoptimizeBase
                         $scriptsrc = $tmpscriptsrc;
                         $this->alreadyminified = true;
                     } else if ( $this->can_inject_late($script) ) {
-                        $scriptsrc = '/*!%%INJECTLATER' . AUTOPTIMIZE_HASH . '%%' . base64_encode( $script ) . '|' . md5( $scriptsrc ) . '%%INJECTLATER%%*/';
+                        $scriptsrc = self::build_injectlater_marker($script, md5($scriptsrc));
                     }
                     $this->jscode .= "\n" . $scriptsrc;
                 }/*else{
