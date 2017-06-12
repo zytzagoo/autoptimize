@@ -290,18 +290,10 @@ abstract class autoptimizeBase
          * so we take that and split the string on `|`.
          * First element is the filepath, second is the md5 hash of contents the filepath
          * had when it was being processed.
-         * If we don't have those, or the md5 hashes don't match, we'll bail out early.
-         *
-         * N.B.:
-         * This introduces the potential of a race condition (in the sense that the file in
-         * question could've legitimately been changed between when it was being processed
-         * and now that it is being placed back). This now results in the new file contents
-         * no longer being included in the resulting AO-ed file (while previously, they
-         * would've been included).
-         */
+         * If we don't have those, we'll bail out early.
+        */
         $filepath = null;
         $filehash = null;
-        $hash_missmatch = false;
 
         // Grab the parts we need
         $parts = explode( $matches[1], '|' );
@@ -310,17 +302,8 @@ abstract class autoptimizeBase
             $filehash = isset($parts[1]) ? $parts[1] : null;
         }
 
-        // Check that hash matches if we've gotten the parts earlier
-        if ( $filepath && $filehash ) {
-            $filecontent = file_get_contents( $filepath );
-            $hash_actual = md5( $filecontent );
-            if ( $hash_actual !== $filehash ) {
-                $hash_missmatch = true;
-            }
-        }
-
         // Bail early if something's not right...
-        if ( ! $filepath || ! $filehash || $hash_missmatch ) {
+        if ( ! $filepath || ! $filehash ) {
             return "\n";
         }
 
