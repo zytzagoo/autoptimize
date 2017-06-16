@@ -86,8 +86,11 @@ class autoptimizeStyles extends autoptimizeBase
         if ( '' !== $excludeCSS ) {
             $this->dontmove = array_filter( array_map( 'trim', explode( ',', $excludeCSS ) ) );
         } else {
-            $this->dontmove = '';
+            $this->dontmove = array();
         }
+
+        // forcefully exclude CSS with data-noptimize attrib
+        $this->dontmove[] = 'data-noptimize';
 
         // Should we defer css?
         // value: true / false
@@ -897,7 +900,7 @@ class autoptimizeStyles extends autoptimizeBase
             // no match with whitelist
             return false;
         } else {
-            if ( is_array( $this->dontmove ) ) {
+            if ( is_array( $this->dontmove ) && ! empty( $this->dontmove ) ) {
                 foreach ( $this->dontmove as $match ) {
                     if ( false !== strpos( $tag, $match ) ) {
                         //Matched something
