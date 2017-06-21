@@ -342,7 +342,7 @@ function autoptimize_end_buffering($content) {
     }
 
     if ( ! defined( 'AUTOPTIMIZE_HASH' ) ) {
-        define( 'AUTOPTIMIZE_HASH', wp_hash( AUTOPTIMIZE_CACHE_URL . SECURE_AUTH_KEY . LOGGED_IN_SALT ) );
+        define( 'AUTOPTIMIZE_HASH', wp_hash( AUTOPTIMIZE_CACHE_URL ) );
     }
 
     // Config element
