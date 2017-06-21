@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class autoptimizeStyles extends autoptimizeBase
 {
-    const ASSETS_REGEX = '/url\s*\(\s*(?!["\']?data:)(?![\'|\"]?[\#|\%|])([^)]+)\s*\)([^;},]*)/i';
+    const ASSETS_REGEX = '/url\s*\(\s*(?!["\']?data:)(?![\'|\"]?[\#|\%|])([^)]+)\s*\)([^;},\s]*)/i';
 
     /**
      * Font-face regex-fu from HamZa at: https://stackoverflow.com/a/21395083

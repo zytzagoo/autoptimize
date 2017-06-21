@@ -1285,4 +1285,24 @@ CSS;
         $css_actual = $instance->rewrite_assets($css_in);
         $this->assertEquals($css_expected, $css_actual);
     }
+
+    public function test_assets_regex_replaces_multi_bg_images()
+    {
+        $in = <<<CSS
+body:after {
+  content: url(/img/close.png) url(/img/loading.gif) url(/img/prev.png) url(/img/next.png);
+}
+CSS;
+        $expected = <<<CSS
+body:after {
+  content: url(http://cdn.example.org/img/close.png) url(http://cdn.example.org/img/loading.gif) url(http://cdn.example.org/img/prev.png) url(http://cdn.example.org/img/next.png);
+}
+CSS;
+
+        $instance = new autoptimizeStyles($in);
+        $instance->setOption('cdn_url', 'http://cdn.example.org');
+        $actual = $instance->rewrite_assets($in);
+
+        $this->assertEquals($expected, $actual);
+    }
 }
