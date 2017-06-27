@@ -145,7 +145,7 @@ function autoptimize_do_buffering($doing_tests = false) {
     static $do_buffering = null;
 
     // Only check once in case we're called multiple times by others but
-    // still allowiong multiple calls when doing tests
+    // still allowing multiple calls when doing tests
     if ( null === $do_buffering || $doing_tests ) {
 
         $ao_noptimize = false;
@@ -154,11 +154,18 @@ function autoptimize_do_buffering($doing_tests = false) {
             $ao_noptimize = true;
         }
 
-        // No need to check QS if the functionality is explicitly disabled via filter
+        // No need to check query-string if the functionality is explicitly disabled via filter
         if ( apply_filters( 'autoptimize_filter_honor_qs_noptimize', true ) ) {
-            // Check for `ao_noptimize` in qs to get non-optimized page for debugging
-            if ( isset( $_GET['ao_noptimize'] ) && '1' === $_GET['ao_noptimize'] ) {
-                $ao_noptimize = true;
+            // Check for `ao_noptimize` (and other) keys in qs to get non-optimized page for debugging
+            $keys = array(
+                'ao_noptimize',
+                'ao_noptirocket'
+            );
+            foreach ( $keys as $key ) {
+                if ( array_key_exists( $key, $_GET ) && '1' === $_GET[ $key ] ) {
+                    $ao_noptimize = true;
+                    break;
+                }
             }
         }
 
