@@ -792,7 +792,7 @@ class autoptimizeStyles extends autoptimizeBase
                 // Add the stylesheet either deferred (import at bottom) or normal links in head
                 if ( $this->defer ) {
                     // Filter to modify the onload attribute - passes value and the stylesheet url
-                    $preloadOnLoad = apply_filters( 'autoptimize_filter_css_preload_onload', "this.rel=\'stylesheet\'", $url );
+                    $preloadOnLoad = apply_filters( 'autoptimize_filter_css_preload_onload', "this.rel='stylesheet'", $url );
 
                     $preloadCssBlock .= '<link rel="preload" as="style" media="' . $media . '" href="' . $url . '" onload="' . $preloadOnLoad . '" />';
                     $noScriptCssBlock .= '<link type="text/css" media="' . $media . '" href="' . $url . '" rel="stylesheet" />';
