@@ -56,7 +56,6 @@ class autoptimizeConfig
 <style>
 /* title and button */
 #ao_title_and_button:after {content:''; display:block; clear:both;}
-#ao_title{float:left;}
 #ao_adv_button{float:right;}
 #ao_hide_adv:before, #ao_show_adv:before {
     display: inline-block;
@@ -164,7 +163,6 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
     #ao_hide_adv:before,#ao_show_adv:before {font-size: 25px;}
     #autoptimize_main input[type="checkbox"] {margin-left: 10px;}
     #autoptimize_main .cb_label {display: block; padding-left: 45px; text-indent: -45px;}
-
 }
 </style>
 
@@ -191,6 +189,8 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
         </span>
         </h1>
     </div>
+
+    <?php echo $this->ao_admin_tabs(); ?>
 
 <form method="post" action="options.php">
 <?php settings_fields('autoptimize'); ?>
@@ -454,6 +454,7 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
             if (jQuery("#autoptimize_js").attr('checked')) {
                 jQuery(".js_sub:visible").fadeTo("fast",1);
             }
+            check_ini_state();
             jQuery( "input#autoptimize_show_adv" ).val("1");
         });
 
@@ -462,12 +463,13 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
             jQuery( "#ao_show_adv" ).show();
             jQuery( ".ao_adv" ).hide("slow");
             jQuery( ".ao_adv" ).addClass("hidden");
-                        if (!jQuery("#autoptimize_css").attr('checked')) {
-                                jQuery(".css_sub:visible").fadeTo("fast",.33);
-                        }
-                        if (!jQuery("#autoptimize_js").attr('checked')) {
-                                jQuery(".js_sub:visible").fadeTo("fast",.33);
-                        }
+            if (!jQuery("#autoptimize_css").attr('checked')) {
+                jQuery(".css_sub:visible").fadeTo("fast",.33);
+            }
+            if (!jQuery("#autoptimize_js").attr('checked')) {
+                jQuery(".js_sub:visible").fadeTo("fast",.33);
+            }
+            check_ini_state();
             jQuery( "input#autoptimize_show_adv" ).val("0");
         });
 
@@ -479,21 +481,21 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
             }
         });
 
-                jQuery( "#autoptimize_js" ).change(function() {
-                        if (this.checked) {
-                                jQuery(".js_sub:visible").fadeTo("fast",1);
-                        } else {
-                                jQuery(".js_sub:visible").fadeTo("fast",.33);
-                        }
-                });
+        jQuery( "#autoptimize_js" ).change(function() {
+            if (this.checked) {
+                jQuery(".js_sub:visible").fadeTo("fast",1);
+            } else {
+                jQuery(".js_sub:visible").fadeTo("fast",.33);
+            }
+        });
 
-                jQuery( "#autoptimize_css" ).change(function() {
-                        if (this.checked) {
-                                jQuery(".css_sub:visible").fadeTo("fast",1);
-                        } else {
-                                jQuery(".css_sub:visible").fadeTo("fast",.33);
-                        }
-                });
+        jQuery( "#autoptimize_css" ).change(function() {
+            if (this.checked) {
+                jQuery(".css_sub:visible").fadeTo("fast",1);
+            } else {
+                jQuery(".css_sub:visible").fadeTo("fast",.33);
+            }
+        });
 
         jQuery( "#autoptimize_css_inline" ).change(function() {
             if (this.checked) {
@@ -536,12 +538,12 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
         if (!jQuery("#autoptimize_html").attr('checked')) {
             jQuery(".html_sub:visible").fadeTo('fast',.33);
         }
-                if (!jQuery("#autoptimize_css").attr('checked')) {
-                        jQuery(".css_sub:visible").fadeTo('fast',.33);
-                }
-                if (!jQuery("#autoptimize_js").attr('checked')) {
-                        jQuery(".js_sub:visible").fadeTo('fast',.33);
-                }
+        if (!jQuery("#autoptimize_css").attr('checked')) {
+            jQuery(".css_sub:visible").fadeTo('fast',.33);
+        }
+        if (!jQuery("#autoptimize_js").attr('checked')) {
+            jQuery(".js_sub:visible").fadeTo('fast',.33);
+        }
     }
 
     function show_feed(id) {
@@ -558,13 +560,7 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
 
     public function addmenu()
     {
-        $hook = add_options_page(
-            __( 'Autoptimize Options', 'autoptimize' ),
-            'Autoptimize',
-            'manage_options',
-            'autoptimize',
-            array( $this, 'show' )
-        );
+        $hook = add_options_page( __( 'Autoptimize Options', 'autoptimize' ), 'Autoptimize', 'manage_options', 'autoptimize', array( $this, 'show' ) );
         add_action( 'admin_print_scripts-' . $hook, array( $this, 'autoptimize_admin_scripts' ) );
         add_action( 'admin_print_styles-' . $hook, array( $this, 'autoptimize_admin_styles' ) );
     }
@@ -580,7 +576,6 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
         wp_enqueue_style( 'unslider', plugins_url( '/external/js/unslider.css', __FILE__ ) );
         wp_enqueue_style( 'unslider-dots', plugins_url( '/external/js/unslider-dots.css', __FILE__ ) );
     }
-
 
     public function registersettings() {
         register_setting( 'autoptimize', 'autoptimize_html' );
@@ -718,5 +713,34 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
             </ul>
         <?php
         }
+    }
+
+    // based on http://wordpress.stackexchange.com/a/58826
+    static function ao_admin_tabs()
+    {
+        $tabs = apply_filters( 'autoptimize_filter_settingsscreen_tabs' ,array( 'autoptimize' => __( 'Main', 'autoptimize' ) ) );
+        $tabContent = '';
+        $tabs_count = count($tabs);
+        if ( $tabs_count > 1 ) {
+            if ( isset( $_GET['page'] ) ) {
+                $currentId = $_GET['page'];
+            } else {
+                $currentId = "autoptimize";
+            }
+            $tabContent .= '<h2 class="nav-tab-wrapper">';
+            foreach ($tabs as $tabId => $tabName) {
+                if ( $currentId == $tabId ) {
+                    $class = ' nav-tab-active';
+                } else{
+                    $class = '';
+                }
+                $tabContent .= '<a class="nav-tab' . $class . '" href="?page=' . $tabId . '">' . $tabName . '</a>';
+            }
+            $tabContent .= '</h2>';
+        } else {
+            $tabContent = '<hr/>';
+        }
+
+        return $tabContent;
     }
 }
