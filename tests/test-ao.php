@@ -1305,4 +1305,26 @@ CSS;
 
         $this->assertEquals($expected, $actual);
     }
+
+    public function test_at_supports_spacing_issue_110()
+    {
+        $in = <<<CSS
+@supports (-webkit-filter: blur(3px)) or (filter: blur(3px)) {
+    .blur { 
+        filter:blur(3px); 
+    }
+}
+@supports((position:-webkit-sticky) or (position:sticky)) {
+    .sticky { position:sticky; }
+}
+CSS;
+        $expected = <<<CSS
+@supports(-webkit-filter:blur(3px)) or (filter:blur(3px)){.blur{filter:blur(3px)}}@supports((position:-webkit-sticky) or (position:sticky)){.sticky{position:sticky}}
+CSS;
+
+        $instance = new autoptimizeStyles($in);
+        $actual = $instance->run_minifier_on($in);
+
+        $this->assertEquals($expected, $actual);
+    }
 }
