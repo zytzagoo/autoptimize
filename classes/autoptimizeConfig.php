@@ -677,7 +677,7 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
             }
 
             // Save for next call
-            $this->config = $config;
+            $this->config = apply_filters( 'autoptimize_filter_get_config', $config );
         }
 
         if ( isset( $this->config[$key] ) ) {
