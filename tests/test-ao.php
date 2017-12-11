@@ -1327,4 +1327,18 @@ CSS;
 
         $this->assertEquals($expected, $actual);
     }
+
+    public function test_css_import_semicolon_url_issue_122()
+    {
+        $in = <<<CSS
+@import url("foo.css?a&#038;b");
+@import url("bar.css");
+CSS;
+
+        $expected = '@import url("foo.css?a&#038;b");@import url("bar.css");';
+
+        $instance = new autoptimizeStyles($in);
+        $actual   = $instance->run_minifier_on($in);
+        $this->assertEquals($expected, $actual);
+    }
 }
