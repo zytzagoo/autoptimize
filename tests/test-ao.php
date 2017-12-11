@@ -1331,14 +1331,34 @@ CSS;
     public function test_css_import_semicolon_url_issue_122()
     {
         $in = <<<CSS
+<style type="text/css">
 @import url("foo.css?a&#038;b");
 @import url("bar.css");
+</style>
 CSS;
 
-        $expected = '@import url("foo.css?a&#038;b");@import url("bar.css");';
+        $expected = '<style type="text/css" media="all">@import url(http://cdn.example.org/foo.css?a&#038;b);@import url(http://cdn.example.org/bar.css);</style><!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `title` missing --><!--/noptimize-->';
+
+        $conf = autoptimizeConfig::instance();
+        $options = array(
+            'autoptimizeStyles' => array(
+                'justhead' => $conf->get('autoptimize_css_justhead'),
+                'datauris' => $conf->get('autoptimize_css_datauris'),
+                'defer' => $conf->get('autoptimize_css_defer'),
+                'defer_inline' => $conf->get('autoptimize_css_defer_inline'),
+                'inline' => $conf->get('autoptimize_css_inline'),
+                'css_exclude' => $conf->get('autoptimize_css_exclude'),
+                'cdn_url' => $conf->get('autoptimize_cdn_url'),
+                'include_inline' => $conf->get('autoptimize_css_include_inline'),
+                'nogooglefont' => $conf->get('autoptimize_css_nogooglefont')
+            )
+        );
 
         $instance = new autoptimizeStyles($in);
-        $actual   = $instance->run_minifier_on($in);
+        $instance->read($options['autoptimizeStyles']);
+        $instance->minify();
+        $instance->cache();
+        $actual = $instance->getcontent();
         $this->assertEquals($expected, $actual);
     }
 }
