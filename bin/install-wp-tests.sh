@@ -12,6 +12,7 @@ DB_HOST=${4-localhost}
 WP_VERSION=${5-latest}
 
 tmpdir=${TMPDIR-/tmp}
+tmpdir=${tmpdir%/}
 
 WP_TESTS_DIR=${WP_TESTS_DIR-$tmpdir/wordpress-tests-lib}
 WP_CORE_DIR=${WP_CORE_DIR-$tmpdir/wordpress/}
