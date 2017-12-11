@@ -1361,4 +1361,47 @@ CSS;
         $actual = $instance->getcontent();
         $this->assertEquals($expected, $actual);
     }
+
+    public function test_fixurls_with_at_imports_and_media_queries()
+    {
+        $in  = '@import "foo.css"; @import "bar.css" (orientation:landscape);';
+        $exp = '@import url(//example.org/wp-content/themes/my-theme/foo.css); @import url(//example.org/wp-content/themes/my-theme/bar.css) (orientation:landscape);';
+
+        $actual = autoptimizeStyles::fixurls(ABSPATH . 'wp-content/themes/my-theme/style.css', $in);
+        $this->assertEquals($exp, $actual);
+    }
+
+    public function test_aostyles_at_imports_with_media_queries()
+    {
+        $in = <<<CSS
+<style type="text/css">
+@import "foo.css"; @import "bar.css" (orientation:landscape);
+</style>
+CSS;
+
+        $expected = '<style type="text/css" media="all">@import url(http://cdn.example.org/foo.css);@import url(http://cdn.example.org/bar.css)(orientation:landscape);</style><!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `title` missing --><!--/noptimize-->';
+
+        $conf = autoptimizeConfig::instance();
+        $options = array(
+            'autoptimizeStyles' => array(
+                'justhead' => $conf->get('autoptimize_css_justhead'),
+                'datauris' => $conf->get('autoptimize_css_datauris'),
+                'defer' => $conf->get('autoptimize_css_defer'),
+                'defer_inline' => $conf->get('autoptimize_css_defer_inline'),
+                'inline' => $conf->get('autoptimize_css_inline'),
+                'css_exclude' => $conf->get('autoptimize_css_exclude'),
+                'cdn_url' => $conf->get('autoptimize_cdn_url'),
+                'include_inline' => $conf->get('autoptimize_css_include_inline'),
+                'nogooglefont' => $conf->get('autoptimize_css_nogooglefont')
+            )
+        );
+
+        $instance = new autoptimizeStyles($in);
+        $instance->read($options['autoptimizeStyles']);
+        $instance->minify();
+        $instance->cache();
+
+        $actual = $instance->getcontent();
+        $this->assertEquals($expected, $actual);
+    }
 }
