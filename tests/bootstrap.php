@@ -2,6 +2,16 @@
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
 if ( ! $_tests_dir ) {
+    $tmp_dir = getenv( 'TMPDIR' );
+    if ( ! empty( $tmp_dir ) ) {
+        $_tests_dir = rtrim($tmp_dir, '/') . '/wordpress-tests-lib';
+        if (!is_dir($_tests_dir)) {
+            $_tests_dir = null;
+        }
+    }
+}
+
+if ( ! $_tests_dir ) {
     $_tests_dir = '/tmp/wordpress-tests-lib';
 }
 
