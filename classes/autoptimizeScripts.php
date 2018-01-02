@@ -13,14 +13,11 @@ class autoptimizeScripts extends autoptimizeBase
     );
 
     private $dontmove = array(
-        'document.write','html5.js','show_ads.js','google_ad','blogcatalog.com/w',
-        'tweetmeme.com/i','mybloglog.com/','histats.com/js','ads.smowtion.com/ad.js',
-        'statcounter.com/counter/counter.js','widgets.amung.us','ws.amazon.com/widgets',
-        'media.fastclick.net','/ads/','comment-form-quicktags/quicktags.php','edToolbar',
-        'intensedebate.com','scripts.chitika.net/','_gaq.push','jotform.com/',
-        'admin-bar.min.js','GoogleAnalyticsObject','plupload.full.min.js',
-        'syntaxhighlighter','adsbygoogle','gist.github.com','_stq','nonce',
-        'post_id', 'data-noptimize','wordfence_logHuman'
+        'document.write','html5.js','show_ads.js','google_ad','histats.com/js','statcounter.com/counter/counter.js',
+        'ws.amazon.com/widgets','media.fastclick.net','/ads/','comment-form-quicktags/quicktags.php','edToolbar',
+        'intensedebate.com','scripts.chitika.net/','_gaq.push','jotform.com/','admin-bar.min.js','GoogleAnalyticsObject',
+        'plupload.full.min.js','syntaxhighlighter','adsbygoogle','gist.github.com','_stq','nonce','post_id','data-noptimize'
+        ,'wordfence_logHuman'
     );
     private $domove     = array(
         'gaJsHost','load_cmc','jd.gallery.transitions.js','swfobject.embedSWF(','tiny_mce.js','tinyMCEPreInit.go'

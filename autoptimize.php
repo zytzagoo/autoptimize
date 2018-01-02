@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: Autoptimize
-Plugin URI: http://autoptimize.com/
+Plugin URI: https://autoptimize.com/
 Description: Optimizes your website, concatenating the CSS and JavaScript code, and compressing it.
-Version: 2.2.2
+Version: 2.3.1
 Author: Frank Goossens (futtta)
-Author URI: http://blog.futtta.be/
+Author URI: https://autoptimize.com/
 Domain Path: localization/
 Text Domain: autoptimize
 Released under the GNU General Public License (GPL)
@@ -64,7 +64,7 @@ $conf = autoptimizeConfig::instance();
 /* Check if we're updating, in which case we might need to do stuff and flush the cache
 to avoid old versions of aggregated files lingering around */
 
-$autoptimize_version = '2.2.0';
+$autoptimize_version = '2.3.0';
 $autoptimize_db_version = get_option( 'autoptimize_version', 'none' );
 
 if ($autoptimize_db_version !== $autoptimize_version) {
@@ -98,7 +98,7 @@ function autoptimize_uninstall(){
         'autoptimize_js_trycatch', 'autoptimize_version', 'autoptimize_show_adv',
         'autoptimize_cdn_url', 'autoptimize_cachesize_notice',
         'autoptimize_css_include_inline', 'autoptimize_js_include_inline',
-        'autoptimize_css_nogooglefont', 'autoptimize_optimize_logged', 'autoptimize_optimize_checkout'
+        'autoptimize_optimize_logged', 'autoptimize_optimize_checkout', 'autoptimize_extra_settings'
     );
 
     if ( ! is_multisite() ) {
@@ -440,6 +440,12 @@ register_activation_hook( __FILE__, 'autoptimize_activate' );
 
 include_once 'classlesses/autoptimizeCacheChecker.php';
 
+add_action( 'plugins_loaded', 'includeAutoptimizeExtra' );
+function includeAutoptimizeExtra() {
+    if ( apply_filters( 'autoptimize_filter_extra_activate', true ) ) {
+        include_once 'classlesses/autoptimizeExtra.php';
+    }
+}
 
 // Do not pollute other plugins
 unset( $conf );

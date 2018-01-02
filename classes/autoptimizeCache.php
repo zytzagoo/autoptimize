@@ -174,7 +174,7 @@ class autoptimizeCache
             $count = $AOstats[0];
             if ( $count > 100 ) {
                 // Store results in transient
-                set_transient( 'autoptimize_stats', $AOstats, HOUR_IN_SECONDS );
+                set_transient( 'autoptimize_stats', $AOstats, apply_filters( 'autoptimize_filter_cache_statsexpiry', HOUR_IN_SECONDS ) );
             }
         }
 
