@@ -12,6 +12,7 @@ DB_HOST=${4-localhost}
 WP_VERSION=${5-latest}
 
 tmpdir=${TMPDIR-/tmp}
+tmpdir=${tmpdir%/}
 
 WP_TESTS_DIR=${WP_TESTS_DIR-$tmpdir/wordpress-tests-lib}
 WP_CORE_DIR=${WP_CORE_DIR-$tmpdir/wordpress/}
@@ -88,22 +89,22 @@ install_test_suite() {
 
 	if [ ! -f wp-tests-config.php ]; then
 		download https://develop.svn.wordpress.org/${WP_TESTS_TAG}/wp-tests-config-sample.php "$WP_TESTS_DIR"/wp-tests-config.php
-		# TODO/FIXME: 
+		# TODO/FIXME:
 		# In msys/mingw case $WP_TESTS_DIR has the "wrong" style
-		# of path written in the config file, i.e.: 
+		# of path written in the config file, i.e.:
 		#
 		# ```php
 		# define( 'ABSPATH', '/c/Windows/Temp/wordpress/' );
 		# ```
 		#
-		# If that's happening to you, edit that file manually once after 
+		# If that's happening to you, edit that file manually once after
 		# running this script and change it so it becomes:
 		#
 		# ```php
 		# define( 'ABSPATH', 'C:/Windows/Temp/wordpress/' );
 		# ```
 		#
-		# Running `php phpunit.phar` within your plugin directory should 
+		# Running `php phpunit.phar` within your plugin directory should
 		# work as expected after that.
 		sed $ioption "s|dirname( __FILE__ ) . '/src/'|'$WP_CORE_DIR'|" "$WP_TESTS_DIR"/wp-tests-config.php
 		sed $ioption "s/youremptytestdbnamehere/$DB_NAME/" "$WP_TESTS_DIR"/wp-tests-config.php
