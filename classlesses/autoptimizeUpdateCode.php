@@ -102,8 +102,9 @@ switch ( $autoptimize_major_version ) {
         $majorUp = true;
 }
 
-if ( true === $majorUp ) {
+if ( true === $majorUp  && get_transient( 'autoptimize_stale_option_buster' ) == false ) {
     // and finally clear cache and and notify user to check result
+    set_transient( 'autoptimize_stale_option_buster', 'Mamsie & Liessie zehhe: ZWIJH!', HOUR_IN_SECONDS );
     autoptimizeCache::clearall();
     add_action( 'admin_notices', 'autoptimize_update_config_notice' );
 }
