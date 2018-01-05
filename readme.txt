@@ -3,8 +3,8 @@ Contributors: futtta, optimizingmatters, turl
 Tags: css, javascript, optimize, minify, performance
 Donate link: http://blog.futtta.be/2013/10/21/do-not-donate-to-me/
 Requires at least: 4.0
-Tested up to: 4.8
-Stable tag: 2.3.1
+Tested up to: 4.9
+Stable tag: 2.3.2
 
 Autoptimize speeds up your website and helps you save bandwidth by aggregating and minimizing JS, CSS and HTML.
 
@@ -247,6 +247,12 @@ You can get help on the [wordpress.org support forum](http://wordpress.org/suppo
 Just [fork Autoptimize on Github](https://github.com/futtta/autoptimize) and code away!
 
 == Changelog ==
+
+= 2.3.2 =
+* workaround for [stale options-data in external object cache such as Redis, Memcached (core bug)](https://core.trac.wordpress.org/ticket/31245) resulting in Autoptimize continuously executing the upgrade-procedure including clearing the cache and trying to preload it with HTTP-requests with "cachebuster" in the query string, thanks to [Haroon Q. Raja](https://hqraja.com/) and [Tomas Trkulja](https://twitter.com/zytzagoo) for their great assistance!
+* fixes for "undefined index" notices on Extra settings page
+* now removing respective dns-prefetch resource hints when "remove emojis" or when Google Fonts are optimized or removed.
+* changed JS code to load webfont.js deferred instead of asynced to make sure the js-file or fonts are not consider render blocking.
 
 = 2.3.1 =
 * fix for issue with update-code in some circumstances, thanks to [Rajendra Zore](https://rajendrazore.com/) to report & help fix!
