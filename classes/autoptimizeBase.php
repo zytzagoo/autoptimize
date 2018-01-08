@@ -466,10 +466,9 @@ abstract class autoptimizeBase
         if ( $found ) {
             $content = preg_replace_callback(
                 $re_replace_pattern,
-                create_function(
-                    '$matches',
-                    'return autoptimizeBase::build_marker("' . $marker . '", $matches[0]);'
-                ),
+                function($matches) use ($marker) {
+                    return autoptimizeBase::build_marker($marker, $matches[0]);
+                },
                 $content
             );
         }
@@ -489,10 +488,9 @@ abstract class autoptimizeBase
         if ( false !== strpos( $content, $marker ) ) {
             $content = preg_replace_callback(
                 '#%%' . $marker . AUTOPTIMIZE_HASH . '%%(.*?)%%' . $marker . '%%#is',
-                create_function(
-                    '$matches',
-                    'return base64_decode($matches[1]);'
-                ),
+                function ($matches) {
+                    return base64_decode($matches[1]);
+                },
                 $content
             );
         }
