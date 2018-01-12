@@ -58,6 +58,42 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	require_once AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCLI.php';
 }
 
+// Define some more constants, but delayed/hooked on `plugins_loaded`, since domain mapping might be required for it
+function autoptimize_define_more_constants() {
+    if ( ! defined( 'AUTOPTIMIZE_WP_SITE_URL' ) ) {
+        if ( function_exists( 'domain_mapping_siteurl' ) ) {
+            define( 'AUTOPTIMIZE_WP_SITE_URL', domain_mapping_siteurl( get_current_blog_id() ) );
+        } else {
+            define( 'AUTOPTIMIZE_WP_SITE_URL', site_url() );
+        }
+    }
+    if ( ! defined( 'AUTOPTIMIZE_WP_CONTENT_URL' ) ) {
+        if ( function_exists( 'domain_mapping_siteurl' ) ) {
+            define( 'AUTOPTIMIZE_WP_CONTENT_URL', str_replace( get_original_url( AUTOPTIMIZE_WP_SITE_URL ), AUTOPTIMIZE_WP_SITE_URL, content_url() ) );
+        } else {
+            define( 'AUTOPTIMIZE_WP_CONTENT_URL', content_url() );
+        }
+    }
+
+    if ( ! defined( 'AUTOPTIMIZE_CACHE_URL' ) ) {
+        if ( is_multisite() && apply_filters( 'autoptimize_separate_blog_caches', true ) ) {
+            $blog_id = get_current_blog_id();
+            define( 'AUTOPTIMIZE_CACHE_URL', AUTOPTIMIZE_WP_CONTENT_URL . AUTOPTIMIZE_CACHE_CHILD_DIR . $blog_id . '/' );
+        } else {
+            define( 'AUTOPTIMIZE_CACHE_URL', AUTOPTIMIZE_WP_CONTENT_URL . AUTOPTIMIZE_CACHE_CHILD_DIR );
+        }
+    }
+
+    if ( ! defined( 'AUTOPTIMIZE_WP_ROOT_URL' ) ) {
+        define( 'AUTOPTIMIZE_WP_ROOT_URL', str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', AUTOPTIMIZE_WP_CONTENT_URL ) );
+    }
+
+    if ( ! defined( 'AUTOPTIMIZE_HASH' ) ) {
+        define( 'AUTOPTIMIZE_HASH', wp_hash( AUTOPTIMIZE_CACHE_URL ) );
+    }
+}
+add_action( 'plugins_loaded', 'autoptimize_define_more_constants' );
+
 // Initialize the cache at least once
 $conf = autoptimizeConfig::instance();
 
@@ -320,42 +356,6 @@ function autoptimize_should_bail_from_processing_buffer($content) {
 function autoptimize_end_buffering($content) {
     if ( autoptimize_should_bail_from_processing_buffer( $content ) ) {
         return $content;
-    }
-
-    // load URL constants as late as possible to allow domain mapper to kick in
-    // (but do so only if they haven't been defined already)
-    if ( ! defined( 'AUTOPTIMIZE_WP_SITE_URL' ) ) {
-        if ( function_exists( 'domain_mapping_siteurl' ) ) {
-            define( 'AUTOPTIMIZE_WP_SITE_URL', domain_mapping_siteurl( get_current_blog_id() ) );
-        } else {
-            define( 'AUTOPTIMIZE_WP_SITE_URL', site_url() );
-        }
-    }
-    if ( ! defined( 'AUTOPTIMIZE_WP_CONTENT_URL' ) ) {
-        if ( function_exists( 'domain_mapping_siteurl' ) ) {
-            define( 'AUTOPTIMIZE_WP_CONTENT_URL', str_replace( get_original_url( AUTOPTIMIZE_WP_SITE_URL ), AUTOPTIMIZE_WP_SITE_URL, content_url() ) );
-        } else {
-            define( 'AUTOPTIMIZE_WP_CONTENT_URL', content_url() );
-        }
-    }
-
-    // Enables calling this function many times in tests (otherwise the constant is already defined from earlier calls)
-    if ( ! defined( 'AUTOPTIMIZE_CACHE_URL' ) ) {
-        if ( is_multisite() && apply_filters( 'autoptimize_separate_blog_caches', true ) ) {
-            $blog_id = get_current_blog_id();
-            define( 'AUTOPTIMIZE_CACHE_URL', AUTOPTIMIZE_WP_CONTENT_URL . AUTOPTIMIZE_CACHE_CHILD_DIR . $blog_id . '/' );
-        } else {
-            define( 'AUTOPTIMIZE_CACHE_URL', AUTOPTIMIZE_WP_CONTENT_URL . AUTOPTIMIZE_CACHE_CHILD_DIR );
-        }
-    }
-
-    // Again, check if already defined to prevent errors in tests where this function is called multiple times
-    if ( ! defined( 'AUTOPTIMIZE_WP_ROOT_URL' ) ) {
-        define( 'AUTOPTIMIZE_WP_ROOT_URL', str_replace( AUTOPTIMIZE_WP_CONTENT_NAME, '', AUTOPTIMIZE_WP_CONTENT_URL ) );
-    }
-
-    if ( ! defined( 'AUTOPTIMIZE_HASH' ) ) {
-        define( 'AUTOPTIMIZE_HASH', wp_hash( AUTOPTIMIZE_CACHE_URL ) );
     }
 
     // Config element
