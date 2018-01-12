@@ -289,14 +289,17 @@ function autoptimize_start_buffering() {
 
         if ( $conf->get('autoptimize_css') ) {
             include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeStyles.php';
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCSSmin.php';
+
             if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) {
                 if ( ! class_exists( 'Minify_CSS_Compressor' ) ) {
                     @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-css-compressor.php';
                 }
             } else {
-                if ( ! class_exists( 'CSSmin' ) ) {
-                    // @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-2.4.8-p10/cssmin.php';
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-2.4.8-4_fgo.php';
+                if ( ! class_exists( '\\Autoptimize\\tubalmartin\\CssMin\\Minifier' ) ) {
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-bundled/Colors.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-bundled/Utils.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-bundled/Minifier.php';
                 }
             }
             if ( ! defined( 'COMPRESS_CSS' ) ) {

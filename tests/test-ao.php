@@ -346,7 +346,7 @@ CSS;
 CSS;
 
 $expected = <<<CSS
-.bg{background:url('img/something.svg')}.bg-no-quote{background:url(img/something.svg)}.bg-double-quotes{background:url("img/something.svg")}.whitespaces{background:url("../../somewhere-else/svg.svg")}.host-relative{background:url("/img/something.svg")}.protocol-relative{background:url("//something/somewhere/example.png")}@font-face{font-family:'Roboto';font-style:normal;font-weight:100;src:url(../fonts/roboto-v15-latin-ext_latin-100.eot);src:local('Roboto Thin'),local('Roboto-Thin'),url(../fonts/roboto-v15-latin-ext_latin-100.eot?#iefix) format('embedded-opentype'),url(../fonts/roboto-v15-latin-ext_latin-100.woff2) format('woff2'),url(../fonts/roboto-v15-latin-ext_latin-100.woff) format('woff'),url(../fonts/roboto-v15-latin-ext_latin-100.ttf) format('truetype'),url(../fonts/roboto-v15-latin-ext_latin-100.svg#Roboto) format('svg')}
+.bg{background:url('img/something.svg')}.bg-no-quote{background:url(img/something.svg)}.bg-double-quotes{background:url("img/something.svg")}.whitespaces{background:url ("../../somewhere-else/svg.svg")}.host-relative{background:url("/img/something.svg")}.protocol-relative{background:url("//something/somewhere/example.png")}@font-face{font-family:'Roboto';font-style:normal;font-weight:100;src:url(../fonts/roboto-v15-latin-ext_latin-100.eot);src:local('Roboto Thin'),local('Roboto-Thin'),url(../fonts/roboto-v15-latin-ext_latin-100.eot?#iefix) format('embedded-opentype'),url(../fonts/roboto-v15-latin-ext_latin-100.woff2) format('woff2'),url(../fonts/roboto-v15-latin-ext_latin-100.woff) format('woff'),url(../fonts/roboto-v15-latin-ext_latin-100.ttf) format('truetype'),url(../fonts/roboto-v15-latin-ext_latin-100.svg#Roboto) format('svg')}
 CSS;
 
         $instance = new autoptimizeStyles($css);
@@ -797,6 +797,15 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
     {
         return array(
             // https://wordpress.org/support/topic/css-minify-breaks-calc-subtract-operation-in-css/?replies=2#post-6610027
+            array(
+                // input
+                'input { width: calc(33.33333% - ((0.75em*2)/3)); }',
+                // expected output (ancient version of CSSmin returns 0.75, newer versions drop the 0)
+                'input{width:calc(33.33333% - ((.75em*2)/3))}'
+            ),
+            // Actual examples from above, but original wasn't really valid css input fully,
+            // but these tests used to work and we'd like to know if output changes with various
+            // CSSmin versions, for backcompat reasons if nothing else
             array(
                 // input
                 'width: calc(33.33333% - ((0.75em*2)/3));',
@@ -1319,7 +1328,7 @@ CSS;
 }
 CSS;
         $expected = <<<CSS
-@supports(-webkit-filter:blur(3px)) or (filter:blur(3px)){.blur{filter:blur(3px)}}@supports((position:-webkit-sticky) or (position:sticky)){.sticky{position:sticky}}
+@supports (-webkit-filter:blur(3px)) or (filter:blur(3px)){.blur{filter:blur(3px)}}@supports((position:-webkit-sticky) or (position:sticky)){.sticky{position:sticky}}
 CSS;
 
         $instance = new autoptimizeStyles($in);
@@ -1379,7 +1388,7 @@ CSS;
 </style>
 CSS;
 
-        $expected = '<style type="text/css" media="all">@import url(http://cdn.example.org/foo.css);@import url(http://cdn.example.org/bar.css)(orientation:landscape);</style><!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `title` missing --><!--/noptimize-->';
+        $expected = '<style type="text/css" media="all">@import url(http://cdn.example.org/foo.css);@import url(http://cdn.example.org/bar.css) (orientation:landscape);</style><!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `title` missing --><!--/noptimize-->';
 
         $conf = autoptimizeConfig::instance();
         $options = array(
