@@ -46,10 +46,6 @@ function ao_js_snippetcacher( $jsin, $jsfilename ) {
     }
     unset( $ccheck );
 
-    if ( 'on' === get_option( 'autoptimize_js_trycatch' ) ) {
-        $scriptsrc = 'try{' . $scriptsrc . '}catch(e){}';
-    }
-
     return $scriptsrc;
 }
 
