@@ -654,6 +654,24 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
         return $config;
     }
 
+    /**
+     * Returns default option values for autoptimizeExtra.
+     *
+     * @return array
+     */
+    public static function get_ao_extra_default_options()
+    {
+        $defaults = array(
+            'autoptimize_extra_checkbox_field_1' => '0',
+            'autoptimize_extra_checkbox_field_0' => '0',
+            'autoptimize_extra_radio_field_4'    => '1',
+            'autoptimize_extra_text_field_2'     => '',
+            'autoptimize_extra_text_field_3'     => '',
+        );
+
+        return $defaults;
+    }
+
     public function get($key)
     {
         if ( ! is_array( $this->config ) ) {

@@ -6,7 +6,6 @@ Description: Optimizes your website, concatenating the CSS and JavaScript code, 
 Version: 2.3.2
 Author: Frank Goossens (futtta)
 Author URI: https://autoptimize.com/
-Domain Path: localization/
 Text Domain: autoptimize
 Released under the GNU General Public License (GPL)
 http://www.gnu.org/licenses/gpl.txt
@@ -19,16 +18,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 // plugin_dir_path() returns the trailing slash!
 define( 'AUTOPTIMIZE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
-// Load config class
 include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeConfig.php';
-
-// Load toolbar class
 include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeToolbar.php';
 
-// Load partners tab if admin
-if ( is_admin() ) {
-    include AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizePartners.php';
-}
+// Load partners tab if admin (and not for admin-ajax.php)
+add_action( 'admin_init', function() {
+    include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizePartners.php';
+    new autoptimizePartners();
+});
 
 // Do we gzip when caching (needed early to load autoptimizeCache.php)
 define( 'AUTOPTIMIZE_CACHE_NOGZIP', (bool) get_option( 'autoptimize_cache_nogzip' ) );
@@ -100,25 +97,25 @@ $conf = autoptimizeConfig::instance();
 /* Check if we're updating, in which case we might need to do stuff and flush the cache
 to avoid old versions of aggregated files lingering around */
 
-$autoptimize_version = '2.3.2';
+define( 'AUTOPTIMIZE_PLUGIN_VERSION', '2.3.2' );
 $autoptimize_db_version = get_option( 'autoptimize_version', 'none' );
 
-if ($autoptimize_db_version !== $autoptimize_version) {
+if ( $autoptimize_db_version !== AUTOPTIMIZE_PLUGIN_VERSION ) {
     if ( 'none' === $autoptimize_db_version ) {
         add_action( 'admin_notices', 'autoptimize_install_config_notice' );
     } else {
         // updating, include the update-code
-        include AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizeUpdateCode.php';
+        include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeVersionUpdatesHandler.php';
+        $ao_updater = new autoptimizeVersionUpdatesHandler( $autoptimize_db_version );
+        $ao_updater->run_needed_major_upgrades();
     }
 
-    update_option( 'autoptimize_version', $autoptimize_version );
-    $autoptimize_db_version = $autoptimize_version;
+    update_option( 'autoptimize_version', AUTOPTIMIZE_PLUGIN_VERSION );
 }
 
 // Load translations
 function autoptimize_load_plugin_textdomain() {
-    $plugin_dir = AUTOPTIMIZE_PLUGIN_DIR . 'localization';
-    load_plugin_textdomain( 'autoptimize', false, $plugin_dir );
+    load_plugin_textdomain( 'autoptimize' );
 }
 add_action( 'init', 'autoptimize_load_plugin_textdomain' );
 
@@ -250,7 +247,8 @@ function autoptimize_start_buffering() {
 
         // load speedupper conditionally (true by default?)
         if ( apply_filters( 'autoptimize_filter_speedupper', true ) ) {
-            include AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizeSpeedupper.php';
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeSpeedupper.php';
+            $ao_speedupper = new autoptimizeSpeedupper();
         }
 
         // Config element
@@ -441,14 +439,16 @@ function autoptimize_activate() {
 }
 register_activation_hook( __FILE__, 'autoptimize_activate' );
 
-include_once 'classlesses/autoptimizeCacheChecker.php';
+include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCacheChecker.php';
+$ao_cache_checker = new autoptimizeCacheChecker();
 
-add_action( 'plugins_loaded', 'includeAutoptimizeExtra' );
-function includeAutoptimizeExtra() {
+add_action( 'plugins_loaded', function() {
     if ( apply_filters( 'autoptimize_filter_extra_activate', true ) ) {
-        include_once 'classlesses/autoptimizeExtra.php';
+        include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeExtra.php';
+        $ao_extra = new autoptimizeExtra();
+        $ao_extra->run();
     }
-}
+} );
 
 // Do not pollute other plugins
 unset( $conf );

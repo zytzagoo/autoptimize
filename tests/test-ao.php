@@ -597,9 +597,8 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
 
     public function test_wpengine_cache_flush()
     {
-        include_once AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizePageCacheFlush.php';
-
-        // Creating a mock so that we can get past class_exists() and method_exists() checks `autoptimize_flush_pagecache()`...
+        // Creating a mock so that we can get past class_exists() and method_exists() checks present
+        // in `autoptimizeCache::flushPageCache()`...
         $stub = $this->getMockBuilder('WpeCommon')->disableAutoload()
                 ->disableOriginalConstructor()->setMethods(array(
                     'purge_varnish_cache'))
@@ -613,14 +612,12 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
             return $methods;
         });
 
-        autoptimize_flush_pagecache();
+        autoptimizeCache::flushPageCache();
     }
 
     // Test with the `autoptimize_flush_wpengine_aggressive` filter
     public function test_wpengine_cache_flush_agressive()
     {
-        include_once AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizePageCacheFlush.php';
-
         // Creating a mock so that we can get past class_exists() and method_exists() checks `autoptimize_flush_pagecache()`...
         $stub = $this->getMockBuilder('WpeCommon')->disableAutoload()
                 ->disableOriginalConstructor()->setMethods(array(
@@ -646,7 +643,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
             return $methods;
         });
 
-        autoptimize_flush_pagecache();
+        autoptimizeCache::flushPageCache();
     }
 
     /**
@@ -1319,8 +1316,8 @@ CSS;
     {
         $in = <<<CSS
 @supports (-webkit-filter: blur(3px)) or (filter: blur(3px)) {
-    .blur { 
-        filter:blur(3px); 
+    .blur {
+        filter:blur(3px);
     }
 }
 @supports((position:-webkit-sticky) or (position:sticky)) {

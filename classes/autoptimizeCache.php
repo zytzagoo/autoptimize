@@ -131,8 +131,7 @@ class autoptimizeCache
         }
         add_action( 'shutdown', 'autoptimize_do_cachepurged_action', 11 );
 
-        include_once AUTOPTIMIZE_PLUGIN_DIR . 'classlesses/autoptimizePageCacheFlush.php';
-        add_action( 'autoptimize_action_cachepurged', 'autoptimize_flush_pagecache', 10, 0 );
+        add_action( 'autoptimize_action_cachepurged', array( 'autoptimizeCache', 'flushPageCache' ), 10, 0 );
 
         // warm cache (part of speedupper)?
         if ( apply_filters( 'autoptimize_filter_speedupper', true ) ) {
@@ -321,5 +320,75 @@ class autoptimizeCache
         }
 
         return true;
+    }
+
+    /**
+     * Flushes as many page cache plugin's caches as possible.
+     * hyper cache and gator cache hook into AO, so we don't need to :-)
+     */
+    public static function flushPageCache()
+    {
+        if ( function_exists( 'wp_cache_clear_cache' ) ) {
+            if ( is_multisite() ) {
+                $blog_id = get_current_blog_id();
+                wp_cache_clear_cache( $blog_id );
+            } else {
+                wp_cache_clear_cache();
+            }
+        } elseif ( has_action( 'cachify_flush_cache' ) ) {
+            do_action( 'cachify_flush_cache' );
+        } elseif ( function_exists( 'w3tc_pgcache_flush' ) ) {
+            w3tc_pgcache_flush(); // w3 total cache
+/*
+        } elseif ( function_exists( 'hyper_cache_invalidate' ) ) {
+            hyper_cache_invalidate(); // hypercache
+*/
+        } else if ( has_action( 'hyper_cache_clean' ) ) {
+            // hypercache NOK, hyper_cache_clean only removes pages older then time+max_age
+            // do_action( 'hyper_cache_clean' );
+        } elseif ( function_exists( 'wp_fast_cache_bulk_delete_all' ) ) {
+            wp_fast_cache_bulk_delete_all(); // still to retest
+        } elseif ( class_exists( 'WpFastestCache' ) ) {
+            $wpfc = new WpFastestCache(); // wp fastest cache
+            $wpfc->deleteCache();
+        } elseif ( class_exists( 'c_ws_plugin__qcache_purging_routines' ) ) {
+            c_ws_plugin__qcache_purging_routines::purge_cache_dir(); // quick cache
+        } elseif ( class_exists( 'zencache' ) ) {
+            zencache::clear();
+        } elseif ( class_exists( 'comet_cache' ) ) {
+            comet_cache::clear();
+        } elseif ( class_exists( 'WpeCommon' ) ) {
+            // WPEngine cache purge/flush methods to call by default
+            $wpe_methods = array(
+                'purge_varnish_cache'
+            );
+
+            // More agressive clear/flush/purge behind a filter
+            if ( apply_filters( 'autoptimize_flush_wpengine_aggressive', false ) ) {
+                $wpe_methods = array_merge( $wpe_methods, array( 'purge_memcached', 'clear_maxcdn_cache' ) );
+            }
+
+            // Filtering the entire list of WpeCommon methods to be called (for advanced usage + easier testing)
+            $wpe_methods = apply_filters( 'autoptimize_flush_wpengine_methods', $wpe_methods );
+
+            foreach ( $wpe_methods as $wpe_method ) {
+                if ( method_exists( 'WpeCommon', $wpe_method ) ) {
+                    WpeCommon::$wpe_method();
+                }
+            }
+        } elseif ( function_exists( 'sg_cachepress_purge_cache' ) ) {
+            sg_cachepress_purge_cache();
+        } elseif ( file_exists ( WP_CONTENT_DIR . '/wp-cache-config.php' ) && function_exists( 'prune_super_cache' ) ) {
+            // fallback for WP-Super-Cache
+            global $cache_path;
+            if ( is_multisite() ) {
+                $blog_id = get_current_blog_id();
+                prune_super_cache( get_supercache_dir( $blog_id ), true );
+                prune_super_cache( $cache_path . 'blogs/', true );
+            } else {
+                prune_super_cache( $cache_path . 'supercache/', true);
+                prune_super_cache( $cache_path, true );
+            }
+        }
     }
 }
