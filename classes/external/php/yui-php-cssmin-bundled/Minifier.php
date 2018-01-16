@@ -29,13 +29,11 @@ class Minifier
     const COMMENT_TOKEN_START = '_CSSMIN_CMT_';
     const RULE_BODY_TOKEN = '_CSSMIN_RBT_%d_';
     const PRESERVED_TOKEN = '_CSSMIN_PTK_%d_';
-    const UNQUOTED_URL_TOKEN = '_CSSMIN_UUT_%d_';
 
     // Token lists
     private $comments = array();
     private $ruleBodies = array();
     private $preservedTokens = array();
-    private $unquotedUrls = array();
 
     // Output options
     private $keepImportantComments = true;
@@ -212,7 +210,6 @@ class Minifier
         $this->comments = array();
         $this->ruleBodies = array();
         $this->preservedTokens = array();
-        $this->unquotedUrls = array();
     }
 
     /**
@@ -259,19 +256,6 @@ class Minifier
     {
         $tokenId = sprintf(self::PRESERVED_TOKEN, count($this->preservedTokens));
         $this->preservedTokens[$tokenId] = $token;
-        return $tokenId;
-    }
-
-    /**
-     * Registers an unquoted url token
-     *
-     * @param string $token
-     * @return string The token ID string
-     */
-    private function registerUnquotedUrlToken($token)
-    {
-        $tokenId = sprintf(self::UNQUOTED_URL_TOKEN, count($this->unquotedUrls));
-        $this->unquotedUrls[$tokenId] = $token;
         return $tokenId;
     }
 
@@ -345,40 +329,27 @@ class Minifier
         // Normalize all whitespace strings to single spaces. Easier to work with that way.
         $css = preg_replace('/\s+/S', ' ', $css);
 
+        // Process import At-rules with unquoted URLs so URI reserved characters such as a semicolon may be used safely.
+        $css = preg_replace_callback(
+            '/@import url\(([^\'"]+?)\)( |;)/Si',
+            array($this, 'processImportUnquotedUrlAtRulesCallback'),
+            $css
+        );
+
         // Process comments
         $css = $this->processComments($css);
 
         // Process rule bodies
         $css = $this->processRuleBodies($css);
 
-        // Process unquoted urls
-        $css = $this->processUnquotedUrls($css);
-
         // Process at-rules and selectors
         $css = $this->processAtRulesAndSelectors($css);
-
-        // Restore preserved unqouted urls
-        $css = strtr($css, $this->unquotedUrls);
 
         // Restore preserved rule bodies before splitting
         $css = strtr($css, $this->ruleBodies);
 
-        // Some source control tools don't like it when files containing lines longer
-        // than, say 8000 characters, are checked in. The linebreak option is used in
-        // that case to split long lines after a specific column.
-        if ($this->linebreakPosition > 0) {
-            $l = strlen($css);
-            $offset = $this->linebreakPosition;
-            while (preg_match('/(?<!\\\\)\}(?!\n)/S', $css, $matches, PREG_OFFSET_CAPTURE, $offset)) {
-                $matchIndex = $matches[0][1];
-                $css = substr_replace($css, "\n", $matchIndex + 1, 0);
-                $offset = $matchIndex + 2 + $this->linebreakPosition;
-                $l += 1;
-                if ($offset > $l) {
-                    break;
-                }
-            }
-        }
+        // Split long lines in output if required
+        $css = $this->processLongLineSplitting($css);
 
         // Restore preserved comments and strings
         $css = strtr($css, $this->preservedTokens);
@@ -434,30 +405,6 @@ class Minifier
     }
 
     /**
-     * Searches & replaces all unquoted url occurences with tokens before
-     * at-rules and selectors are processed (otherwise unquoted urls conatining
-     * semicolons are not handled properly).
-     * @param string $css
-     * @return string
-     */
-    private function processUnquotedUrls($css)
-    {
-        $regex        = '/url\((?!\s*["\'])\s*(?:[^"\'()\s]|)*(?:\s*\))?/i';
-        $matches      = [];
-        $replacements = [];
-        preg_match_all($regex, $css, $matches);
-
-        if (is_array($matches) && !empty($matches)) {
-            foreach ($matches[0] as $count => $url) {
-                $tokenId = $this->registerUnquotedUrlToken($url);
-                $css = str_replace($url, $tokenId, $css);
-            }
-        }
-
-        return $css;
-    }
-
-    /**
      * Registers all comments found as candidates to be preserved.
      * @param array $matches
      * @return string
@@ -498,6 +445,17 @@ class Minifier
         $match = str_ireplace('progid:DXImageTransform.Microsoft.Alpha(Opacity=', 'alpha(opacity=', $match);
 
         return $quote . $this->registerPreservedToken($match) . $quote;
+    }
+
+    /**
+     * Searches & replaces all import at-rule unquoted urls with tokens so URI reserved characters such as a semicolon
+     * may be used safely in a URL.
+     * @param array $matches
+     * @return string
+     */
+    private function processImportUnquotedUrlAtRulesCallback($matches)
+    {
+        return '@import url('. $this->registerPreservedToken($matches[1]) .')'. $matches[2];
     }
 
     /**
@@ -832,6 +790,35 @@ class Minifier
         // 2. @imports below @charset
         // 3. @namespaces below @imports
         $css = $charset . $imports . $namespaces . $css;
+
+        return $css;
+    }
+
+    /**
+     * Splits long lines after a specific column.
+     *
+     * Some source control tools don't like it when files containing lines longer
+     * than, say 8000 characters, are checked in. The linebreak option is used in
+     * that case to split long lines after a specific column.
+     *
+     * @param string $css the whole stylesheet.
+     * @return string
+     */
+    private function processLongLineSplitting($css)
+    {
+        if ($this->linebreakPosition > 0) {
+            $l = strlen($css);
+            $offset = $this->linebreakPosition;
+            while (preg_match('/(?<!\\\\)\}(?!\n)/S', $css, $matches, PREG_OFFSET_CAPTURE, $offset)) {
+                $matchIndex = $matches[0][1];
+                $css = substr_replace($css, "\n", $matchIndex + 1, 0);
+                $offset = $matchIndex + 2 + $this->linebreakPosition;
+                $l += 1;
+                if ($offset > $l) {
+                    break;
+                }
+            }
+        }
 
         return $css;
     }
