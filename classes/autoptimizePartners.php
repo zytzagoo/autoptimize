@@ -17,15 +17,15 @@ class autoptimizePartners
 
     public function run()
     {
-        add_action( 'admin_init', array( $this, 'tabs_preinit' ) );
-        add_action( 'admin_menu', array( $this, 'init' ) );
-    }
-
-    public function tabs_preinit()
-    {
-        if ( apply_filters( 'autoptimize_filter_show_partner_tabs', true ) ) {
+        if ( $this->enabled() ) {
             add_filter( 'autoptimize_filter_settingsscreen_tabs', array( $this, 'add_partner_tabs' ), 10, 1 );
         }
+        add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+    }
+
+    protected function enabled()
+    {
+        return apply_filters( 'autoptimize_filter_show_partner_tabs', true );
     }
 
     public function add_partner_tabs( $in )
@@ -37,9 +37,9 @@ class autoptimizePartners
         return $in;
     }
 
-    public function init()
+    public function add_admin_menu()
     {
-        if ( apply_filters( 'autoptimize_filter_show_partner_tabs', true ) ) {
+        if ( $this->enabled() ) {
             add_submenu_page( null, 'AO partner', 'AO partner', 'manage_options', 'ao_partners', array( $this, 'ao_partners_page' ) );
         }
     }
