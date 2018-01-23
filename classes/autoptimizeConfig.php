@@ -754,4 +754,28 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
 
         return $tabContent;
     }
+
+    /**
+     * Returns true if in admin (and not in admin-ajax.php!)
+     *
+     * @return bool
+     */
+    public static function is_admin_and_not_ajax()
+    {
+        return ( is_admin() && ! self::doing_ajax() );
+    }
+
+    /**
+     * Returns true if doing ajax.
+     *
+     * @return type
+     */
+    protected static function doing_ajax()
+    {
+        if ( function_exists( 'wp_doing_ajax' ) ) {
+            return wp_doing_ajax();
+        } else {
+            return ( defined( 'DOING_AJAX' ) && DOING_AJAX );
+        }
+    }
 }

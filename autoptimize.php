@@ -22,9 +22,11 @@ include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeConfig.php';
 include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeToolbar.php';
 
 // Load partners tab if admin (and not for admin-ajax.php)
-add_action( 'admin_init', function() {
-    include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizePartners.php';
-    new autoptimizePartners();
+add_action( 'plugins_loaded', function() {
+    if ( autoptimizeConfig::is_admin_and_not_ajax() ) {
+        include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizePartners.php';
+        new autoptimizePartners();
+    }
 });
 
 // Do we gzip when caching (needed early to load autoptimizeCache.php)
