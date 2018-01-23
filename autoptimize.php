@@ -3,7 +3,7 @@
 Plugin Name: Autoptimize
 Plugin URI: https://autoptimize.com/
 Description: Optimizes your website, concatenating the CSS and JavaScript code, and compressing it.
-Version: 2.3.2
+Version: 2.4.0-beta1
 Author: Frank Goossens (futtta)
 Author URI: https://autoptimize.com/
 Text Domain: autoptimize
@@ -97,7 +97,7 @@ $conf = autoptimizeConfig::instance();
 /* Check if we're updating, in which case we might need to do stuff and flush the cache
 to avoid old versions of aggregated files lingering around */
 
-define( 'AUTOPTIMIZE_PLUGIN_VERSION', '2.3.2' );
+define( 'AUTOPTIMIZE_PLUGIN_VERSION', '2.4.0-beta1' );
 $autoptimize_db_version = get_option( 'autoptimize_version', 'none' );
 
 if ( $autoptimize_db_version !== AUTOPTIMIZE_PLUGIN_VERSION ) {
@@ -274,7 +274,7 @@ function autoptimize_start_buffering() {
                 if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) {
                     @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/jsmin-1.1.1.php';
                 } else {
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.3.1-jsmin.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.3.3-jsmin.php';
                 }
             }
             if ( ! defined( 'CONCATENATE_SCRIPTS' ) ) {
