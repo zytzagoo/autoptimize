@@ -276,7 +276,7 @@ function autoptimize_start_buffering() {
                 if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) {
                     @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/jsmin-1.1.1.php';
                 } else {
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.3.3-jsmin.php';
+                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.3.2-jsmin.php';
                 }
             }
             if ( ! defined( 'CONCATENATE_SCRIPTS' ) ) {
