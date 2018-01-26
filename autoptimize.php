@@ -21,13 +21,30 @@ define( 'AUTOPTIMIZE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeConfig.php';
 include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeToolbar.php';
 
+// Bail early if attempting to run on non-supported php versions
+if ( version_compare( PHP_VERSION, '5.3', '<' ) ) {
+    function autoptimize_incompatible_admin_notice() {
+        echo '<div class="error"><p>' . __( 'Autoptimize requires PHP 5.3 (or higher) to function properly. Please upgrade PHP. The Plugin has been auto-deactivated.', 'autoptimize' ) . '</p></div>';
+        if ( isset( $_GET['activate'] ) ) {
+            unset( $_GET['activate'] );
+        }
+    }
+    function autoptimize_deactivate_self() {
+        deactivate_plugins( plugin_basename( __FILE__ ) );
+    }
+    add_action( 'admin_notices', 'autoptimize_incompatible_admin_notice' );
+    add_action( 'admin_init', 'autoptimize_deactivate_self' );
+    return;
+}
+
 // Load partners tab if admin (and not for admin-ajax.php)
-add_action( 'plugins_loaded', function() {
+function autoptimize_load_partners_tab() {
     if ( autoptimizeConfig::is_admin_and_not_ajax() ) {
         include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizePartners.php';
         new autoptimizePartners();
     }
-});
+}
+add_action( 'plugins_loaded', 'autoptimize_load_partners_tab' );
 
 // Do we gzip when caching (needed early to load autoptimizeCache.php)
 define( 'AUTOPTIMIZE_CACHE_NOGZIP', (bool) get_option( 'autoptimize_cache_nogzip' ) );
@@ -50,11 +67,9 @@ if ( is_multisite() && apply_filters( 'autoptimize_separate_blog_caches', true )
 define( 'AUTOPTIMIZE_CACHE_DELAY', true );
 define( 'WP_ROOT_DIR', substr( WP_CONTENT_DIR, 0, strlen( WP_CONTENT_DIR ) - strlen( AUTOPTIMIZE_WP_CONTENT_NAME ) ) );
 
-// define( 'AUTOPTIMIZE_WP_SITE_URL', site_url() );
-
 // WP CLI
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
-	require_once AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCLI.php';
+    require AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCLI.php';
 }
 
 // Define some more constants, but delayed/hooked on `plugins_loaded`, since domain mapping might be required for it
@@ -425,13 +440,14 @@ register_activation_hook( __FILE__, 'autoptimize_activate' );
 include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCacheChecker.php';
 $ao_cache_checker = new autoptimizeCacheChecker();
 
-add_action( 'plugins_loaded', function() {
+function autoptimize_maybe_run_ao_extra() {
     if ( apply_filters( 'autoptimize_filter_extra_activate', true ) ) {
         include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeExtra.php';
         $ao_extra = new autoptimizeExtra();
         $ao_extra->run();
     }
-} );
+}
+add_action( 'plugins_loaded', 'autoptimize_maybe_run_ao_extra' );
 
 // Do not pollute other plugins
 unset( $conf );
