@@ -262,23 +262,12 @@ function autoptimize_start_buffering() {
         // Load extra classes and set some vars
         if ( $conf->get('autoptimize_html') ) {
             include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeHTML.php';
-            // BUG: new minify-html does not support keeping HTML comments, skipping for now
-            // if (defined('AUTOPTIMIZE_LEGACY_MINIFIERS')) {
-                @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-html.php';
-            // } else {
-            //  @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.1.7-html.php';
-            // }
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-html.php';
         }
 
         if ( $conf->get('autoptimize_js') ) {
             include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeScripts.php';
-            if ( ! class_exists( 'JSMin' ) ) {
-                if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) {
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/jsmin-1.1.1.php';
-                } else {
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.3.2-jsmin.php';
-                }
-            }
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-2.3.2-jsmin.php';
             if ( ! defined( 'CONCATENATE_SCRIPTS' ) ) {
                 define( 'CONCATENATE_SCRIPTS', false );
             }
@@ -290,18 +279,10 @@ function autoptimize_start_buffering() {
         if ( $conf->get('autoptimize_css') ) {
             include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeStyles.php';
             include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCSSmin.php';
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-bundled/Colors.php';
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-bundled/Utils.php';
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-bundled/Minifier.php';
 
-            if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) {
-                if ( ! class_exists( 'Minify_CSS_Compressor' ) ) {
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/minify-css-compressor.php';
-                }
-            } else {
-                if ( ! class_exists( '\\Autoptimize\\tubalmartin\\CssMin\\Minifier' ) ) {
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-bundled/Colors.php';
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-bundled/Utils.php';
-                    @include AUTOPTIMIZE_PLUGIN_DIR . 'classes/external/php/yui-php-cssmin-bundled/Minifier.php';
-                }
-            }
             if ( ! defined( 'COMPRESS_CSS' ) ) {
                 define( 'COMPRESS_CSS', false );
             }
@@ -320,7 +301,7 @@ function autoptimize_start_buffering() {
 
 /**
  * Returns true if markup is considered to be AMP.
- * This is far from actual validation againts AMP spec, but it'll do for now.
+ * This is far from actual validation against AMP spec, but it'll do for now.
  */
 function autoptimize_is_amp_markup($content) {
     $is_amp_markup = preg_match( '/<html[^>]*(?:amp|⚡)/i', $content );
