@@ -8,13 +8,20 @@ class autoptimizeCache
 {
     private $filename;
     private $cachedir;
+
+    /**
+     * Whether gzipping is done by the web server or us.
+     * True => we don't gzip, the web server does it.
+     * False => we do it ourselves.
+     *
+     * @var bool
+     */
     private $nogzip;
 
-    public function __construct($md5, $ext = 'php')
+    public function __construct( $md5, $ext = 'php' )
     {
         $this->cachedir = AUTOPTIMIZE_CACHE_DIR;
-        $this->nogzip   = AUTOPTIMIZE_CACHE_NOGZIP; // true => we don't gzip, web server does it (default), false => we do gzipping ourselves
-
+        $this->nogzip   = AUTOPTIMIZE_CACHE_NOGZIP;
         if ( ! $this->nogzip ) {
             $this->filename = AUTOPTIMIZE_CACHEFILE_PREFIX . $md5 . '.php';
         } else {
@@ -29,7 +36,7 @@ class autoptimizeCache
     public function check()
     {
         if ( ! file_exists( $this->cachedir . $this->filename ) ) {
-            // No cached file, sorry
+            // No cached file.
             return false;
         }
 
@@ -49,21 +56,21 @@ class autoptimizeCache
         return false;
     }
 
-    public function cache($code, $mime)
+    public function cache( $code, $mime )
     {
         if ( false === $this->nogzip ) {
-            // We handle gzipping instead of having the web server do it
+            // We handle gzipping ourselves.
             $file    = 'default.php';
-            $phpcode = file_get_contents( AUTOPTIMIZE_PLUGIN_DIR . 'config/' . $file);
+            $phpcode = file_get_contents( AUTOPTIMIZE_PLUGIN_DIR . 'config/' . $file );
             $phpcode = str_replace( array( '%%CONTENT%%', 'exit;' ), array( $mime, '' ), $phpcode );
 
             file_put_contents( $this->cachedir . $this->filename, $phpcode, LOCK_EX );
             file_put_contents( $this->cachedir . $this->filename . '.none', $code, LOCK_EX );
         } else {
-            // Write code to cache without doing anything else
+            // Write code to cache without doing anything else.
             file_put_contents( $this->cachedir . $this->filename, $code, LOCK_EX );
-            if (apply_filters( 'autoptimize_filter_cache_create_static_gzip', false ) ) {
-                // Create an additional cached gzip file
+            if ( apply_filters( 'autoptimize_filter_cache_create_static_gzip', false ) ) {
+                // Create an additional cached gzip file.
                 file_put_contents( $this->cachedir . $this->filename . '.gz', gzencode( $code, 9, FORCE_GZIP ), LOCK_EX );
             }
         }
@@ -71,27 +78,30 @@ class autoptimizeCache
 
     public function getname()
     {
-        apply_filters( 'autoptimize_filter_cache_getname', AUTOPTIMIZE_CACHE_URL . $this->filename);
+        apply_filters( 'autoptimize_filter_cache_getname', AUTOPTIMIZE_CACHE_URL . $this->filename );
+
         return $this->filename;
     }
 
     /**
-    * Returns true if $file is considered a valid Autoptimize cache file, false otherwise.
-    *
-    * @param $file Filename/pathname to check
-    * @return bool
-    */
-    static function is_valid_cache_file($dir, $file)
+     * Returns true if given `$file` is considered a valid Autoptimize cache file,
+     * false otherwise.
+     *
+     * @param string $dir Directory name (with a trailing slash).
+     * @param string $file Filename.
+     * @return bool
+     */
+    static function is_valid_cache_file( $dir, $file )
     {
         if ( '.' !== $file && '..' !== $file &&
             false !== strpos( $file, AUTOPTIMIZE_CACHEFILE_PREFIX ) &&
             is_file( $dir . $file ) ) {
 
-            // It's a valid file
+            // It's a valid file!
             return true;
         }
 
-        // Everything else is considered invalid
+        // Everything else is considered invalid!
         return false;
     }
 
@@ -101,13 +111,10 @@ class autoptimizeCache
             return false;
         }
 
-        // scan the cachedirs
-        $scan = self::get_cache_contents();
-
-        // clear the cachedirs
-        foreach ( $scan as $scandirName => $scanneddir ) {
-            $dir = rtrim( AUTOPTIMIZE_CACHE_DIR . $scandirName, '/' ) . '/';
-            foreach ( $scanneddir as $file ) {
+        $contents = self::get_cache_contents();
+        foreach ( $contents as $name => $files ) {
+            $dir = rtrim( AUTOPTIMIZE_CACHE_DIR . $name, '/' ) . '/';
+            foreach ( $files as $file ) {
                 if ( self::is_valid_cache_file( $dir, $file ) ) {
                     @unlink( $dir . $file );
                 }
@@ -117,33 +124,36 @@ class autoptimizeCache
         @unlink( AUTOPTIMIZE_CACHE_DIR . '/.htaccess' );
         delete_transient( 'autoptimize_stats' );
 
-        // add cachepurged action
+        // Cache was just purged!
         if ( ! function_exists( 'autoptimize_do_cachepurged_action ' ) ) {
             function autoptimize_do_cachepurged_action() {
                 do_action( 'autoptimize_action_cachepurged' );
             }
         }
         add_action( 'shutdown', 'autoptimize_do_cachepurged_action', 11 );
-
         add_action( 'autoptimize_action_cachepurged', array( 'autoptimizeCache', 'flushPageCache' ), 10, 0 );
 
-        // warm cache (part of speedupper)
+        // Warm cache (part of speedupper)!
         if ( apply_filters( 'autoptimize_filter_speedupper', true ) ) {
-            $warmCacheUrl = site_url() . '/?ao_speedup_cachebuster=' . rand( 1, 100000 );
-            $warmCache = @wp_remote_get( $warmCacheUrl );
-            unset( $warmCache );
+            $url   = site_url() . '/?ao_speedup_cachebuster=' . rand( 1, 100000 );
+            $cache = @wp_remote_get( $url );
+            unset( $cache );
         }
 
         return true;
     }
 
-    // returns contents of our cache dirs
+    /**
+     * Returns the contents of our cache dirs.
+     *
+     * @return array
+     */
     static function get_cache_contents()
     {
         $contents = array();
 
-        foreach ( array( '', 'js', 'css' ) as $dir_name ) {
-            $contents[$dir_name] = scandir( AUTOPTIMIZE_CACHE_DIR . $dir_name );
+        foreach ( array( '', 'js', 'css' ) as $dir ) {
+            $contents[ $dir ] = scandir( AUTOPTIMIZE_CACHE_DIR . $dir );
         }
 
         return $contents;
@@ -151,27 +161,22 @@ class autoptimizeCache
 
     static function stats()
     {
-        // Get stats from transient
-        $AOstats = get_transient( 'autoptimize_stats' );
+        $stats = get_transient( 'autoptimize_stats' );
 
-        // If no transient, do the actual scan
-        if ( ! is_array( $AOstats ) ) {
-            // Cache not available :(
+        // If no transient, do the actual scan!
+        if ( ! is_array( $stats ) ) {
             if ( ! autoptimizeCache::cacheavail() ) {
                 return 0;
             }
-
-            // Collect stats from cache dirs
-            $AOstats = self::stats_scan();
-
-            $count = $AOstats[0];
+            $stats = self::stats_scan();
+            $count = $stats[0];
             if ( $count > 100 ) {
-                // Store results in transient
-                set_transient( 'autoptimize_stats', $AOstats, apply_filters( 'autoptimize_filter_cache_statsexpiry', HOUR_IN_SECONDS ) );
+                // Store results in transient.
+                set_transient( 'autoptimize_stats', $stats, apply_filters( 'autoptimize_filter_cache_statsexpiry', HOUR_IN_SECONDS ) );
             }
         }
 
-        return $AOstats;
+        return $stats;
     }
 
     static function stats_scan()
@@ -179,10 +184,10 @@ class autoptimizeCache
         $count = 0;
         $size  = 0;
 
-        // scan the cachedirs
-        foreach ( self::get_cache_contents() as $scandirName => $scanneddir ) {
-            $dir = rtrim( AUTOPTIMIZE_CACHE_DIR . $scandirName, '/' ) . '/';
-            foreach ( $scanneddir as $file ) {
+        // Scan everything in our cache directories.
+        foreach ( self::get_cache_contents() as $name => $files ) {
+            $dir = rtrim( AUTOPTIMIZE_CACHE_DIR . $name, '/' ) . '/';
+            foreach ( $files as $file ) {
                 if ( self::is_valid_cache_file( $dir, $file ) ) {
                     if ( AUTOPTIMIZE_CACHE_NOGZIP &&
                         (
@@ -192,10 +197,10 @@ class autoptimizeCache
                             false !== strpos( $file, '.txt' )
                         )
                     ) {
-                        // web server is gzipping, we count .js|.css|.img|.txt files
+                        // Web server is gzipping, we count .js|.css|.img|.txt files.
                         $count++;
                     } elseif ( ! AUTOPTIMIZE_CACHE_NOGZIP && false !== strpos( $file, '.none' ) ) {
-                        // we are gzipping ourselves via php, counting only .none files
+                        // We are gzipping ourselves via php, counting only .none files.
                         $count++;
                     }
                     $size += filesize( $dir . $file );
@@ -203,37 +208,37 @@ class autoptimizeCache
             }
         }
 
-        $AOstats = array( $count, $size, time() );
+        $stats = array( $count, $size, time() );
 
-        return $AOstats;
+        return $stats;
     }
 
     static function cacheavail()
     {
         if ( ! defined( 'AUTOPTIMIZE_CACHE_DIR' ) ) {
-            // We didn't set a cache
+            // We didn't set a cache.
             return false;
         }
 
-        foreach ( array( '', 'js', 'css' ) as $checkDir ) {
-            if ( ! autoptimizeCache::checkCacheDir( AUTOPTIMIZE_CACHE_DIR . $checkDir ) ) {
+        foreach ( array( '', 'js', 'css' ) as $dir ) {
+            if ( ! autoptimizeCache::checkCacheDir( AUTOPTIMIZE_CACHE_DIR . $dir ) ) {
                 return false;
             }
         }
 
-        /** write .htaccess here to overrule wp_super_cache */
-        $htAccess = AUTOPTIMIZE_CACHE_DIR . '/.htaccess';
-        if ( ! is_file( $htAccess ) ) {
+        // Using .htaccess inside our cache folder to overrule wp-super-cache.
+        $htaccess = AUTOPTIMIZE_CACHE_DIR . '/.htaccess';
+        if ( ! is_file( $htaccess ) ) {
             /**
-             * create wp-content/AO_htaccess_tmpl with
+             * Create `wp-content/AO_htaccess_tmpl` file with
              * whatever htaccess rules you might need
              * if you want to override default AO htaccess
              */
             $htaccess_tmpl = WP_CONTENT_DIR . '/AO_htaccess_tmpl';
             if ( is_file( $htaccess_tmpl ) ) {
-                $htAccessContent = file_get_contents( $htaccess_tmpl );
+                $content = file_get_contents( $htaccess_tmpl );
             } elseif ( is_multisite() || ! AUTOPTIMIZE_CACHE_NOGZIP ) {
-                $htAccessContent = '<IfModule mod_expires.c>
+                $content = '<IfModule mod_expires.c>
         ExpiresActive On
         ExpiresByType text/css A30672000
         ExpiresByType text/javascript A30672000
@@ -259,7 +264,7 @@ class autoptimizeCache
     </Files>
 </IfModule>';
             } else {
-                $htAccessContent = '<IfModule mod_expires.c>
+                $content = '<IfModule mod_expires.c>
         ExpiresActive On
         ExpiresByType text/css A30672000
         ExpiresByType text/javascript A30672000
@@ -285,16 +290,16 @@ class autoptimizeCache
     </Files>
 </IfModule>';
             }
-            @file_put_contents( $htAccess, $htAccessContent );
+            @file_put_contents( $htaccess, $content );
         }
 
-        // All OK
+        // All OK!
         return true;
     }
 
-    static function checkCacheDir($dir)
+    static function checkCacheDir( $dir )
     {
-        // Check and create if not exists
+        // Try creating the dir if it doesn't exist.
         if ( ! file_exists( $dir ) ) {
             @mkdir( $dir, 0775, true );
             if ( ! file_exists( $dir ) ) {
@@ -302,15 +307,15 @@ class autoptimizeCache
             }
         }
 
-        // check if we can now write
+        // If we still cannot write, bail.
         if ( ! is_writable( $dir ) ) {
             return false;
         }
 
-        // and write index.html here to avoid prying eyes
-        $indexFile = rtrim( $dir, "/\\" ) . '/index.html';
-        if ( ! is_file( $indexFile ) ) {
-            @file_put_contents( $indexFile, '<html><head><meta name="robots" content="noindex, nofollow"></head><body>Generated by <a href="http://wordpress.org/extend/plugins/autoptimize/" rel="nofollow">Autoptimize</a></body></html>' );
+        // Create an index.html in there to avoid prying eyes!
+        $idx_file = rtrim( $dir, '/\\' ) . '/index.html';
+        if ( ! is_file( $idx_file ) ) {
+            @file_put_contents( $idx_file, '<html><head><meta name="robots" content="noindex, nofollow"></head><body>Generated by <a href="http://wordpress.org/extend/plugins/autoptimize/" rel="nofollow">Autoptimize</a></body></html>' );
         }
 
         return true;
@@ -333,13 +338,6 @@ class autoptimizeCache
             do_action( 'cachify_flush_cache' );
         } elseif ( function_exists( 'w3tc_pgcache_flush' ) ) {
             w3tc_pgcache_flush(); // w3 total cache
-/*
-        } elseif ( function_exists( 'hyper_cache_invalidate' ) ) {
-            hyper_cache_invalidate(); // hypercache
-*/
-        } else if ( has_action( 'hyper_cache_clean' ) ) {
-            // hypercache NOK, hyper_cache_clean only removes pages older then time+max_age
-            // do_action( 'hyper_cache_clean' );
         } elseif ( function_exists( 'wp_fast_cache_bulk_delete_all' ) ) {
             wp_fast_cache_bulk_delete_all(); // still to retest
         } elseif ( class_exists( 'WpFastestCache' ) ) {
@@ -354,7 +352,7 @@ class autoptimizeCache
         } elseif ( class_exists( 'WpeCommon' ) ) {
             // WPEngine cache purge/flush methods to call by default
             $wpe_methods = array(
-                'purge_varnish_cache'
+                'purge_varnish_cache',
             );
 
             // More agressive clear/flush/purge behind a filter
@@ -372,7 +370,7 @@ class autoptimizeCache
             }
         } elseif ( function_exists( 'sg_cachepress_purge_cache' ) ) {
             sg_cachepress_purge_cache();
-        } elseif ( file_exists ( WP_CONTENT_DIR . '/wp-cache-config.php' ) && function_exists( 'prune_super_cache' ) ) {
+        } elseif ( file_exists( WP_CONTENT_DIR . '/wp-cache-config.php' ) && function_exists( 'prune_super_cache' ) ) {
             // fallback for WP-Super-Cache
             global $cache_path;
             if ( is_multisite() ) {
@@ -380,7 +378,7 @@ class autoptimizeCache
                 prune_super_cache( get_supercache_dir( $blog_id ), true );
                 prune_super_cache( $cache_path . 'blogs/', true );
             } else {
-                prune_super_cache( $cache_path . 'supercache/', true);
+                prune_super_cache( $cache_path . 'supercache/', true );
                 prune_super_cache( $cache_path, true );
             }
         }
