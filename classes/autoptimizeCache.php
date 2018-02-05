@@ -8,12 +8,11 @@ class autoptimizeCache
 {
     private $filename;
     private $cachedir;
-    private $delayed;
+    private $nogzip;
 
     public function __construct($md5, $ext = 'php')
     {
         $this->cachedir = AUTOPTIMIZE_CACHE_DIR;
-        $this->delayed  = AUTOPTIMIZE_CACHE_DELAY;
         $this->nogzip   = AUTOPTIMIZE_CACHE_NOGZIP; // true => we don't gzip, web server does it (default), false => we do gzipping ourselves
 
         if ( ! $this->nogzip ) {
@@ -52,19 +51,14 @@ class autoptimizeCache
 
     public function cache($code, $mime)
     {
-        if ( false == $this->nogzip ) {
-            $file    = $this->delayed ? 'delayed.php' : 'default.php';
+        if ( false === $this->nogzip ) {
+            // We handle gzipping instead of having the web server do it
+            $file    = 'default.php';
             $phpcode = file_get_contents( AUTOPTIMIZE_PLUGIN_DIR . 'config/' . $file);
             $phpcode = str_replace( array( '%%CONTENT%%', 'exit;' ), array( $mime, '' ), $phpcode );
 
             file_put_contents( $this->cachedir . $this->filename, $phpcode, LOCK_EX );
             file_put_contents( $this->cachedir . $this->filename . '.none', $code, LOCK_EX );
-
-            if ( ! $this->delayed ) {
-                // Compress now!
-                file_put_contents( $this->cachedir . $this->filename . '.deflate', gzencode( $code, 9, FORCE_DEFLATE ), LOCK_EX );
-                file_put_contents( $this->cachedir . $this->filename . '.gzip', gzencode( $code, 9, FORCE_GZIP ), LOCK_EX );
-            }
         } else {
             // Write code to cache without doing anything else
             file_put_contents( $this->cachedir . $this->filename, $code, LOCK_EX );
@@ -133,7 +127,7 @@ class autoptimizeCache
 
         add_action( 'autoptimize_action_cachepurged', array( 'autoptimizeCache', 'flushPageCache' ), 10, 0 );
 
-        // warm cache (part of speedupper)?
+        // warm cache (part of speedupper)
         if ( apply_filters( 'autoptimize_filter_speedupper', true ) ) {
             $warmCacheUrl = site_url() . '/?ao_speedup_cachebuster=' . rand( 1, 100000 );
             $warmCache = @wp_remote_get( $warmCacheUrl );
