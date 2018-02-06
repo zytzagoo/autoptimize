@@ -8,7 +8,9 @@ class autoptimizeConfig
 
     private $settings_screen_do_remote_http = true;
 
-    //Singleton: private construct
+    /**
+     * Singleton.
+     */
     private function __construct()
     {
         if ( is_admin() ) {
@@ -33,17 +35,20 @@ class autoptimizeConfig
             }
 
             $this->settings_screen_do_remote_http = apply_filters( 'autoptimize_settingsscreen_remotehttp', $this->settings_screen_do_remote_http );
-
-            //Add the Autoptimize Toolbar to the Admin bar
-            //(we loaded outside the verification of is_admin to also be displayed on the frontend toolbar)
-            $toolbar = new autoptimizeToolbar();
         }
+
+        // Adds the Autoptimize Toolbar to the Admin bar.
+        // (we load outside the is_admin check so it's also displayed on the frontend toolbar)
+        $toolbar = new autoptimizeToolbar();
     }
 
+    /**
+     * @return autoptimizeConfig
+     */
     static public function instance()
     {
-        //Only one instance
-        if (self::$instance == null) {
+        // Only one instance
+        if ( null === self::$instance ) {
             self::$instance = new autoptimizeConfig();
         }
 
@@ -168,23 +173,23 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
 
 <div class="wrap">
 
-<?php if (version_compare(PHP_VERSION, '5.3.0') < 0) { ?>
-<div class="notice-error notice"><?php echo '<p>' . sprintf( __('<strong>You are using a very old version of PHP</strong> (5.2.x or older) which has <a href=%s>serious security and performance issues</a>. Support for PHP 5.5 and below will be removed in one of the next AO released, please ask your hoster to provide you with an upgrade path to 7.x.','autoptimize'), '"http://blog.futtta.be/2016/03/15/why-would-you-still-be-on-php-5-2/" target="_blank"') . '</p>'; ?></div>
+<?php if ( version_compare( PHP_VERSION, '5.3.0' ) < 0 ) { ?>
+<div class="notice-error notice"><?php echo '<p>' . sprintf( __( '<strong>You are using a very old version of PHP</strong> (5.2.x or older) which has <a href=%s>serious security and performance issues</a>. Support for PHP 5.5 and below will be removed in one of the next AO released, please ask your hoster to provide you with an upgrade path to 7.x.', 'autoptimize' ), '"http://blog.futtta.be/2016/03/15/why-would-you-still-be-on-php-5-2/" target="_blank"' ) . '</p>'; ?></div>
 <?php } ?>
 
 <div id="autoptimize_main">
     <div id="ao_title_and_button">
-        <h1 id="ao_title"><?php _e('Autoptimize Settings','autoptimize'); ?>
+        <h1 id="ao_title"><?php _e( 'Autoptimize Settings', 'autoptimize' ); ?>
         <span id="ao_adv_button">
-        <?php if (get_option('autoptimize_show_adv','0')=='1') { ?>
+        <?php if ( get_option( 'autoptimize_show_adv', '0' ) == '1' ) { ?>
             <a href="javascript:void(0);" id="ao_show_adv" class="button" style="display:none;"><span><?php _e("Show advanced settings","autoptimize") ?></span></a>
             <a href="javascript:void(0);" id="ao_hide_adv" class="button"><span><?php _e("Hide advanced settings","autoptimize") ?></span></a>
             <style>tr.ao_adv{display:table-row;} li.ao_adv{display:list-item;}</style>
-            <?php $hiddenClass = 'hidden '; ?>
+            <?php $hiddenClass = ''; ?>
         <?php } else { ?>
             <a href="javascript:void(0);" id="ao_show_adv" class="button"><span><?php _e("Show advanced settings","autoptimize") ?></span></a>
             <a href="javascript:void(0);" id="ao_hide_adv" class="button" style="display:none;"><span><?php _e("Hide advanced settings","autoptimize") ?></span></a>
-            <?php $hiddenClass = ''; ?>
+            <?php $hiddenClass = 'hidden '; ?>
         <?php } ?>
         </span>
         </h1>
@@ -193,7 +198,7 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
     <?php echo $this->ao_admin_tabs(); ?>
 
 <form method="post" action="options.php">
-<?php settings_fields('autoptimize'); ?>
+<?php settings_fields( 'autoptimize' ); ?>
 
 <ul>
 
@@ -683,7 +688,7 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
                 $conf = get_option( $name );
                 if ( false !== $conf ) {
                     // It was set before!
-                    $config[$name] = $conf;
+                    $config[ $name ] = $conf;
                 }
             }
 
@@ -691,8 +696,8 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
             $this->config = apply_filters( 'autoptimize_filter_get_config', $config );
         }
 
-        if ( isset( $this->config[$key] ) ) {
-            return $this->config[$key];
+        if ( isset( $this->config[ $key ] ) ) {
+            return $this->config[ $key ];
         }
 
         return false;

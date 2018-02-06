@@ -81,7 +81,7 @@ class autoptimizeToolbar
             'id'     => 'autoptimize-cache-info',
             'title'  => '<p>' . __( "Cache Info", 'autoptimize' ) . '</p>' .
                    '<div class="autoptimize-radial-bar" percentage="' . $percentage . '">' .
-                   '<div class="circle">'.
+                   '<div class="autoptimize-circle">'.
                    '<div class="mask full"><div class="fill bg-' . $color . '"></div></div>'.
                    '<div class="mask half"><div class="fill bg-' . $color . '"></div></div>'.
                    '<div class="shadow"></div>'.
