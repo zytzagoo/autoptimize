@@ -41,7 +41,7 @@ function autoptimize_autoload( $class_name ) {
     if ( in_array( $class_name, array( 'Minify_HTML', 'JSMin' ) ) ) {
         $file     = strtolower( $class_name );
         $file     = str_replace( '_', '-', $file );
-        $path     = dirname( __FILE__ ) . '/classes/external/';
+        $path     = dirname( __FILE__ ) . '/classes/external/php/';
         $filepath = $path . $file . '.php';
     } elseif ( false !== strpos( $class_name, 'Autoptimize\\tubalmartin\\CssMin' ) ) {
         $file     = str_replace( 'Autoptimize\\tubalmartin\\CssMin\\', '', $class_name );
