@@ -1,12 +1,14 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 class autoptimizeToolbar
 {
     public function __construct()
     {
         // If Cache is not available we don't add the Autoptimize Toolbar
-        if( ! autoptimizeCache::cacheavail() ) {
+        if ( ! autoptimizeCache::cacheavail() ) {
             return;
         }
 

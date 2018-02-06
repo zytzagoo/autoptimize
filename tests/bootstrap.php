@@ -18,7 +18,7 @@ if ( ! $_tests_dir ) {
 require_once $_tests_dir . '/includes/functions.php';
 
 function _manually_load_plugin() {
-    // define( 'AUTOPTIMIZE_INIT_EARLIER', true );
+    define( 'AUTOPTIMIZE_INIT_EARLIER', true );
     /*
     $active_plugins = array(
         'autoptimize/autoptimize.php'
@@ -37,8 +37,6 @@ function _manually_load_plugin() {
     });
 
     require dirname( dirname( __FILE__ ) ) . '/autoptimize.php';
-
-    autoptimize_start_buffering();
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 

@@ -20,9 +20,6 @@ define( 'AUTOPTIMIZE_PLUGIN_VERSION', '2.4.0-beta1' );
 // plugin_dir_path() returns the trailing slash!
 define( 'AUTOPTIMIZE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
-include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeConfig.php';
-include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeToolbar.php';
-
 // Bail early if attempting to run on non-supported php versions
 if ( version_compare( PHP_VERSION, '5.3', '<' ) ) {
     function autoptimize_incompatible_admin_notice() {
@@ -39,18 +36,6 @@ if ( version_compare( PHP_VERSION, '5.3', '<' ) ) {
     return;
 }
 
-// Load partners tab if admin (and not for admin-ajax.php)
-function autoptimize_load_partners_tab() {
-    if ( autoptimizeConfig::is_admin_and_not_ajax() ) {
-        include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizePartners.php';
-        new autoptimizePartners();
-    }
-}
-add_action( 'plugins_loaded', 'autoptimize_load_partners_tab' );
-
-// Do we gzip when caching (needed early to load autoptimizeCache.php)
-define( 'AUTOPTIMIZE_CACHE_NOGZIP', (bool) get_option( 'autoptimize_cache_nogzip' ) );
-
 // WP CLI
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
     require AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCLI.php';
@@ -58,6 +43,9 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
 // Define some more constants, but delayed/hooked on `plugins_loaded`, since domain mapping might be required for it
 function autoptimize_define_more_constants() {
+    // Do we gzip in php when caching or is webserver doing it
+    define( 'AUTOPTIMIZE_CACHE_NOGZIP', (bool) get_option( 'autoptimize_cache_nogzip' ) );
+
     // wp-content dir name (automagically set, should not be needed), dirname of AO cache dir and AO-prefix can be overridden in wp-config.php
     if ( ! defined( 'AUTOPTIMIZE_WP_CONTENT_NAME' ) ) { define( 'AUTOPTIMIZE_WP_CONTENT_NAME', '/' . wp_basename( WP_CONTENT_DIR ) ); }
     if ( ! defined( 'AUTOPTIMIZE_CACHE_CHILD_DIR' ) ) { define( 'AUTOPTIMIZE_CACHE_CHILD_DIR', '/cache/autoptimize/' ); }
@@ -106,18 +94,16 @@ function autoptimize_define_more_constants() {
         define( 'AUTOPTIMIZE_HASH', wp_hash( AUTOPTIMIZE_CACHE_URL ) );
     }
 
-    // Fire an action so that the rest of our code knows when it's ready to move on
+    // Fire an action so that the rest of our codebase knows it's fine to go on
     do_action( 'autoptimize_setup_done' );
 }
 add_action( 'plugins_loaded', 'autoptimize_define_more_constants' );
 
-add_action( 'autoptimize_setup_done', 'autoptimize_run' );
-function autoptimize_run() {
-    // Load cache class
+add_action( 'autoptimize_setup_done', 'autoptimize_include_some_files' );
+function autoptimize_include_some_files() {
+    include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeConfig.php';
+    include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeToolbar.php';
     include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCache.php';
-
-    // Initialize the cache at least once (this also loads the toolbar, which should be decoupled really
-    $conf = autoptimizeConfig::instance();
 }
 
 add_action( 'autoptimize_setup_done', 'autoptimize_version_upgrades_check' );
@@ -137,6 +123,27 @@ function autoptimize_version_upgrades_check() {
         }
 
         update_option( 'autoptimize_version', AUTOPTIMIZE_PLUGIN_VERSION );
+    }
+}
+
+// autoptimize_check_cache_available() is the one that actually hooks into "init" or "template_redirect"
+add_action( 'autoptimize_setup_done', 'autoptimize_check_cache_available' );
+function autoptimize_check_cache_available() {
+    if ( autoptimizeCache::cacheavail() ) {
+        $conf = autoptimizeConfig::instance();
+        if ( $conf->get('autoptimize_html') || $conf->get('autoptimize_js') || $conf->get('autoptimize_css' ) ) {
+            // Hook to wordpress
+            if ( defined( 'AUTOPTIMIZE_INIT_EARLIER' ) ) {
+                add_action( 'init', 'autoptimize_start_buffering', -1 );
+            } else {
+                if ( ! defined( 'AUTOPTIMIZE_HOOK_INTO' ) ) {
+                    define( 'AUTOPTIMIZE_HOOK_INTO', 'template_redirect' );
+                }
+                add_action( constant( 'AUTOPTIMIZE_HOOK_INTO' ), 'autoptimize_start_buffering' , 2 );
+            }
+        }
+    } else {
+        add_action( 'admin_notices', 'autoptimize_cache_unavailable_notice' );
     }
 }
 
@@ -206,7 +213,7 @@ function autoptimize_cache_unavailable_notice() {
  *
  * @return bool
  */
-function autoptimize_do_buffering($doing_tests = false) {
+function autoptimize_do_buffering( $doing_tests = false ) {
     static $do_buffering = null;
 
     // Only check once in case we're called multiple times by others but
@@ -425,34 +432,16 @@ function autoptimize_end_buffering($content) {
     return $content;
 }
 
-add_action( 'plugins_loaded', 'autoptimize_check_cache_available' );
-function autoptimize_check_cache_available() {
-    if ( autoptimizeCache::cacheavail() ) {
-        $conf = autoptimizeConfig::instance();
-        if ( $conf->get('autoptimize_html') || $conf->get('autoptimize_js') || $conf->get('autoptimize_css' ) ) {
-            // Hook to wordpress
-            if ( defined( 'AUTOPTIMIZE_INIT_EARLIER' ) ) {
-                add_action( 'init', 'autoptimize_start_buffering', -1 );
-            } else {
-                if ( ! defined( 'AUTOPTIMIZE_HOOK_INTO' ) ) {
-                    define( 'AUTOPTIMIZE_HOOK_INTO', 'template_redirect' );
-                }
-                add_action( constant( 'AUTOPTIMIZE_HOOK_INTO' ), 'autoptimize_start_buffering' , 2 );
-            }
-        }
-    } else {
-        add_action( 'admin_notices', 'autoptimize_cache_unavailable_notice' );
-    }
-}
-
 function autoptimize_activate() {
     register_uninstall_hook( __FILE__, 'autoptimize_uninstall' );
 }
 register_activation_hook( __FILE__, 'autoptimize_activate' );
 
+// Always runs! (hooks itself on plugins_loaded, could maybe be changed)
 include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCacheChecker.php';
 $ao_cache_checker = new autoptimizeCacheChecker();
 
+add_action( 'autoptimize_setup_done', 'autoptimize_maybe_run_ao_extra' );
 function autoptimize_maybe_run_ao_extra() {
     if ( apply_filters( 'autoptimize_filter_extra_activate', true ) ) {
         include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeExtra.php';
@@ -460,4 +449,12 @@ function autoptimize_maybe_run_ao_extra() {
         $ao_extra->run();
     }
 }
-add_action( 'plugins_loaded', 'autoptimize_maybe_run_ao_extra' );
+
+// Load partners tab if admin (and not for admin-ajax.php)
+add_action( 'autoptimize_setup_done', 'autoptimize_load_partners_tab' );
+function autoptimize_load_partners_tab() {
+    if ( autoptimizeConfig::is_admin_and_not_ajax() ) {
+        include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizePartners.php';
+        new autoptimizePartners();
+    }
+}
