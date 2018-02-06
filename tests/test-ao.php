@@ -828,7 +828,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
      */
     public function test_cssmin_issues($input, $expected)
     {
-        $minifier = new CSSmin(false); // no need to raise limits for now
+        $minifier = new autoptimizeCSSmin(false); // no need to raise limits for now
 
         $actual = $minifier->run($input);
         $this->assertEquals($expected, $actual);

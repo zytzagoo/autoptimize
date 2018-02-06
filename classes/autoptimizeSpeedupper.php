@@ -35,14 +35,10 @@ class autoptimizeSpeedupper
             $scriptsrc = $ccheck->retrieve();
         } else {
             if ( false === ( strpos( $jsfilename, 'min.js' ) ) && ( false === strpos( $jsfilename, 'js/jquery/jquery.js' ) ) && ( str_replace( apply_filters( 'autoptimize_filter_js_consider_minified', false ), '', $jsfilename ) === $jsfilename ) ) {
-                if ( class_exists( 'JSMin' ) ) {
-                    $tmp_jscode = trim( JSMin::minify( $jsin ) );
-                    if ( ! empty( $tmp_jscode ) ) {
-                        $scriptsrc = $tmp_jscode;
-                        unset( $tmp_jscode );
-                    } else {
-                        $scriptsrc = $jsin;
-                    }
+                $tmp_jscode = trim( JSMin::minify( $jsin ) );
+                if ( ! empty( $tmp_jscode ) ) {
+                    $scriptsrc = $tmp_jscode;
+                    unset( $tmp_jscode );
                 } else {
                     $scriptsrc = $jsin;
                 }
@@ -76,12 +72,8 @@ class autoptimizeSpeedupper
             $stylesrc = $ccheck->retrieve();
         } else {
             if ( ( false === strpos( $cssfilename, 'min.css' ) ) && ( str_replace( apply_filters( 'autoptimize_filter_css_consider_minified', false ), '', $cssfilename ) === $cssfilename ) ) {
-                if ( class_exists( 'Minify_CSS_Compressor' ) ) {
-                    $tmp_code = trim( Minify_CSS_Compressor::process( $cssin ) );
-                } elseif ( class_exists( 'CSSmin' ) ) {
-                    $cssmin   = new CSSmin();
-                    $tmp_code = trim( $cssmin->run( $cssin ) );
-                }
+                $cssmin   = new autoptimizeCSSmin();
+                $tmp_code = trim( $cssmin->run( $cssin ) );
 
                 if ( ! empty( $tmp_code ) ) {
                     $stylesrc = $tmp_code;

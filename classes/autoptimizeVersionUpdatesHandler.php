@@ -54,8 +54,8 @@ class autoptimizeVersionUpdatesHandler
     }
 
     /**
-     * Checks specified version against the one stored in the database
-     * under `autoptimize_version` and performs any major upgrade routines if needed.
+     * Checks specified version against the one stored in the database under `autoptimize_version` and performs
+     * any major upgrade routines if needed.
      * Updates the database version to the specified $target if it's different to the one currently stored there.
      *
      * @param string $target Target version to check against (ie., the currently running one).
@@ -65,7 +65,7 @@ class autoptimizeVersionUpdatesHandler
         $db_version = get_option( 'autoptimize_version', 'none' );
         if ( $db_version !== $target ) {
             if ( 'none' === $db_version ) {
-                add_action( 'admin_notices', 'autoptimize_install_config_notice' );
+                add_action( 'admin_notices', 'autoptimizeMain::notice_installed' );
             } else {
                 $updater = new self( $db_version );
                 $updater->run_needed_major_upgrades();
@@ -86,7 +86,7 @@ class autoptimizeVersionUpdatesHandler
         if ( false == get_transient( 'autoptimize_stale_option_buster' ) ) {
             set_transient( 'autoptimize_stale_option_buster', 'Mamsie & Liessie zehhe: ZWIJH!', HOUR_IN_SECONDS );
             autoptimizeCache::clearall();
-            add_action( 'admin_notices', 'autoptimize_update_config_notice' );
+            add_action( 'admin_notices', 'autoptimizeMain::notice_updated' );
         }
     }
 

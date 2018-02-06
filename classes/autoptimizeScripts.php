@@ -313,22 +313,17 @@ class autoptimizeScripts extends autoptimizeBase
 
         // $this->jscode has all the uncompressed code now.
         if ( true !== $this->alreadyminified ) {
-            if ( class_exists( 'JSMin' ) && apply_filters( 'autoptimize_js_do_minify', true ) ) {
-                if ( @is_callable( array( 'JSMin', 'minify' ) ) ) {
-                    $tmp_jscode = trim( JSMin::minify($this->jscode) );
-                    if ( ! empty( $tmp_jscode ) ) {
-                        $this->jscode = $tmp_jscode;
-                        unset( $tmp_jscode );
-                    }
-                    $this->jscode = $this->inject_minified($this->jscode);
-                    $this->jscode = apply_filters( 'autoptimize_js_after_minify', $this->jscode );
-                    return true;
-                } else {
-                    $this->jscode = $this->inject_minified($this->jscode);
-                    return false;
+            if ( apply_filters( 'autoptimize_js_do_minify', true ) ) {
+                $tmp_jscode = trim( JSMin::minify( $this->jscode ) );
+                if ( ! empty( $tmp_jscode ) ) {
+                    $this->jscode = $tmp_jscode;
+                    unset( $tmp_jscode );
                 }
+                $this->jscode = $this->inject_minified( $this->jscode );
+                $this->jscode = apply_filters( 'autoptimize_js_after_minify', $this->jscode );
+                return true;
             } else {
-                $this->jscode = $this->inject_minified($this->jscode);
+                $this->jscode = $this->inject_minified( $this->jscode );
                 return false;
             }
         }

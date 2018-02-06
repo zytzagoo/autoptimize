@@ -54,6 +54,8 @@
  * @link http://code.google.com/p/jsmin-php/
  */
 
+// This is from https://github.com/mrclay/jsmin-php 2.3.2
+
 class JSMin {
     const ORD_LF            = 10;
     const ORD_SPACE         = 32;

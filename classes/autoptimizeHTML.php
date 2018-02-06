@@ -44,54 +44,47 @@ class autoptimizeHTML extends autoptimizeBase
             return false;
         }
 
-        if ( class_exists( 'Minify_HTML' ) ) {
-            // Wrap the to-be-excluded strings in noptimize tags.
-            foreach ( $this->exclude as $str ) {
-                if ( false !== strpos( $this->content, $str ) ) {
-                    $replacement   = '<!--noptimize-->' . $str . '<!--/noptimize-->';
-                    $this->content = str_replace( $str, $replacement, $this->content );
-                }
+        // Wrap the to-be-excluded strings in noptimize tags.
+        foreach ( $this->exclude as $str ) {
+            if ( false !== strpos( $this->content, $str ) ) {
+                $replacement   = '<!--noptimize-->' . $str . '<!--/noptimize-->';
+                $this->content = str_replace( $str, $replacement, $this->content );
             }
-
-            // Noptimize.
-            $this->content = $this->hide_noptimize( $this->content );
-
-            // Preparing options for Minify_HTML.
-            $options = array( 'keepComments' => $this->keepcomments );
-            if ( $this->forcexhtml ) {
-                $options['xhtml'] = true;
-            }
-
-            if ( @is_callable( array( 'Minify_HTML', 'minify' ) ) ) {
-                $tmp_content = Minify_HTML::minify( $this->content, $options );
-                if ( ! empty( $tmp_content ) ) {
-                    $this->content = $tmp_content;
-                    unset( $tmp_content );
-                }
-            }
-
-            // Restore noptimize.
-            $this->content = $this->restore_noptimize( $this->content );
-
-            // Remove the noptimize-wrapper from around the excluded strings.
-            foreach ( $this->exclude as $str ) {
-                $replacement = '<!--noptimize-->' . $str . '<!--/noptimize-->';
-                if ( false !== strpos( $this->content, $replacement ) ) {
-                    $this->content = str_replace( $replacement, $str, $this->content );
-                }
-            }
-
-            // Revslider data attribs somehow suffer from HTML optimization, this fixes that!
-            if ( class_exists( 'RevSlider' ) && apply_filters( 'autoptimize_filter_html_dataattrib_cleanup', false ) ) {
-                $this->content = preg_replace( '#\n(data-.*$)\n#Um', ' $1 ', $this->content );
-                $this->content = preg_replace( '#<[^>]*(=\"[^"\'<>\s]*\")(\w)#', '$1 $2', $this->content );
-            }
-
-            return true;
         }
 
-        // Didn't minify :(
-        return false;
+        // Noptimize.
+        $this->content = $this->hide_noptimize( $this->content );
+
+        // Preparing options for Minify_HTML.
+        $options = array( 'keepComments' => $this->keepcomments );
+        if ( $this->forcexhtml ) {
+            $options['xhtml'] = true;
+        }
+
+        $tmp_content = Minify_HTML::minify( $this->content, $options );
+        if ( ! empty( $tmp_content ) ) {
+            $this->content = $tmp_content;
+            unset( $tmp_content );
+        }
+
+        // Restore noptimize.
+        $this->content = $this->restore_noptimize( $this->content );
+
+        // Remove the noptimize-wrapper from around the excluded strings.
+        foreach ( $this->exclude as $str ) {
+            $replacement = '<!--noptimize-->' . $str . '<!--/noptimize-->';
+            if ( false !== strpos( $this->content, $replacement ) ) {
+                $this->content = str_replace( $replacement, $str, $this->content );
+            }
+        }
+
+        // Revslider data attribs somehow suffer from HTML optimization, this fixes that!
+        if ( class_exists( 'RevSlider' ) && apply_filters( 'autoptimize_filter_html_dataattrib_cleanup', false ) ) {
+            $this->content = preg_replace( '#\n(data-.*$)\n#Um', ' $1 ', $this->content );
+            $this->content = preg_replace( '#<[^>]*(=\"[^"\'<>\s]*\")(\w)#', '$1 $2', $this->content );
+        }
+
+        return true;
     }
 
     /**

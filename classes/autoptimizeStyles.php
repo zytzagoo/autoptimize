@@ -683,17 +683,8 @@ class autoptimizeStyles extends autoptimizeBase
             $do_minify = apply_filters( 'autoptimize_css_do_minify', true );
 
             if ( $do_minify ) {
-                $tmp_code = null;
-                if ( class_exists( 'Minify_CSS_Compressor' ) ) {
-                    $tmp_code = trim( Minify_CSS_Compressor::process($code) );
-                } elseif ( class_exists( 'CSSmin' ) ) {
-                    $cssmin = new CSSmin();
-                    if ( method_exists( $cssmin, 'run' ) ) {
-                        $tmp_code = trim( $cssmin->run($code) );
-                    } elseif ( @is_callable( array( $cssmin, 'minify') ) ) {
-                        $tmp_code = trim( CssMin::minify($code) );
-                    }
-                }
+                $cssmin   = new autoptimizeCSSmin();
+                $tmp_code = trim( $cssmin->run($code) );
 
                 if ( ! empty( $tmp_code ) ) {
                     $code = $tmp_code;
@@ -763,12 +754,8 @@ class autoptimizeStyles extends autoptimizeBase
                             // we have the optimized inline CSS in cache
                             $defer_inline_code = $iCssCache->retrieve();
                         } else {
-                            if ( class_exists( 'Minify_CSS_Compressor' ) ) {
-                                $tmp_code = trim( Minify_CSS_Compressor::process($defer_inline_code) );
-                            } elseif ( class_exists( 'CSSmin' ) ) {
-                                $cssmin = new CSSmin();
-                                $tmp_code = trim( $cssmin->run($defer_inline_code) );
-                            }
+                            $cssmin   = new CSSmin();
+                            $tmp_code = trim( $cssmin->run( $defer_inline_code ) );
 
                             if ( ! empty( $tmp_code ) ) {
                                 $defer_inline_code = $tmp_code;
