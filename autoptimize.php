@@ -15,6 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+define( 'AUTOPTIMIZE_PLUGIN_VERSION', '2.4.0-beta1' );
+
 // plugin_dir_path() returns the trailing slash!
 define( 'AUTOPTIMIZE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -49,25 +51,6 @@ add_action( 'plugins_loaded', 'autoptimize_load_partners_tab' );
 // Do we gzip when caching (needed early to load autoptimizeCache.php)
 define( 'AUTOPTIMIZE_CACHE_NOGZIP', (bool) get_option( 'autoptimize_cache_nogzip' ) );
 
-// Load cache class
-include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCache.php';
-
-// wp-content dir name (automagically set, should not be needed), dirname of AO cache dir and AO-prefix can be overridden in wp-config.php
-if ( ! defined( 'AUTOPTIMIZE_WP_CONTENT_NAME' ) ) { define( 'AUTOPTIMIZE_WP_CONTENT_NAME', '/' . wp_basename( WP_CONTENT_DIR ) ); }
-if ( ! defined( 'AUTOPTIMIZE_CACHE_CHILD_DIR' ) ) { define( 'AUTOPTIMIZE_CACHE_CHILD_DIR', '/cache/autoptimize/' ); }
-if ( ! defined( 'AUTOPTIMIZE_CACHEFILE_PREFIX' ) ) { define( 'AUTOPTIMIZE_CACHEFILE_PREFIX', 'autoptimize_' ); }
-
-// Plugin dir constants (plugin url's defined later to accomodate domain mapped sites)
-if ( ! defined( 'AUTOPTIMIZE_CACHE_DIR' ) ) {
-    if ( is_multisite() && apply_filters( 'autoptimize_separate_blog_caches', true ) ) {
-        $blog_id = get_current_blog_id();
-        define( 'AUTOPTIMIZE_CACHE_DIR' , WP_CONTENT_DIR . AUTOPTIMIZE_CACHE_CHILD_DIR . $blog_id . '/' );
-    } else {
-        define( 'AUTOPTIMIZE_CACHE_DIR', WP_CONTENT_DIR . AUTOPTIMIZE_CACHE_CHILD_DIR );
-    }
-}
-define( 'WP_ROOT_DIR', substr( WP_CONTENT_DIR, 0, strlen( WP_CONTENT_DIR ) - strlen( AUTOPTIMIZE_WP_CONTENT_NAME ) ) );
-
 // WP CLI
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
     require AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCLI.php';
@@ -75,6 +58,22 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
 // Define some more constants, but delayed/hooked on `plugins_loaded`, since domain mapping might be required for it
 function autoptimize_define_more_constants() {
+    // wp-content dir name (automagically set, should not be needed), dirname of AO cache dir and AO-prefix can be overridden in wp-config.php
+    if ( ! defined( 'AUTOPTIMIZE_WP_CONTENT_NAME' ) ) { define( 'AUTOPTIMIZE_WP_CONTENT_NAME', '/' . wp_basename( WP_CONTENT_DIR ) ); }
+    if ( ! defined( 'AUTOPTIMIZE_CACHE_CHILD_DIR' ) ) { define( 'AUTOPTIMIZE_CACHE_CHILD_DIR', '/cache/autoptimize/' ); }
+    if ( ! defined( 'AUTOPTIMIZE_CACHEFILE_PREFIX' ) ) { define( 'AUTOPTIMIZE_CACHEFILE_PREFIX', 'autoptimize_' ); }
+
+    // Plugin dir constants (plugin url's defined later to accomodate domain mapped sites)
+    if ( ! defined( 'AUTOPTIMIZE_CACHE_DIR' ) ) {
+        if ( is_multisite() && apply_filters( 'autoptimize_separate_blog_caches', true ) ) {
+            $blog_id = get_current_blog_id();
+            define( 'AUTOPTIMIZE_CACHE_DIR' , WP_CONTENT_DIR . AUTOPTIMIZE_CACHE_CHILD_DIR . $blog_id . '/' );
+        } else {
+            define( 'AUTOPTIMIZE_CACHE_DIR', WP_CONTENT_DIR . AUTOPTIMIZE_CACHE_CHILD_DIR );
+        }
+    }
+    define( 'WP_ROOT_DIR', substr( WP_CONTENT_DIR, 0, strlen( WP_CONTENT_DIR ) - strlen( AUTOPTIMIZE_WP_CONTENT_NAME ) ) );
+
     if ( ! defined( 'AUTOPTIMIZE_WP_SITE_URL' ) ) {
         if ( function_exists( 'domain_mapping_siteurl' ) ) {
             define( 'AUTOPTIMIZE_WP_SITE_URL', domain_mapping_siteurl( get_current_blog_id() ) );
@@ -106,29 +105,39 @@ function autoptimize_define_more_constants() {
     if ( ! defined( 'AUTOPTIMIZE_HASH' ) ) {
         define( 'AUTOPTIMIZE_HASH', wp_hash( AUTOPTIMIZE_CACHE_URL ) );
     }
+
+    // Fire an action so that the rest of our code knows when it's ready to move on
+    do_action( 'autoptimize_setup_done' );
 }
 add_action( 'plugins_loaded', 'autoptimize_define_more_constants' );
 
-// Initialize the cache at least once
-$conf = autoptimizeConfig::instance();
+add_action( 'autoptimize_setup_done', 'autoptimize_run' );
+function autoptimize_run() {
+    // Load cache class
+    include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCache.php';
 
+    // Initialize the cache at least once (this also loads the toolbar, which should be decoupled really
+    $conf = autoptimizeConfig::instance();
+}
+
+add_action( 'autoptimize_setup_done', 'autoptimize_version_upgrades_check' );
 /* Check if we're updating, in which case we might need to do stuff and flush the cache
 to avoid old versions of aggregated files lingering around */
+function autoptimize_version_upgrades_check() {
+    $autoptimize_db_version = get_option( 'autoptimize_version', 'none' );
 
-define( 'AUTOPTIMIZE_PLUGIN_VERSION', '2.4.0-beta1' );
-$autoptimize_db_version = get_option( 'autoptimize_version', 'none' );
+    if ( $autoptimize_db_version !== AUTOPTIMIZE_PLUGIN_VERSION ) {
+        if ( 'none' === $autoptimize_db_version ) {
+            add_action( 'admin_notices', 'autoptimize_install_config_notice' );
+        } else {
+            // updating, include the update-code
+            include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeVersionUpdatesHandler.php';
+            $ao_updater = new autoptimizeVersionUpdatesHandler( $autoptimize_db_version );
+            $ao_updater->run_needed_major_upgrades();
+        }
 
-if ( $autoptimize_db_version !== AUTOPTIMIZE_PLUGIN_VERSION ) {
-    if ( 'none' === $autoptimize_db_version ) {
-        add_action( 'admin_notices', 'autoptimize_install_config_notice' );
-    } else {
-        // updating, include the update-code
-        include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeVersionUpdatesHandler.php';
-        $ao_updater = new autoptimizeVersionUpdatesHandler( $autoptimize_db_version );
-        $ao_updater->run_needed_major_upgrades();
+        update_option( 'autoptimize_version', AUTOPTIMIZE_PLUGIN_VERSION );
     }
-
-    update_option( 'autoptimize_version', AUTOPTIMIZE_PLUGIN_VERSION );
 }
 
 // Load translations
@@ -416,21 +425,24 @@ function autoptimize_end_buffering($content) {
     return $content;
 }
 
-if ( autoptimizeCache::cacheavail() ) {
-    $conf = autoptimizeConfig::instance();
-    if ( $conf->get('autoptimize_html') || $conf->get('autoptimize_js') || $conf->get('autoptimize_css' ) ) {
-        // Hook to wordpress
-        if ( defined( 'AUTOPTIMIZE_INIT_EARLIER' ) ) {
-            add_action( 'init', 'autoptimize_start_buffering', -1 );
-        } else {
-            if ( ! defined( 'AUTOPTIMIZE_HOOK_INTO' ) ) {
-                define( 'AUTOPTIMIZE_HOOK_INTO', 'template_redirect' );
+add_action( 'plugins_loaded', 'autoptimize_check_cache_available' );
+function autoptimize_check_cache_available() {
+    if ( autoptimizeCache::cacheavail() ) {
+        $conf = autoptimizeConfig::instance();
+        if ( $conf->get('autoptimize_html') || $conf->get('autoptimize_js') || $conf->get('autoptimize_css' ) ) {
+            // Hook to wordpress
+            if ( defined( 'AUTOPTIMIZE_INIT_EARLIER' ) ) {
+                add_action( 'init', 'autoptimize_start_buffering', -1 );
+            } else {
+                if ( ! defined( 'AUTOPTIMIZE_HOOK_INTO' ) ) {
+                    define( 'AUTOPTIMIZE_HOOK_INTO', 'template_redirect' );
+                }
+                add_action( constant( 'AUTOPTIMIZE_HOOK_INTO' ), 'autoptimize_start_buffering' , 2 );
             }
-            add_action( constant('AUTOPTIMIZE_HOOK_INTO'), 'autoptimize_start_buffering' , 2 );
         }
+    } else {
+        add_action( 'admin_notices', 'autoptimize_cache_unavailable_notice' );
     }
-} else {
-    add_action( 'admin_notices', 'autoptimize_cache_unavailable_notice' );
 }
 
 function autoptimize_activate() {
@@ -449,6 +461,3 @@ function autoptimize_maybe_run_ao_extra() {
     }
 }
 add_action( 'plugins_loaded', 'autoptimize_maybe_run_ao_extra' );
-
-// Do not pollute other plugins
-unset( $conf );
