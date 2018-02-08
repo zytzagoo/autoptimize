@@ -10,5 +10,6 @@
 /phpcs.xml.dist export-ignore
 /phpunit.xml export-ignore
 /phpunit.xml.dist export-ignore
+/phpunit.phar export-ignore
 /tests export-ignore
 /bin export-ignore
