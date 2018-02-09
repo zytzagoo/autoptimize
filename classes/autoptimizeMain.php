@@ -1,4 +1,7 @@
 <?php
+/**
+ * Wraps base plugin logic/hooks and handles activation/deactivation/uninstall.
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -6,18 +9,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class autoptimizeMain
 {
-    protected $version     = null;
-    protected $plugin_file = null;
+    /**
+     * Version string.
+     *
+     * @var string
+     */
+    protected $version = null;
 
-    public function __construct( $version, $plugin_file )
+    /**
+     * Main plugin filepath.
+     * Used for activation/deactivation/uninstall hooks.
+     *
+     * @var string
+     */
+    protected $filepath = null;
+
+    /**
+     * Constructor.
+     *
+     * @param string $version Version.
+     * @param string $filepath Filepath. Needed for activation/deactivation/uninstall hooks.
+     */
+    public function __construct( $version, $filepath )
     {
-        $this->version     = $version;
-        $this->plugin_file = $plugin_file;
+        $this->version  = $version;
+        $this->filepath = $filepath;
     }
 
     public function run()
     {
         $this->add_hooks();
+
+        // Runs cache size checker.
+        $checker = new autoptimizeCacheChecker();
+        $checker->run();
     }
 
     protected function add_hooks()
@@ -31,12 +56,12 @@ class autoptimizeMain
 
         add_action( 'init', array( $this, 'load_textdomain' ) );
 
-        register_activation_hook( $this->plugin_file, array( $this, 'on_activate' ) );
+        register_activation_hook( $this->filepath, array( $this, 'on_activate' ) );
     }
 
     public function on_activate()
     {
-        register_uninstall_hook( $this->plugin_file, array( $this, 'on_uninstall' ) );
+        register_uninstall_hook( $this->filepath, array( $this, 'on_uninstall' ) );
     }
 
     public function load_textdomain()
@@ -119,12 +144,12 @@ class autoptimizeMain
             if ( $conf->get( 'autoptimize_html' ) || $conf->get( 'autoptimize_js' ) || $conf->get( 'autoptimize_css' ) ) {
                 // Hook into WordPress frontend.
                 if ( defined( 'AUTOPTIMIZE_INIT_EARLIER' ) ) {
-                    add_action( 'init', 'autoptimize_start_buffering', -1 );
+                    add_action( 'init', array( $this, 'start_buffering' ), -1 );
                 } else {
                     if ( ! defined( 'AUTOPTIMIZE_HOOK_INTO' ) ) {
                         define( 'AUTOPTIMIZE_HOOK_INTO', 'template_redirect' );
                     }
-                    add_action( constant( 'AUTOPTIMIZE_HOOK_INTO' ), 'autoptimize_start_buffering', 2 );
+                    add_action( constant( 'AUTOPTIMIZE_HOOK_INTO' ), array( $this, 'start_buffering', 2 ) );
                 }
             }
         } else {
@@ -148,6 +173,239 @@ class autoptimizeMain
             include AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizePartners.php';
             new autoptimizePartners();
         }
+    }
+
+    /**
+     * Setup output buffering if needed.
+     *
+     * @return void
+     */
+    public function start_buffering()
+    {
+        if ( $this->should_buffer() ) {
+
+            // Load speedupper conditionally (true by default).
+            if ( apply_filters( 'autoptimize_filter_speedupper', true ) ) {
+                $ao_speedupper = new autoptimizeSpeedupper();
+            }
+
+            $conf = autoptimizeConfig::instance();
+
+            if ( $conf->get( 'autoptimize_js' ) ) {
+                if ( ! defined( 'CONCATENATE_SCRIPTS' ) ) {
+                    define( 'CONCATENATE_SCRIPTS', false );
+                }
+                if ( ! defined( 'COMPRESS_SCRIPTS' ) ) {
+                    define( 'COMPRESS_SCRIPTS', false );
+                }
+            }
+
+            if ( $conf->get( 'autoptimize_css' ) ) {
+                if ( ! defined( 'COMPRESS_CSS' ) ) {
+                    define( 'COMPRESS_CSS', false );
+                }
+            }
+
+            if ( apply_filters( 'autoptimize_filter_obkiller', false ) ) {
+                while ( ob_get_level() > 0 ) {
+                    ob_end_clean();
+                }
+            }
+
+            // Now, start the real thing!
+            ob_start( array( $this, 'end_buffering' ) );
+        }
+    }
+
+    /**
+     * Returns true if all the conditions to start output buffering are satisfied.
+     *
+     * @param bool $doing_tests Allows overriding the optimization of only
+     *                          deciding once per request (for use in tests).
+     * @return bool
+     */
+    public function should_buffer( $doing_tests = false )
+    {
+        static $do_buffering = null;
+
+        // Only check once in case we're called multiple times by others but
+        // still allows multiple calls when doing tests.
+        if ( null === $do_buffering || $doing_tests ) {
+
+            $ao_noptimize = false;
+
+            // Checking for DONOTMINIFY constant as used by e.g. WooCommerce POS.
+            if ( defined( 'DONOTMINIFY' ) && ( constant( 'DONOTMINIFY' ) === true || constant( 'DONOTMINIFY' ) === 'true' ) ) {
+                $ao_noptimize = true;
+            }
+
+            // Skip checking query strings if they're disabled.
+            if ( apply_filters( 'autoptimize_filter_honor_qs_noptimize', true ) ) {
+                // Check for `ao_noptimize` (and other) keys in the query string
+                // to get non-optimized page for debugging.
+                $keys = array(
+                    'ao_noptimize',
+                    'ao_noptirocket',
+                );
+                foreach ( $keys as $key ) {
+                    if ( array_key_exists( $key, $_GET ) && '1' === $_GET[ $key ] ) {
+                        $ao_noptimize = true;
+                        break;
+                    }
+                }
+            }
+
+            // If setting says not to optimize logged in user and user is logged in...
+            if ( 'on' !== get_option( 'autoptimize_optimize_logged', 'on' ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+                $ao_noptimize = true;
+            }
+
+            // If setting says not to optimize cart/checkout.
+            if ( 'on' !== get_option( 'autoptimize_optimize_checkout', 'on' ) ) {
+                // Checking for woocommerce, easy digital downloads and wp ecommerce...
+                foreach ( array( 'is_checkout', 'is_cart', 'edd_is_checkout', 'wpsc_is_cart', 'wpsc_is_checkout' ) as $func ) {
+                    if ( function_exists( $func ) && $func() ) {
+                        $ao_noptimize = true;
+                        break;
+                    }
+                }
+            }
+
+            // Allows blocking of autoptimization on your own terms regardless of above decisions.
+            $ao_noptimize = (bool) apply_filters( 'autoptimize_filter_noptimize', $ao_noptimize );
+
+            // Check for site being previewed in the Customizer (available since WP 4.0).
+            $is_customize_preview = false;
+            if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
+                $is_customize_preview = is_customize_preview();
+            }
+
+            // We only buffer the frontend requests (and then only if not a feed
+            // and not turned off explicitly and not when being previewed in Customizer)
+            // TODO/FIXME: Tests throw a notice here since we're calling is_feed()
+            // without the main query being ran (unless we init early).
+            $do_buffering = ( ! is_admin() && ! is_feed() && ! $ao_noptimize && ! $is_customize_preview );
+        }
+
+        return $do_buffering;
+    }
+
+    /**
+     * Returns true if given markup is considered valid/processable/optimizable.
+     *
+     * @param string $content Markup.
+     *
+     * @return bool
+     */
+    public function is_valid_buffer( $content )
+    {
+        // Defaults to true.
+        $valid = true;
+
+        $has_no_html_tag    = ( false === stripos( $content, '<html' ) );
+        $has_xsl_stylesheet = ( false !== stripos( $content, '<xsl:stylesheet' ) );
+        $has_html5_doctype  = ( preg_match( '/^<!DOCTYPE.+html>/i', $content ) > 0 );
+
+        if ( $has_no_html_tag ) {
+            // Can't be valid amp markup without an html tag preceding it.
+            $is_amp_markup = false;
+        } else {
+            $is_amp_markup = self::is_amp_markup( $content );
+        }
+
+        // If it's not html, or if it's amp or contains xsl stylesheets we don't touch it.
+        if ( $has_no_html_tag && ! $has_html5_doctype || $is_amp_markup || $has_xsl_stylesheet ) {
+            $valid = false;
+        }
+
+        return $valid;
+    }
+
+    /**
+     * Returns true if given $content is considered to be AMP markup.
+     * This is far from actual validation against AMP spec, but it'll do for now.
+     *
+     * @param string $content Markup to check.
+     *
+     * @return bool
+     */
+    public static function is_amp_markup( $content )
+    {
+        $is_amp_markup = preg_match( '/<html[^>]*(?:amp|⚡)/i', $content );
+
+        return (bool) $is_amp_markup;
+    }
+
+    /**
+     * Processes/optimizes the output-buffered content and returns it.
+     * If the content is not processable, it is returned unmodified.
+     *
+     * @param string $content Buffered content.
+     *
+     * @return string
+     */
+    public function end_buffering( $content )
+    {
+        // Bail early without modifying anything if we can't handle the content.
+        if ( ! $this->is_valid_buffer( $content ) ) {
+            return $content;
+        }
+
+        $conf = autoptimizeConfig::instance();
+
+        // Determine what needs to be ran.
+        $classes = array();
+        if ( $conf->get( 'autoptimize_js' ) ) {
+            $classes[] = 'autoptimizeScripts';
+        }
+        if ( $conf->get( 'autoptimize_css' ) ) {
+            $classes[] = 'autoptimizeStyles';
+        }
+        if ( $conf->get( 'autoptimize_html' ) ) {
+            $classes[] = 'autoptimizeHTML';
+        }
+
+        $classoptions = array(
+            'autoptimizeScripts' => array(
+                'justhead'       => $conf->get( 'autoptimize_js_justhead' ),
+                'forcehead'      => $conf->get( 'autoptimize_js_forcehead' ),
+                'trycatch'       => $conf->get( 'autoptimize_js_trycatch' ),
+                'js_exclude'     => $conf->get( 'autoptimize_js_exclude' ),
+                'cdn_url'        => $conf->get( 'autoptimize_cdn_url' ),
+                'include_inline' => $conf->get( 'autoptimize_js_include_inline' ),
+            ),
+            'autoptimizeStyles'  => array(
+                'justhead'       => $conf->get( 'autoptimize_css_justhead' ),
+                'datauris'       => $conf->get( 'autoptimize_css_datauris' ),
+                'defer'          => $conf->get( 'autoptimize_css_defer' ),
+                'defer_inline'   => $conf->get( 'autoptimize_css_defer_inline' ),
+                'inline'         => $conf->get( 'autoptimize_css_inline' ),
+                'css_exclude'    => $conf->get( 'autoptimize_css_exclude' ),
+                'cdn_url'        => $conf->get( 'autoptimize_cdn_url' ),
+                'include_inline' => $conf->get( 'autoptimize_css_include_inline' ),
+                'nogooglefont'   => $conf->get( 'autoptimize_css_nogooglefont' ),
+            ),
+            'autoptimizeHTML'    => array(
+                'keepcomments' => $conf->get( 'autoptimize_html_keepcomments' ),
+            ),
+        );
+
+        $content = apply_filters( 'autoptimize_filter_html_before_minify', $content );
+
+        // Run the classes!
+        foreach ( $classes as $name ) {
+            $instance = new $name( $content );
+            if ( $instance->read( $classoptions[ $name ] ) ) {
+                $instance->minify();
+                $instance->cache();
+                $content = $instance->getcontent();
+            }
+            unset( $instance );
+        }
+
+        $content = apply_filters( 'autoptimize_html_after_minify', $content );
+
+        return $content;
     }
 
     public function on_uninstall()

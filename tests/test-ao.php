@@ -3,6 +3,11 @@
 class AOTest extends WP_UnitTestcase
 {
     /**
+     * @var autoptimizeMain
+     */
+    protected $ao;
+
+    /**
      * Normalizes EOLs into "\n" otherwise some tests fail due to simple newline
      * differences in the markup (depending on how/where it was entered/generated).
      * This can occasionally get even more complicated by git changing newlines
@@ -15,6 +20,13 @@ class AOTest extends WP_UnitTestcase
     private function normalize_newlines($str)
     {
         return str_replace("\r\n", "\n", $str);
+    }
+
+    public function setUp()
+    {
+        $this->ao = new autoptimizeMain( AUTOPTIMIZE_PLUGIN_VERSION, AUTOPTIMIZE_PLUGIN_FILE );
+
+        parent::setUp();
     }
 
     // Runs after each test method
@@ -238,7 +250,7 @@ MARKUP;
      */
     function test_rewrite_markup_with_cdn($input, $expected)
     {
-        $actual = autoptimize_end_buffering($input);
+        $actual = $this->ao->end_buffering( $input );
 
         // $this->markTestIncomplete('Full-blown rewrite test currently doesn\'t work on Windows (or with any custom WP-tests setup/location really).');
         $this->assertEquals($expected, $actual);
@@ -422,84 +434,84 @@ CSS;
     }
 
     /**
-     * @dataProvider provider_autoptimize_should_bail_from_processing_buffer
-     * @covers autoptimize_should_bail_from_processing_buffer
+     * @dataProvider provider_is_valid_buffer
+     * @covers autoptimizeMain::is_valid_buffer
      */
-    public function test_autoptimize_should_bail_from_processing_buffer($input, $expected)
+    public function test_valid_buffers($input, $expected)
     {
-        $actual = autoptimize_should_bail_from_processing_buffer($input);
+        $actual = $this->ao->is_valid_buffer($input);
 
         $this->assertEquals($expected, $actual);
     }
 
-    public function provider_autoptimize_should_bail_from_processing_buffer()
+    public function provider_is_valid_buffer()
     {
         return array(
             array(
                 '<!doctype html>
 <html ⚡>',
-                true,
+                false,
             ),
             array(
                 '<!doctype html>
 <html amp>',
-                true
+                false
             ),
             array(
                 '<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
-                true
+                false
             ),
             array(
                 '<!doctype html>
 <html>',
-                false
+                true
             ),
             array(
                 '<html dir="ltr" amp>',
-                true
+                false
             ),
             array(
                 '<html dir="ltr" ⚡>',
-                true
+                false
             ),
             array(
                 '<html amp dir="ltr">',
-                true
+                false
             ),
             array(
                 '<html ⚡ dir="ltr">',
-                true
+                false
             ),
             array(
                 '<HTML ⚡ DIR="LTR">',
-                true
+                false
             ),
             array(
                 '<HTML AMP DIR="LTR">',
-                true
+                false
             ),
             // https://github.com/futtta/autoptimize/commit/54385939db06f725fcafe68598cce6ed148ef6c1
             array(
                 '<!doctype html>',
-                false
+                true
             ),
         );
     }
 
     /**
-     * @dataProvider provider_autoptimize_is_amp_markup
-     * @covers autoptimize_is_amp_markup
+     * @dataProvider provider_is_amp_markup
+     * @covers autoptimizeMain::is_amp_markup
      */
     public function test_autoptimize_is_amp_markup($input, $expected)
     {
-        $actual = autoptimize_is_amp_markup($input);
+        $actual = autoptimizeMain::is_amp_markup($input);
 
         $this->assertEquals($expected, $actual);
     }
 
-    public function provider_autoptimize_is_amp_markup()
+    public function provider_is_amp_markup()
     {
         return array(
             array(
@@ -525,21 +537,6 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
      * Test various conditions that can/should prevent autoptimize from buffering content.
      */
 
-// This is causing testability issues due to the use of the constant, which,
-// once defined, interferes with other tests because `autoptimize_do_buffering()` is
-// checking it again and again... And we cannot test stuff in isolation any more.
-/*
-    public function test_skips_buffering_with_DONOTMINIFY_constant_defined()
-    {
-        define( 'DONOTMINIFY', true );
-
-        // buffering should not run due to te constant above being defined
-        $expected = false;
-        $actual = autoptimize_do_buffering($doing_tests = true);
-
-        $this->assertEquals($expected, $actual);
-    }
-//*/
     public function test_skips_buffering_when_ao_noptimize_filter_is_true()
     {
         // true => disable autoptimize
@@ -547,7 +544,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
 
         // buffering should not run due to the above filter
         $expected = false;
-        $actual = autoptimize_do_buffering($doing_tests = true);
+        $actual   = $this->ao->should_buffer( $doing_tests = true );
 
         $this->assertEquals($expected, $actual);
     }
@@ -559,22 +556,14 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
 
         // buffering should run because of above
         $expected = true;
-        $actual = autoptimize_do_buffering($doing_tests = true);
+        $actual   = $this->ao->should_buffer( $doing_tests = true );
 
         $this->assertEquals($expected, $actual);
     }
 
-/*
-    public function test_skips_buffering_with_ao_noptimize_qs_set()
-    {
-        // Simulating `ao_noptimize=1` qs by using 'autoptimize_filter_noptimize' because superglobals...
-        $this->test_skips_buffering_when_ao_noptimize_filter_is_true();
-    }
-//*/
-
     public function test_ignores_ao_noptimize_qs_when_instructed()
     {
-        // Should skip checking for the qs completely due to filter
+        // Should skip checking for the qs completely due to filter.
         add_filter( 'autoptimize_filter_honor_qs_noptimize', '__return_false' );
 
         // Which should then result in the "current" value being `false` when passed to 'autoptimize_filter_noptimize'
@@ -582,7 +571,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
         // basically means this test changes its' expected result depending on the order of tests
         // execution and/or the environment, which is AAAARGGGGGGHHH...
 
-        $that = $this; // Make it work on 5.3
+        $that = $this; // Makes it work on php 5.3!
         add_filter( 'autoptimize_filter_noptimize', function ($current_value) use ($that) {
             $expected = false;
             if ( defined( 'DONOTMINIFY' ) && DONOTMINIFY ) {
@@ -592,7 +581,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
             $that->assertEquals($expected, $current_value);
         });
 
-        autoptimize_do_buffering($doing_tests = true);
+        $this->ao->should_buffer( $doing_tests = true );
     }
 
     public function test_wpengine_cache_flush()
@@ -1409,5 +1398,29 @@ CSS;
 
         $actual = $instance->getcontent();
         $this->assertEquals($expected, $actual);
+    }
+
+    public function test_cache_size_checker_hooked_by_default()
+    {
+        $this->assertTrue(true, autoptimizeCacheChecker::SCHEDULE_HOOK);
+
+        // No schedule, because it's only added when is_admin() is true
+        $this->assertEquals(false, wp_get_schedule(autoptimizeCacheChecker::SCHEDULE_HOOK));
+
+        // Prove that setup() sets the schedule as needed
+        $checker = new autoptimizeCacheChecker();
+        $checker->setup();
+        $this->assertEquals('daily', wp_get_schedule(autoptimizeCacheChecker::SCHEDULE_HOOK));
+    }
+
+    public function test_cache_size_checker_disabled_with_filter()
+    {
+        add_filter( 'autoptimize_filter_cachecheck_do', '__return_false' );
+
+        $checker = new autoptimizeCacheChecker();
+        $checker->setup();
+        $this->assertEquals(false, wp_get_schedule(autoptimizeCacheChecker::SCHEDULE_HOOK));
+
+        remove_all_filters( 'autoptimize_filter_cachecheck_do' );
     }
 }

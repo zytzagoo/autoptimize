@@ -12,7 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class autoptimizeCacheChecker
 {
+    const SCHEDULE_HOOK = 'ao_cachechecker';
+
     public function __construct()
+    {
+    }
+
+    public function run()
     {
         $this->add_hooks();
     }
@@ -22,22 +28,22 @@ class autoptimizeCacheChecker
         if ( is_admin() ) {
             add_action( 'plugins_loaded', array( $this, 'setup' ) );
         }
-        add_action( 'ao_cachechecker', array( $this, 'cronjob' ) );
+        add_action( self::SCHEDULE_HOOK, array( $this, 'cronjob' ) );
         add_action( 'admin_notices', array( $this, 'show_admin_notice' ) );
     }
 
     public function setup()
     {
         $do_cache_check = (bool) apply_filters( 'autoptimize_filter_cachecheck_do', true );
-        $schedule       = wp_get_schedule( 'ao_cachechecker' );
+        $schedule       = wp_get_schedule( self::SCHEDULE_HOOK );
         $frequency      = apply_filters( 'autoptimize_filter_cachecheck_frequency', 'daily' );
         if ( ! in_array( $frequency, array( 'hourly', 'daily', 'monthly' ) ) ) {
             $frequency = 'daily';
         }
         if ( $do_cache_check && ( ! $schedule || $schedule !== $frequency ) ) {
-            wp_schedule_event( time(), $frequency, 'ao_cachechecker' );
+            wp_schedule_event( time(), $frequency, self::SCHEDULE_HOOK );
         } elseif ( $schedule && ! $do_cache_check ) {
-            wp_clear_scheduled_hook( 'ao_cachechecker' );
+            wp_clear_scheduled_hook( self::SCHEDULE_HOOK );
         }
     }
 
