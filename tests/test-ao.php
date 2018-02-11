@@ -1423,4 +1423,31 @@ CSS;
 
         remove_all_filters( 'autoptimize_filter_cachecheck_do' );
     }
+
+    public function test_is_start_buffering_hooked_properly()
+    {
+        $instance = autoptimize();
+
+        // TODO/FIXME: ideally, we'd test all possible setups, but once we set
+        // a constant, there's no going back, unless we use runkit or somesuch:
+        // https://www.theaveragedev.com/mocking-constants-in-tests/
+
+        if (defined('AUTOPTIMIZE_INIT_EARLIER')) {
+            $this->assertEquals(
+                autoptimizeMain::INIT_EARLIER_PRIORITY,
+                has_action('init', array($instance, 'start_buffering'))
+            );
+            $this->assertTrue(!defined('AUTOPTIMIZE_HOOK_INTO'));
+        }
+/*
+        // AUTOPTIMIZE_HOOK_INTO only exists if AUTOPTIMIZE_INIT_EARLIER doesnt
+        $this->assertEquals(
+            autoptimizeMain::DEFAULT_HOOK_PRIORITY,
+            has_action(constant('AUTOPTIMIZE_HOOK_INTO'), array($instance, 'start_buffering'))
+        );
+        $this->assertFalse(
+            has_action('init', array($instance, 'start_buffering'))
+        );
+*/
+    }
 }

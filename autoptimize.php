@@ -69,5 +69,19 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
     require AUTOPTIMIZE_PLUGIN_DIR . 'classes/autoptimizeCLI.php';
 }
 
-$ao = new autoptimizeMain( AUTOPTIMIZE_PLUGIN_VERSION, AUTOPTIMIZE_PLUGIN_FILE );
-$ao->run();
+/**
+ * Retrieve the instance of the main plugin class.
+ *
+ * @return autoptimizeMain
+ */
+function autoptimize() {
+    static $plugin = null;
+
+    if ( null === $plugin ) {
+        $plugin = new autoptimizeMain( AUTOPTIMIZE_PLUGIN_VERSION, AUTOPTIMIZE_PLUGIN_FILE );
+    }
+
+    return $plugin;
+}
+
+autoptimize()->run();

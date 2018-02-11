@@ -9,6 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class autoptimizeMain
 {
+    const INIT_EARLIER_PRIORITY = -1;
+    const DEFAULT_HOOK_PRIORITY = 2;
+
     /**
      * Version string.
      *
@@ -144,12 +147,20 @@ class autoptimizeMain
             if ( $conf->get( 'autoptimize_html' ) || $conf->get( 'autoptimize_js' ) || $conf->get( 'autoptimize_css' ) ) {
                 // Hook into WordPress frontend.
                 if ( defined( 'AUTOPTIMIZE_INIT_EARLIER' ) ) {
-                    add_action( 'init', array( $this, 'start_buffering' ), -1 );
+                    add_action(
+                        'init',
+                        array( $this, 'start_buffering' ),
+                        self::INIT_EARLIER_PRIORITY
+                    );
                 } else {
                     if ( ! defined( 'AUTOPTIMIZE_HOOK_INTO' ) ) {
                         define( 'AUTOPTIMIZE_HOOK_INTO', 'template_redirect' );
                     }
-                    add_action( constant( 'AUTOPTIMIZE_HOOK_INTO' ), array( $this, 'start_buffering', 2 ) );
+                    add_action(
+                        constant( 'AUTOPTIMIZE_HOOK_INTO' ),
+                        array( $this, 'start_buffering' ),
+                        self::DEFAULT_HOOK_PRIORITY
+                    );
                 }
             }
         } else {
