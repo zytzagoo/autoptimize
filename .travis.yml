@@ -1,9 +1,14 @@
 language: php
+dist: trusty
+sudo: false
 
 notifications:
   email:
     on_success: never
     on_failure: change
+
+git:
+    depth: 1
 
 php:
   - 5.6
@@ -18,8 +23,15 @@ matrix:
   include:
     - php: 5.6
       env: WP_VERSION=latest WP_MULTISITE=1
+    - php: 7.2
+      env: PHPUNIT5=true
 
 before_script:
   - bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
+  - phpunit --version
 
-script: phpunit
+script:
+    # download & run phpunit5
+    - if [[ $PHPUNIT5 == true ]]; then wget -O phpunit5.phar https://phar.phpunit.de/phpunit-5.phar && php phpunit5.phar; fi
+    # run stock phpunit (the one bundled on travis)
+    - if [[ $PHPUNIT5 != true ]]; then phpunit; fi
