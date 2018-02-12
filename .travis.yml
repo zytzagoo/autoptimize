@@ -23,15 +23,16 @@ matrix:
   include:
     - php: 5.6
       env: WP_VERSION=latest WP_MULTISITE=1
-    - php: 7.2
-      env: PHPUNIT5=true
 
 before_script:
   - bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
-  - phpunit --version
+  # install different global phpunit versions via composer for different php versions
+  - |
+    if [[ ${TRAVIS_PHP_VERSION:0:2} == "7." ]]; then
+      composer global require "phpunit/phpunit=5.7.*"
+    else
+      composer global require "phpunit/phpunit=4.8.*"
+    fi
+  - |
 
-script:
-    # download & run phpunit5
-    - if [[ $PHPUNIT5 == true ]]; then wget -O phpunit5.phar https://phar.phpunit.de/phpunit-5.phar && php phpunit5.phar; fi
-    # run stock phpunit (the one bundled on travis)
-    - if [[ $PHPUNIT5 != true ]]; then phpunit; fi
+script: phpunit
