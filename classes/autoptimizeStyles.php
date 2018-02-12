@@ -754,7 +754,7 @@ class autoptimizeStyles extends autoptimizeBase
                             // we have the optimized inline CSS in cache
                             $defer_inline_code = $iCssCache->retrieve();
                         } else {
-                            $cssmin   = new CSSmin();
+                            $cssmin   = new autoptimizeCSSmin();
                             $tmp_code = trim( $cssmin->run( $defer_inline_code ) );
 
                             if ( ! empty( $tmp_code ) ) {

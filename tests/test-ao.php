@@ -245,6 +245,94 @@ MARKUP;
 </html>
 MARKUP;
 
+    const TEST_MARKUP_OUTPUT_INLINE_DEFER = <<<MARKUP
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8 lt-ie7"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
+<!--[if IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
+<!--[if IE 8]> <html class="no-svg no-js lt-ie9"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-svg no-js"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<style type="text/css" id="aoatfcss" media="all">1</style><link rel="preload" as="style" media="all" href="http://cdn.example.org/wp-content/cache/autoptimize/css/autoptimize_863f587e89f100b0223ddccc0dabc57a.css" onload="this.onload=null;this.rel='stylesheet'" /><noscript id="aonoscrcss"><link type="text/css" media="all" href="http://cdn.example.org/wp-content/cache/autoptimize/css/autoptimize_863f587e89f100b0223ddccc0dabc57a.css" rel="stylesheet" /></noscript><title>Mliječna juha od brokule &#9832; Kuhaj.hr</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <!--[if lt IE 9]>
+    <script src="http://example.org/wp-content/themes/my-theme/js/vendor/html5shiv-printshiv.min.js" type="text/javascript"></script>
+    <![endif]-->
+    <!--[if (gte IE 6)&(lte IE 8)]>
+        <script type="text/javascript" src="http://example.org/wp-content/themes/my-theme/js/vendor/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body class="single single-post">
+
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/hr_HR/sdk.js#version=v2.0&xfbml=1&appId=";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>
+    </script>
+
+<script type='text/javascript' src='http://example.org/wp-content/plugins/ajax-load-more/core/js/ajax-load-more.min.js?ver=1.1'></script>
+<script type='text/javascript' src='http://example.org/wp-content/plugins/wp-ga-social-tracking-js/ga-social-tracking.min.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/vendor/alm-seo.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/vendor/jquery.placeholder-2.1.1.min.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/vendor/typeahead.bundle.min.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/vendor/bootstrap-tagsinput.min.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/m-mobilemenu.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/main.js'></script>
+
+<script type="text/javascript" defer src="http://cdn.example.org/wp-content/cache/autoptimize/js/autoptimize_730dfe55780a3a6fc98224e18fa27340.js"></script><script data-cfasync='false'>!function(t){"use strict";t.loadCSS||(t.loadCSS=function(){});var e=loadCSS.relpreload={};if(e.support=function(){var e;try{e=t.document.createElement("link").relList.supports("preload")}catch(t){e=!1}return function(){return e}}(),e.bindMediaToggle=function(t){function e(){t.media=a}var a=t.media||"all";t.addEventListener?t.addEventListener("load",e):t.attachEvent&&t.attachEvent("onload",e),setTimeout(function(){t.rel="stylesheet",t.media="only x"}),setTimeout(e,3e3)},e.poly=function(){if(!e.support())for(var a=t.document.getElementsByTagName("link"),n=0;n<a.length;n++){var o=a[n];"preload"!==o.rel||"style"!==o.getAttribute("as")||o.getAttribute("data-loadcss")||(o.setAttribute("data-loadcss",!0),e.bindMediaToggle(o))}},!e.support()){e.poly();var a=t.setInterval(e.poly,500);t.addEventListener?t.addEventListener("load",function(){e.poly(),t.clearInterval(a)}):t.attachEvent&&t.attachEvent("onload",function(){e.poly(),t.clearInterval(a)})}"undefined"!=typeof exports?exports.loadCSS=loadCSS:t.loadCSS=loadCSS}("undefined"!=typeof global?global:this);</script></body>
+</html>
+MARKUP;
+
+    const TEST_MARKUP_OUTPUT_INLINE_DEFER_MS = <<<MARKUP
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8 lt-ie7"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
+<!--[if IE 7]> <html class="no-svg no-js lt-ie9 lt-ie8"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
+<!--[if IE 8]> <html class="no-svg no-js lt-ie9"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-svg no-js"  xmlns:fb="https://www.facebook.com/2008/fbml"  xmlns:og="http://ogp.me/ns#" lang="hr"> <!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<style type="text/css" id="aoatfcss" media="all">1</style><link rel="preload" as="style" media="all" href="http://cdn.example.org/wp-content/cache/autoptimize/1/css/autoptimize_863f587e89f100b0223ddccc0dabc57a.css" onload="this.onload=null;this.rel='stylesheet'" /><noscript id="aonoscrcss"><link type="text/css" media="all" href="http://cdn.example.org/wp-content/cache/autoptimize/1/css/autoptimize_863f587e89f100b0223ddccc0dabc57a.css" rel="stylesheet" /></noscript><title>Mliječna juha od brokule &#9832; Kuhaj.hr</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <!--[if lt IE 9]>
+    <script src="http://example.org/wp-content/themes/my-theme/js/vendor/html5shiv-printshiv.min.js" type="text/javascript"></script>
+    <![endif]-->
+    <!--[if (gte IE 6)&(lte IE 8)]>
+        <script type="text/javascript" src="http://example.org/wp-content/themes/my-theme/js/vendor/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body class="single single-post">
+
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/hr_HR/sdk.js#version=v2.0&xfbml=1&appId=";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>
+    </script>
+
+<script type='text/javascript' src='http://example.org/wp-content/plugins/ajax-load-more/core/js/ajax-load-more.min.js?ver=1.1'></script>
+<script type='text/javascript' src='http://example.org/wp-content/plugins/wp-ga-social-tracking-js/ga-social-tracking.min.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/vendor/alm-seo.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/vendor/jquery.placeholder-2.1.1.min.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/vendor/typeahead.bundle.min.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/vendor/bootstrap-tagsinput.min.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/m-mobilemenu.js'></script>
+<script type='text/javascript' src='http://example.org/wp-content/themes/my-theme/js/main.js'></script>
+
+<script type="text/javascript" defer src="http://cdn.example.org/wp-content/cache/autoptimize/1/js/autoptimize_730dfe55780a3a6fc98224e18fa27340.js"></script><script data-cfasync='false'>!function(t){"use strict";t.loadCSS||(t.loadCSS=function(){});var e=loadCSS.relpreload={};if(e.support=function(){var e;try{e=t.document.createElement("link").relList.supports("preload")}catch(t){e=!1}return function(){return e}}(),e.bindMediaToggle=function(t){function e(){t.media=a}var a=t.media||"all";t.addEventListener?t.addEventListener("load",e):t.attachEvent&&t.attachEvent("onload",e),setTimeout(function(){t.rel="stylesheet",t.media="only x"}),setTimeout(e,3e3)},e.poly=function(){if(!e.support())for(var a=t.document.getElementsByTagName("link"),n=0;n<a.length;n++){var o=a[n];"preload"!==o.rel||"style"!==o.getAttribute("as")||o.getAttribute("data-loadcss")||(o.setAttribute("data-loadcss",!0),e.bindMediaToggle(o))}},!e.support()){e.poly();var a=t.setInterval(e.poly,500);t.addEventListener?t.addEventListener("load",function(){e.poly(),t.clearInterval(a)}):t.attachEvent&&t.attachEvent("onload",function(){e.poly(),t.clearInterval(a)})}"undefined"!=typeof exports?exports.loadCSS=loadCSS:t.loadCSS=loadCSS}("undefined"!=typeof global?global:this);</script></body>
+</html>
+MARKUP;
+
     /**
      * @dataProvider provider_test_rewrite_markup_with_cdn
      */
@@ -1449,5 +1537,21 @@ CSS;
             has_action('init', array($instance, 'start_buffering'))
         );
 */
+    }
+
+    public function test_inline_and_defer_markup()
+    {
+        add_filter( 'autoptimize_filter_css_defer', '__return_true' );
+        add_filter( 'autoptimize_filter_css_defer_inline', '__return_true' );
+
+        $actual = $this->ao->end_buffering( self::TEST_MARKUP );
+        if ( is_multisite() ) {
+            $this->assertEquals( self::TEST_MARKUP_OUTPUT_INLINE_DEFER_MS, $actual );
+        } else {
+            $this->assertEquals( self::TEST_MARKUP_OUTPUT_INLINE_DEFER, $actual );
+        }
+
+        remove_all_filters( 'autoptimize_filter_css_defer' );
+        remove_all_filters( 'autoptimize_filter_css_defer_inline' );
     }
 }
