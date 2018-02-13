@@ -20,7 +20,10 @@
 
     <!-- Check all PHP files in directory tree by default. -->
     <arg name="extensions" value="php"/>
-    <file>.</file>
+    <!--file>.</file-->
+    <file>autoptimize.php</file>
+    <file>classes</file>
+    <file>tests</file>
 
     <!-- Show progress and sniff codes in all reports -->
     <arg value="ps"/>
@@ -28,8 +31,7 @@
     <rule ref="PHPCompatibility"/>
     <config name="testVersion" value="5.3"/>
 
-<!--
-    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <!--exclude-pattern>*/node_modules/*</exclude-pattern-->
     <exclude-pattern>*/vendor/*</exclude-pattern>
--->
+    <exclude-pattern>*/external/*</exclude-pattern>
 </ruleset>

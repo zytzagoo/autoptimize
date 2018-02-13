@@ -13,3 +13,6 @@
 /phpunit.phar export-ignore
 /tests export-ignore
 /bin export-ignore
+/vendor export-ignore
+/composer.json export-ignore
+/composer.lock export-ignore

@@ -5,7 +5,8 @@ The [official Autoptimize repo on Github can be found here](https://github.com/f
 
 ## Installing/running the tests
 * Install wp test suite by running `bin/install-wp-tests.sh`
-* Run `php phpunit.phar`
+* Run `composer install`
+* Now you should be able to run either `composer test` or `phpunit`
 
 Have a read through `tests/test-ao.php` and `tests/bootstrap.php` if you'd like to know more.
 
