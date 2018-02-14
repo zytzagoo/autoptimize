@@ -24,17 +24,16 @@ matrix:
     - php: 5.6
       env: WP_VERSION=latest WP_MULTISITE=1
 
+install:
+    # flags to pass to install
+    - flags="--ansi --prefer-dist --no-interaction --optimize-autoloader --no-suggest --no-progress"
+    # install dependencies using system provided composer binary
+    - composer install $flags
+
 before_script:
+  # install wp tests infra
   - bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
   # print what's installed and where by default
   - which phpunit && phpunit --version
-  # install different phpunit versions via composer for different php versions
-  - |
-    if [[ ${TRAVIS_PHP_VERSION:0:2} == "7." ]]; then
-      composer require "phpunit/phpunit=5.7.*"
-    else
-      composer require "phpunit/phpunit=4.8.*"
-    fi
-  - |
 
 script: ./vendor/bin/phpunit
