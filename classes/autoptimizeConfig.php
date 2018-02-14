@@ -177,6 +177,10 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
 <div class="notice-error notice"><?php echo '<p>' . sprintf( __( '<strong>You are using a very old version of PHP</strong> (5.2.x or older) which has <a href=%s>serious security and performance issues</a>. Support for PHP 5.5 and below will be removed in one of the next AO released, please ask your hoster to provide you with an upgrade path to 7.x.', 'autoptimize' ), '"http://blog.futtta.be/2016/03/15/why-would-you-still-be-on-php-5-2/" target="_blank"' ) . '</p>'; ?></div>
 <?php } ?>
 
+<?php if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) { ?>
+<div class="notice-error notice"><?php echo '<p>' . __( 'You are forcing Autoptimize to use the "legacy minifiers" using the AUTOPTIMIZE_LEGACY_MINFIERS constant in /wp-config.php. The "legacy minifiers" will not be supported as from the upcoming Autoptimize 2.4 any more.', 'autoptimize' ) . '</p>'; ?></div>
+<?php } ?>
+
 <div id="autoptimize_main">
     <div id="ao_title_and_button">
         <h1 id="ao_title"><?php _e( 'Autoptimize Settings', 'autoptimize' ); ?>
