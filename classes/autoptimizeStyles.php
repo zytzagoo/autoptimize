@@ -188,8 +188,8 @@ class autoptimizeStyles extends autoptimizeBase
                         $url          = $exploded_url[0];
                         $path         = $this->getpath( $url );
 
-                        if ( $path && apply_filters( 'autoptimize_filter_css_minify_excluded', false ) ) {
-                            $minified_url = $this->minify_single($path);
+                        if ( $path && apply_filters( 'autoptimize_filter_css_minify_excluded', true ) ) {
+                            $minified_url = $this->minify_single( $path );
                             if ( ! empty( $minified_url ) ) {
                                 // Replace orig URL with cached minified URL
                                 $new_tag = str_replace( $url, $minified_url, $tag );
