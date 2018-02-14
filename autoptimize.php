@@ -1,4 +1,8 @@
 <?php
+/**
+ * Autoptimize main plugin file.
+ */
+
 /*
 Plugin Name: Autoptimize
 Plugin URI: https://autoptimize.com/
