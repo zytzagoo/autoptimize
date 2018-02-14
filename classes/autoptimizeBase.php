@@ -1,37 +1,68 @@
 <?php
+/**
+ * Base class other (more-specific) classes inherit from.
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
+    exit;
 }
 
 abstract class autoptimizeBase
 {
+    /**
+     * Holds content being processed (html, scripts, styles)
+     *
+     * @var string
+     */
     protected $content = '';
 
+    /**
+     * Controls debug logging.
+     *
+     * @var bool
+     */
     public $debug_log = false;
 
-    public function __construct($content)
+    public function __construct( $content )
     {
         $this->content = $content;
     }
 
-    // Reads the page and collects tags
-    abstract public function read($justhead);
+    /**
+     * Reads the page and collects tags.
+     *
+     * @param array $options Options.
+     *
+     * @return bool
+     */
+    abstract public function read( $options );
 
-    // Joins and optimizes collected things
+    /**
+     * Joins and optimizes collected things.
+     *
+     * @return bool
+     */
     abstract public function minify();
 
-    // Caches the things
+    /**
+     * Caches the things.
+     *
+     * @return void
+     */
     abstract public function cache();
 
-    // Returns the content
+    /**
+     * Returns the content
+     *
+     * @return string
+     */
     abstract public function getcontent();
 
     /**
-     * Converts a given URL to a full local filepath if possible.
+     * Tranfsorms a given URL to a full local filepath if possible.
      * Returns local filepath or false.
      *
-     * @param string $url
+     * @param string $url URL to transform.
      *
      * @return bool|string
      */
@@ -43,22 +74,22 @@ abstract class autoptimizeBase
             $url = urldecode( $url );
         }
 
-        $site_host = parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST );
+        $site_host    = parse_url( AUTOPTIMIZE_WP_SITE_URL, PHP_URL_HOST );
         $content_host = parse_url( AUTOPTIMIZE_WP_ROOT_URL, PHP_URL_HOST );
 
-        // Normalize
-        if (0 === strpos( $url, '//' ) ) {
+        // Normalizing attempts...
+        if ( 0 === strpos( $url, '//' ) ) {
             if ( is_ssl() ) {
                 $url = 'https:' . $url;
             } else {
                 $url = 'http:' . $url;
             }
-        } elseif ( ( false === strpos($url, '//' ) ) && ( false === strpos( $url, $site_host ) ) ) {
+        } elseif ( ( false === strpos( $url, '//' ) ) && ( false === strpos( $url, $site_host ) ) ) {
             if ( AUTOPTIMIZE_WP_SITE_URL === $site_host ) {
                 $url = AUTOPTIMIZE_WP_SITE_URL . $url;
             } else {
                 $subdir_levels = substr_count( preg_replace( '/https?:\/\//', '', AUTOPTIMIZE_WP_SITE_URL ), '/' );
-                $url = AUTOPTIMIZE_WP_SITE_URL . str_repeat( '/..', $subdir_levels ) . $url;
+                $url           = AUTOPTIMIZE_WP_SITE_URL . str_repeat( '/..', $subdir_levels ) . $url;
             }
         }
 
@@ -66,20 +97,20 @@ abstract class autoptimizeBase
             $url = str_replace( AUTOPTIMIZE_WP_CONTENT_URL, AUTOPTIMIZE_WP_SITE_URL . AUTOPTIMIZE_WP_CONTENT_NAME, $url );
         }
 
-        // First check; hostname wp site should be hostname of url
-        $url_host = @parse_url( $url, PHP_URL_HOST );
+        // First check; hostname wp site should be hostname of url!
+        $url_host = @parse_url( $url, PHP_URL_HOST ); // @codingStandardsIgnoreLine
         if ( $url_host !== $site_host ) {
-            /*
-            * first try to get all domains from WPML (if available)
-            * then explicitely declare $this->cdn_url as OK as well
-            * then apply own filter autoptimize_filter_cssjs_multidomain takes an array of hostnames
-            * each item in that array will be considered part of the same WP multisite installation
-            */
+            /**
+             * First try to get all domains from WPML (if available)
+             * then explicitely declare $this->cdn_url as OK as well
+             * then apply own filter autoptimize_filter_cssjs_multidomain takes an array of hostnames
+             * each item in that array will be considered part of the same WP multisite installation
+             */
             $multidomains = array();
 
             $multidomains_wpml = apply_filters( 'wpml_setting', array(), 'language_domains' );
             if ( ! empty( $multidomains_wpml ) ) {
-                $multidomains = array_map( array( $this, 'get_url_hostname'), $multidomains_wpml );
+                $multidomains = array_map( array( $this, 'get_url_hostname' ), $multidomains_wpml );
             }
 
             if ( ! empty( $this->cdn_url ) ) {
@@ -99,27 +130,28 @@ abstract class autoptimizeBase
             }
         }
 
-        // Try to remove "wp root url" from url while not minding http<>https
+        // Try to remove "wp root url" from url while not minding http<>https.
         $tmp_ao_root = preg_replace( '/https?:/', '', AUTOPTIMIZE_WP_ROOT_URL );
 
-        if ($site_host !== $content_host) {
-            // as we replaced the content-domain with the site-domain, we should match against that
+        if ( $site_host !== $content_host ) {
+            // As we replaced the content-domain with the site-domain, we should match against that.
             $tmp_ao_root = preg_replace( '/https?:/', '', AUTOPTIMIZE_WP_SITE_URL );
         }
 
-        $tmp_url     = preg_replace( '/https?:/', '', $url );
-        $path        = str_replace( $tmp_ao_root, '', $tmp_url );
+        $tmp_url = preg_replace( '/https?:/', '', $url );
+        $path    = str_replace( $tmp_ao_root, '', $tmp_url );
 
-        // if path starts with :// or //, this is not a URL in the WP context and we have to assume we can't aggregate
+        // If path starts with :// or //, this is not a URL in the WP context and
+        // we have to assume we can't aggregate.
         if ( preg_match( '#^:?//#', $path ) ) {
-            /** External script/css (adsense, etc) */
+            // External script/css (adsense, etc).
             return false;
         }
 
-        // prepend with WP_ROOT_DIR to have full path to file
+        // Prepend with WP_ROOT_DIR to have full path to file.
         $path = str_replace( '//', '/', WP_ROOT_DIR . $path );
 
-        // final check: does file exist and is it readable
+        // Final check: does file exist and is it readable?
         if ( file_exists( $path ) && is_file( $path ) && is_readable( $path ) ) {
             return $path;
         } else {
@@ -133,11 +165,11 @@ abstract class autoptimizeBase
      * it was missing).
      * Used as callback for WPML multidomains filter.
      *
-     * @param string $url
+     * @param string $url URL.
      *
      * @return string
      */
-    protected function get_url_hostname($url)
+    protected function get_url_hostname( $url )
     {
         // Checking that the url starts with something vaguely resembling a protocol.
         if ( ( 0 !== strpos( $url, 'http' ) ) && ( 0 !== strpos( $url, '//' ) ) ) {
@@ -155,36 +187,62 @@ abstract class autoptimizeBase
         return $hostname;
     }
 
-    // hide everything between noptimize-comment tags
-    protected function hide_noptimize($markup)
+    /**
+     * Hides everything between noptimize-comment tags.
+     *
+     * @param string $markup Markup to process.
+     *
+     * @return string
+     */
+    protected function hide_noptimize( $markup )
     {
         return $this->replace_contents_with_marker_if_exists(
-                'NOPTIMIZE',
-                '/<!--\s?noptimize\s?-->/',
-                '#<!--\s?noptimize\s?-->.*?<!--\s?/\s?noptimize\s?-->#is',
-                $markup
+            'NOPTIMIZE',
+            '/<!--\s?noptimize\s?-->/',
+            '#<!--\s?noptimize\s?-->.*?<!--\s?/\s?noptimize\s?-->#is',
+            $markup
         );
     }
 
-    // Unhide noptimize-tags
-    protected function restore_noptimize($markup)
+    /**
+     * Unhide noptimize-tags.
+     *
+     * @param string $markup Markup to process.
+     *
+     * @return string
+     */
+    protected function restore_noptimize( $markup )
     {
-        return $this->restore_marked_content('NOPTIMIZE', $markup);
+        return $this->restore_marked_content( 'NOPTIMIZE', $markup );
     }
 
-    protected function hide_iehacks($markup)
+    /**
+     * Hides "iehacks" content.
+     *
+     * @param string $markup Markup to process.
+     *
+     * @return string
+     */
+    protected function hide_iehacks( $markup )
     {
         return $this->replace_contents_with_marker_if_exists(
-                'IEHACK', // marker name
-                '<!--[if', // not-valid regex, will fallback to search using strpos()
-                '#<!--\[if.*?\[endif\]-->#is', // replacement regex
-                $markup
+            'IEHACK', // Marker name...
+            '<!--[if', // Invalid regex, will fallback to search using strpos()...
+            '#<!--\[if.*?\[endif\]-->#is', // Replacement regex...
+            $markup
         );
     }
 
-    protected function restore_iehacks($markup)
+    /**
+     * Restores "hidden" iehacks content.
+     *
+     * @param string $markup Markup to process.
+     *
+     * @return string
+     */
+    protected function restore_iehacks( $markup )
     {
-        return $this->restore_marked_content('IEHACK', $markup);
+        return $this->restore_marked_content( 'IEHACK', $markup );
     }
 
     /**
@@ -192,16 +250,17 @@ abstract class autoptimizeBase
      * if HTML comment markers are found.
      * `<!--example-->` becomes `%%COMMENTS%%ZXhhbXBsZQ==%%COMMENTS%%`
      *
-     * @param string $markup
+     * @param string $markup Markup to process.
+     *
      * @return string
      */
-    protected function hide_comments($markup)
+    protected function hide_comments( $markup )
     {
         return $this->replace_contents_with_marker_if_exists(
-                'COMMENTS',
-                '<!--',
-                '#<!--.*?-->#is',
-                $markup
+            'COMMENTS',
+            '<!--',
+            '#<!--.*?-->#is',
+            $markup
         );
     }
 
@@ -209,77 +268,111 @@ abstract class autoptimizeBase
      * Restores original HTML comment markers inside a string whose HTML
      * comments have been "hidden" by using `hide_comments()`.
      *
-     * @param string $markup
+     * @param string $markup Markup to process.
+     *
      * @return string
      */
-    protected function restore_comments($markup)
+    protected function restore_comments( $markup )
     {
-        return $this->restore_marked_content('COMMENTS', $markup);
+        return $this->restore_marked_content( 'COMMENTS', $markup );
     }
 
+    /**
+     * Replaces the given URL with the CDN-version of it when CDN replacement
+     * is supposed to be done.
+     *
+     * @param string $url URL to process.
+     *
+     * @return string
+     */
     public function url_replace_cdn( $url )
     {
         $cdn_url = apply_filters( 'autoptimize_filter_base_cdnurl', $this->cdn_url );
         if ( ! empty( $cdn_url ) ) {
-            $this->debug_log('before=' . $url);
+            $this->debug_log( 'before=' . $url );
 
             // Simple str_replace-based approach fails when $url is protocol-or-host-relative.
-            $is_protocol_relative = ( '/' === $url{1} ); // second char is '/'
+            $is_protocol_relative = ( '/' === $url{1} ); // second char is `/`.
             $is_host_relative     = ( ! $is_protocol_relative && ( '/' === $url{0} ) );
             $cdn_url              = rtrim( $cdn_url, '/' );
 
-            // $this->debug_log('is_protocol_relative=' . $is_protocol_relative);
-            // $this->debug_log('is_host_relative=' . $is_host_relative);
-            // $this->debug_log('cdn_url=' . $cdn_url);
-
             if ( $is_host_relative ) {
-                // Prepending host-relative urls with the cdn url
+                // Prepending host-relative urls with the cdn url.
                 $url = $cdn_url . $url;
             } else {
-                // Either a protocol-relative or "regular" url, replacing it either way
+                // Either a protocol-relative or "regular" url, replacing it either way.
                 if ( $is_protocol_relative ) {
-                    // Massage $site_url so that simple str_replace still "works" by
-                    // searching for the protocol-relative version of AUTOPTIMIZE_WP_SITE_URL
+                    // Massage $site_url so that simple str_replace() still "works" by
+                    // searching for the protocol-relative version of AUTOPTIMIZE_WP_SITE_URL.
                     $site_url = str_replace( array( 'http:', 'https:' ), '', AUTOPTIMIZE_WP_SITE_URL );
                 } else {
                     $site_url = AUTOPTIMIZE_WP_SITE_URL;
                 }
-                $this->debug_log('`' . $site_url . '` -> `' . $cdn_url . '` in `' . $url . '`');
+                $this->debug_log( '`' . $site_url . '` -> `' . $cdn_url . '` in `' . $url . '`' );
                 $url = str_replace( $site_url, $cdn_url, $url );
             }
 
-            $this->debug_log('after=' . $url);
+            $this->debug_log( 'after=' . $url );
         }
 
-        // allow API filter to take care of CDN replacement
+        // Allow API filter to take further care of CDN replacement.
         $url = apply_filters( 'autoptimize_filter_base_replace_cdn', $url );
 
         return $url;
     }
 
-    protected function inject_in_html($payload, $replaceTag)
+    /**
+     * Injects/replaces the given payload markup into `$this->content`
+     * at the specified location.
+     * If the specified tag cannot be found, the payload is appended into
+     * $this->content along with a warning wrapped inside <!--noptimize--> tags.
+     *
+     * @param string $payload Markup to inject.
+     * @param array  $where   Array specifying the tag name and method of injection.
+     *                        Index 0 is the tag name (i.e., `</body>`).
+     *                        Index 1 specifies ˛'before', 'after' or 'replace'. Defaults to 'before'.
+     *
+     * @return void
+     */
+    protected function inject_in_html( $payload, $where )
     {
         $warned = false;
-        if ( false !== strpos( $this->content, $replaceTag[0] ) ) {
-            if ( 'after' === $replaceTag[1] ) {
-                $replaceBlock = $replaceTag[0] . $payload;
-            } else if ( 'replace' === $replaceTag[1] ){
-                $replaceBlock = $payload;
+        if ( false !== strpos( $this->content, $where[0] ) ) {
+            // Found the tag, setup content/injection as specified.
+            if ( 'after' === $where[1] ) {
+                $content = $where[0] . $payload;
+            } elseif ( 'replace' === $where[1] ) {
+                $content = $payload;
             } else {
-                $replaceBlock = $payload . $replaceTag[0];
+                $content = $payload . $where[0];
             }
-            $this->content = substr_replace( $this->content, $replaceBlock, strpos( $this->content, $replaceTag[0] ), strlen( $replaceTag[0] ) );
+            // Place where specified.
+            $this->content = substr_replace(
+                $this->content,
+                $content,
+                strpos( $this->content, $where[0] ),
+                strlen( $where[0] )
+            );
         } else {
+            // Couldn't find what was specified, just append and add a warning.
             $this->content .= $payload;
             if ( ! $warned ) {
-                $tag_display = str_replace( array( '<', '>' ), '', $replaceTag[0] );
-                $this->content .= "<!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `" . $tag_display . "` missing --><!--/noptimize-->";
-                $warned = true;
+                $tag_display    = str_replace( array( '<', '>' ), '', $where[0] );
+                $this->content .= '<!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `' . $tag_display . '` missing --><!--/noptimize-->';
+                $warned         = true;
             }
         }
     }
 
-    protected function isremovable($tag, $removables)
+    /**
+     * Returns true if given `$tag` is found in the list of `$removables`.
+     *
+     * @param string $tag Tag to search for.
+     * @param array  $removables List of things considered completely removable.
+     *
+     * @return bool
+     */
+    protected function isremovable( $tag, $removables )
     {
         foreach ( $removables as $match ) {
             if ( false !== strpos( $tag, $match ) ) {
@@ -290,8 +383,14 @@ abstract class autoptimizeBase
         return false;
     }
 
-    // Callback used in self::inject_minified()
-    public function inject_minified_callback($matches)
+    /**
+     * Callback used in `self::inject_minified()`.
+     *
+     * @param array $matches Regex matches.
+     *
+     * @return string
+     */
+    public function inject_minified_callback( $matches )
     {
         static $conf = null;
         if ( null === $conf ) {
@@ -299,20 +398,20 @@ abstract class autoptimizeBase
         }
 
         /**
-         * $hashes[1] holds the whole match caught by regex in inject_minified(),
+         * $matches[1] holds the whole match caught by regex in self::inject_minified(),
          * so we take that and split the string on `|`.
-         * First element is the filepath, second is the md5 hash of contents the filepath
-         * had when it was being processed.
+         * First element is the filepath, second is the md5 hash of contents
+         * the filepath had when it was being processed.
          * If we don't have those, we'll bail out early.
         */
         $filepath = null;
         $filehash = null;
 
-        // Grab the parts we need
+        // Grab the parts we need.
         $parts = explode( $matches[1], '|' );
         if ( ! empty( $parts ) ) {
-            $filepath = isset($parts[0]) ? $parts[0] : null;
-            $filehash = isset($parts[1]) ? $parts[1] : null;
+            $filepath = isset( $parts[0] ) ? $parts[0] : null;
+            $filehash = isset( $parts[1] ) ? $parts[1] : null;
         }
 
         // Bail early if something's not right...
@@ -322,7 +421,7 @@ abstract class autoptimizeBase
 
         $filecontent = file_get_contents( $filepath );
 
-        // Some things are differently handled for css/js
+        // Some things are differently handled for css/js...
         $is_js_file = ( '.js' === substr( $filepath, -3, 3 ) );
 
         $is_css_file = false;
@@ -330,48 +429,51 @@ abstract class autoptimizeBase
             $is_css_file = ( '.css' === substr( $filepath, -4, 4 ) );
         }
 
-        // Upstream nukes BOM here, although not really sure why...
-        // It doesn't seem like something AO should be doing... And if it should, it shouldn't
-        // just blindly strip all occurences of those three bytes in the entire file, no?
-        // (but rather strip the first three bytes [if those first three bytes are the BOM])
-        // $filecontent = preg_replace( "#\x{EF}\x{BB}\x{BF}#", '', $filecontent );
+        // BOMs being nuked here unconditionally (regardless of where they are)!
+        $filecontent = preg_replace( "#\x{EF}\x{BB}\x{BF}#", '', $filecontent );
 
-        // Remove comments and blank lines
+        // Remove comments and blank lines.
         if ( $is_js_file ) {
             $filecontent = preg_replace( '#^\s*\/\/.*$#Um', '', $filecontent );
         }
 
-        // Nuke un-important comments
+        // Nuke un-important comments.
         $filecontent = preg_replace( '#^\s*\/\*[^!].*\*\/\s?#Um', '', $filecontent );
 
-        // Normalize newlines
+        // Normalize newlines.
         $filecontent = preg_replace( '#(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+#', "\n", $filecontent );
 
-        // JS specifics
+        // JS specifics.
         if ( $is_js_file ) {
-            // Append a semicolon at the end of js files if it's missing
-            $last_char = substr( $filecontent, -1, 1);
+            // Append a semicolon at the end of js files if it's missing.
+            $last_char = substr( $filecontent, -1, 1 );
             if ( ';' !== $last_char && '}' !== $last_char ) {
                 $filecontent .= ';';
             }
-            // Check if try/catch should be used
-            $opt_js_try_catch = $conf->get('autoptimize_js_trycatch');
+            // Check if try/catch should be used.
+            $opt_js_try_catch = $conf->get( 'autoptimize_js_trycatch' );
             if ( 'on' === $opt_js_try_catch ) {
-                // Wrap in try/catch
+                // It should, wrap in try/catch.
                 $filecontent = 'try{' . $filecontent . '}catch(e){}';
             }
         } elseif ( $is_css_file ) {
-            $filecontent = autoptimizeStyles::fixurls($filepath, $filecontent);
+            $filecontent = autoptimizeStyles::fixurls( $filepath, $filecontent );
         } else {
             $filecontent = '';
         }
 
-        // Return modified code
+        // Return modified (or empty!) code/content.
         return "\n" . $filecontent;
     }
 
-    // Inject already minified code in optimized JS/CSS
-    protected function inject_minified($in)
+    /**
+     * Inject already minified code in optimized JS/CSS.
+     *
+     * @param string $in Markup.
+     *
+     * @return string
+     */
+    protected function inject_minified( $in )
     {
         $out = $in;
 
@@ -389,16 +491,18 @@ abstract class autoptimizeBase
     /**
      * Specialized method to create the INJECTLATER marker.
      * These are somewhat "special", in the sense that they're additionally wrapped
-     * within an "exclamation mark style" comment, so that they're not stripped out by minifiers.
+     * within an "exclamation mark style" comment, so that they're not stripped
+     * out by minifiers.
      * They also currently contain the hash of the file's contents too (unlike other markers).
      *
-     * @param string $filepath
-     * @param string $hash
+     * @param string $filepath Filepath.
+     * @param string $hash Hash.
+     *
      * @return string
      */
-    public static function build_injectlater_marker($filepath, $hash)
+    public static function build_injectlater_marker( $filepath, $hash )
     {
-        $contents = '/*!' . self::build_marker('INJECTLATER', $filepath, $hash) . '*/';
+        $contents = '/*!' . self::build_marker( 'INJECTLATER', $filepath, $hash ) . '*/';
 
         return $contents;
     }
@@ -410,25 +514,23 @@ abstract class autoptimizeBase
      * using `|` as the separator (in order to support building the
      * somewhat special/different INJECTLATER marker).
      *
-     * @param string $name Marker name
-     * @param string $data Marker data which will be encoded in base64
+     * @param string      $name Marker name.
+     * @param string      $data Marker data which will be base64-encoded.
      * @param string|null $hash Optional.
      *
      * @return string
      */
-    public static function build_marker($name, $data, $hash = null)
+    public static function build_marker( $name, $data, $hash = null )
     {
-        // $name = strtoupper($name);
-
-        // Start the marker, add the data
+        // Start the marker, add the data.
         $marker = '%%' . $name . AUTOPTIMIZE_HASH . '%%' . base64_encode( $data );
 
-        // Add the hash if provided
+        // Add the hash if provided.
         if ( null !== $hash ) {
             $marker .= '|' . $hash;
         }
 
-        // Close the marker
+        // Close the marker.
         $marker .= '%%' . $name . '%%';
 
         return $marker;
@@ -437,11 +539,11 @@ abstract class autoptimizeBase
     /**
      * Returns true if the string is a valid regex.
      *
-     * @param string $string
+     * @param string $string String, duh.
      *
      * @return bool
      */
-    protected function str_is_valid_regex($string)
+    protected function str_is_valid_regex( $string )
     {
         set_error_handler( function() {}, E_WARNING );
         $is_regex = ( false !== preg_match( $string, '' ) );
@@ -458,18 +560,18 @@ abstract class autoptimizeBase
      * These are then at some point replaced back to their actual/original/modified
      * contents using `autoptimizeBase::restore_marked_content()`.
      *
-     * @param string $marker Marker name (without percent characters)
-     * @param string $search A string or full blown regex pattern to search for in $content. Uses `strpos()` or `preg_match()`
-     * @param string $re_replace_pattern Regex pattern to use when replacing contents
-     * @param string $content Content to work on
+     * @param string $marker Marker name (without percent characters).
+     * @param string $search A string or full blown regex pattern to search for in $content. Uses `strpos()` or `preg_match()`.
+     * @param string $re_replace_pattern Regex pattern to use when replacing contents.
+     * @param string $content Content to work on.
      *
      * @return string
      */
-    protected function replace_contents_with_marker_if_exists($marker, $search, $re_replace_pattern, $content)
+    protected function replace_contents_with_marker_if_exists( $marker, $search, $re_replace_pattern, $content )
     {
         $found = false;
 
-        $is_regex = $this->str_is_valid_regex($search);
+        $is_regex = $this->str_is_valid_regex( $search );
         if ( $is_regex ) {
             $found = preg_match( $search, $content );
         } else {
@@ -479,8 +581,8 @@ abstract class autoptimizeBase
         if ( $found ) {
             $content = preg_replace_callback(
                 $re_replace_pattern,
-                function($matches) use ($marker) {
-                    return autoptimizeBase::build_marker($marker, $matches[0]);
+                function( $matches ) use ( $marker ) {
+                    return autoptimizeBase::build_marker( $marker, $matches[0] );
                 },
                 $content
             );
@@ -490,19 +592,20 @@ abstract class autoptimizeBase
     }
 
     /**
-     * Complements `autoptimizeBase::replace_contents_with_marker_if_exists()`
+     * Complements `autoptimizeBase::replace_contents_with_marker_if_exists()`.
      *
-     * @param string $marker
-     * @param string $content
+     * @param string $marker Marker.
+     * @param string $content Markup.
+     *
      * @return string
      */
-    protected function restore_marked_content($marker, $content)
+    protected function restore_marked_content( $marker, $content )
     {
         if ( false !== strpos( $content, $marker ) ) {
             $content = preg_replace_callback(
                 '#%%' . $marker . AUTOPTIMIZE_HASH . '%%(.*?)%%' . $marker . '%%#is',
-                function ($matches) {
-                    return base64_decode($matches[1]);
+                function ( $matches ) {
+                    return base64_decode( $matches[1] );
                 },
                 $content
             );
@@ -511,13 +614,20 @@ abstract class autoptimizeBase
         return $content;
     }
 
+    /**
+     * Logs given `$data` for debugging purposes (when debug logging is on).
+     *
+     * @param mixed $data Data to log.
+     *
+     * @return void
+     */
     protected function debug_log( $data )
     {
         if ( ! isset( $this->debug_log ) || ! $this->debug_log ) {
             return;
         }
 
-        if ( ! is_string( $data ) && !is_resource( $data ) ) {
+        if ( ! is_string( $data ) && ! is_resource( $data ) ) {
             $data = var_export( $data, true );
         }
 
@@ -525,9 +635,9 @@ abstract class autoptimizeBase
     }
 
     /**
-     * Minifies a single local css/js file and returns it's (cached) url.
+     * Minifies a single local css/js file and returns its (cached) url.
      *
-     * @param [type] $filepath
+     * @param string $filepath Filepath.
      *
      * @return bool|string Url pointing to the minified css/js file or false.
      */
@@ -537,7 +647,7 @@ abstract class autoptimizeBase
         if ( $this->str_ends_in( $filepath, '.js' ) ) {
             $type = 'js';
             $mime = 'text/javascript';
-        } else if ( $this->str_ends_in( $filepath, '.css') ) {
+        } elseif ( $this->str_ends_in( $filepath, '.css' ) ) {
             $type = 'css';
             $mime = 'text/css';
         } else {
@@ -545,7 +655,7 @@ abstract class autoptimizeBase
         }
 
         // Bail if it looks like its already minifed (by having -min or .min
-        // in filename) or if it looks like WP jquery.js (which is minified)
+        // in filename) or if it looks like WP jquery.js (which is minified).
         $minified_variants = array(
             '-min.' . $type,
             '.min.' . $type,
@@ -557,7 +667,7 @@ abstract class autoptimizeBase
             }
         }
 
-        // Get file contents, bail if empty
+        // Get file contents, bail if empty.
         $contents = file_get_contents( $filepath );
         if ( empty( $contents ) ) {
             return false;
@@ -571,8 +681,8 @@ abstract class autoptimizeBase
         if ( ! $cache->check() ) {
             if ( 'js' === $type ) {
                 $contents = trim( JSMin::minify( $contents ) );
-            } elseif ('css' === $type ) {
-                $cssmin = new autoptimizeCSSmin();
+            } elseif ( 'css' === $type ) {
+                $cssmin   = new autoptimizeCSSmin();
                 $contents = trim( $cssmin->run( $contents ) );
             }
             // Store in cache.
@@ -581,7 +691,7 @@ abstract class autoptimizeBase
         $url = AUTOPTIMIZE_CACHE_URL . $cache->getname();
         unset( $cache );
 
-        // if CDN, then CDN
+        // CDN-replace if needed...
         $url = $this->url_replace_cdn( $url );
 
         return $url;
@@ -590,8 +700,8 @@ abstract class autoptimizeBase
     /**
      * Returns true if given $str ends with given $test.
      *
-     * @param string $str
-     * @param string $test
+     * @param string $str String to check.
+     * @param string $test Ending to match.
      *
      * @return bool
      */
