@@ -95,8 +95,9 @@ class autoptimizeExtra
 
         $settings = $this->options['autoptimize_extra_text_field_3'];
         $async    = array_fill_keys( array_filter( array_map( 'trim', explode( ',', $settings ) ) ), '' );
+        $attr     = apply_filters( 'autoptimize_filter_extra_async', 'async' );
         foreach ( $async as $k => $v ) {
-            $async[ $k ] = 'async';
+            $async[ $k ] = $attr;
         }
 
         // Merge exclusions & asyncs in one array and return to AO API.
