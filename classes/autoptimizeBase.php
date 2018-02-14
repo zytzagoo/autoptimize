@@ -27,8 +27,15 @@ abstract class autoptimizeBase
     // Returns the content
     abstract public function getcontent();
 
-    // Converts an URL to a full path
-    public function getpath($url)
+    /**
+     * Converts a given URL to a full local filepath if possible.
+     * Returns local filepath or false.
+     *
+     * @param string $url
+     *
+     * @return bool|string
+     */
+    public function getpath( $url )
     {
         $url = apply_filters( 'autoptimize_filter_cssjs_alter_url', $url );
 
@@ -55,7 +62,7 @@ abstract class autoptimizeBase
             }
         }
 
-        if ($site_host !== $content_host) {
+        if ( $site_host !== $content_host ) {
             $url = str_replace( AUTOPTIMIZE_WP_CONTENT_URL, AUTOPTIMIZE_WP_SITE_URL . AUTOPTIMIZE_WP_CONTENT_NAME, $url );
         }
 
@@ -70,9 +77,9 @@ abstract class autoptimizeBase
             */
             $multidomains = array();
 
-            $multidomainsWPML = apply_filters( 'wpml_setting', array(), 'language_domains' );
-            if (!empty($multidomainsWPML)) {
-                $multidomains = array_map( array( $this, 'ao_getDomain'), $multidomainsWPML );
+            $multidomains_wpml = apply_filters( 'wpml_setting', array(), 'language_domains' );
+            if ( ! empty( $multidomains_wpml ) ) {
+                $multidomains = array_map( array( $this, 'get_url_hostname'), $multidomains_wpml );
             }
 
             if ( ! empty( $this->cdn_url ) ) {
@@ -120,22 +127,32 @@ abstract class autoptimizeBase
         }
     }
 
-    // needed for WPML-filter
-    protected function ao_getDomain($in) {
-        // make sure the url starts with something vaguely resembling a protocol
-        if ( ( strpos( $in, 'http' ) !== 0 ) && (strpos($in, '//') !== 0 ) ) {
-            $in = 'http://' . $in;
+    /**
+     * Returns the hostname part of a given $url if we're able to parse it.
+     * If not, it returns the original url (prefixed with http:// scheme in case
+     * it was missing).
+     * Used as callback for WPML multidomains filter.
+     *
+     * @param string $url
+     *
+     * @return string
+     */
+    protected function get_url_hostname($url)
+    {
+        // Checking that the url starts with something vaguely resembling a protocol.
+        if ( ( 0 !== strpos( $url, 'http' ) ) && ( 0 !== strpos( $url, '//' ) ) ) {
+            $url = 'http://' . $url;
         }
 
-        // do the actual parse_url
-        $out = parse_url( $in, PHP_URL_HOST );
+        // Grab the hostname.
+        $hostname = parse_url( $url, PHP_URL_HOST );
 
-        // fallback if parse_url does not understand the url is in fact a url
-        if ( empty( $out ) ) {
-            $out = in;
+        // Fallback when parse_url() fails.
+        if ( empty( $hostname ) ) {
+            $hostname = $url;
         }
 
-        return $out;
+        return $hostname;
     }
 
     // hide everything between noptimize-comment tags
