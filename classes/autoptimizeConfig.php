@@ -178,7 +178,9 @@ input[type=url]:invalid {color: red; border-color:red;} .form-table th{font-weig
 <?php } ?>
 
 <?php if ( defined( 'AUTOPTIMIZE_LEGACY_MINIFIERS' ) ) { ?>
-<div class="notice-error notice"><?php echo '<p>' . _e( "You are using the (no longer supported) AUTOPTIMIZE_LEGACY_MINIFIERS constant. Ensure your site is working properly and remove the constant, it doesn't do anything any more.", 'autoptimize' ) . '</p>'; ?></div>
+    <div class="notice-error notice"><p>
+        <?php _e( "You are using the (no longer supported) AUTOPTIMIZE_LEGACY_MINIFIERS constant. Ensure your site is working properly and remove the constant, it doesn't do anything any more.", 'autoptimize' ); ?>
+    </p></div>
 <?php } ?>
 
 <div id="autoptimize_main">
