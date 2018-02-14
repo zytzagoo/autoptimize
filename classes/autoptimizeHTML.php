@@ -1,4 +1,7 @@
 <?php
+/**
+ * Handles minifying HTML markup.
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -6,8 +9,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class autoptimizeHTML extends autoptimizeBase
 {
+    /**
+     * Whether HTML comments are kept.
+     *
+     * @var bool
+     */
     private $keepcomments = false;
-    private $exclude      = array(
+
+    /**
+     * Things to exclude from being minifed.
+     *
+     * @var array
+     */
+    private $exclude = array(
         '<!-- ngg_resource_manager_marker -->',
         '<!--noindex-->',
         '<!--/noindex-->',
