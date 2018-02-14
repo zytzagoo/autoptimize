@@ -200,7 +200,7 @@ abstract class autoptimizeBase
         return $this->restore_marked_content('COMMENTS', $markup);
     }
 
-    public function url_replace_cdn($url)
+    public function url_replace_cdn( $url )
     {
         $cdn_url = apply_filters( 'autoptimize_filter_base_cdnurl', $this->cdn_url );
         if ( ! empty( $cdn_url ) ) {
@@ -494,7 +494,7 @@ abstract class autoptimizeBase
         return $content;
     }
 
-    protected function debug_log($data)
+    protected function debug_log( $data )
     {
         if ( ! isset( $this->debug_log ) || ! $this->debug_log ) {
             return;
@@ -505,5 +505,81 @@ abstract class autoptimizeBase
         }
 
         error_log( $data );
+    }
+
+    /**
+     * Minifies a single local css/js file and returns it's (cached) url.
+     *
+     * @param [type] $filepath
+     *
+     * @return bool|string Url pointing to the minified css/js file or false.
+     */
+    protected function minify_single( $filepath )
+    {
+        // Decide what we're dealing with, return false if we don't know.
+        if ( $this->str_ends_in( $filepath, '.js' ) ) {
+            $type = 'js';
+            $mime = 'text/javascript';
+        } else if ( $this->str_ends_in( $filepath, '.css') ) {
+            $type = 'css';
+            $mime = 'text/css';
+        } else {
+            return false;
+        }
+
+        // Bail if it looks like its already minifed (by having -min or .min
+        // in filename) or if it looks like WP jquery.js (which is minified)
+        $minified_variants = array(
+            '-min.' . $type,
+            '.min.' . $type,
+            'js/jquery/jquery.js',
+        );
+        foreach ( $minified_variants as $ending ) {
+            if ( $this->str_ends_in( $filepath, $ending ) ) {
+                return false;
+            }
+        }
+
+        // Get file contents, bail if empty
+        $contents = file_get_contents( $filepath );
+        if ( empty( $contents ) ) {
+            return false;
+        }
+
+        // Check cache.
+        $hash  = 'single_' . md5( $contents );
+        $cache = new autoptimizeCache( $hash, $type );
+
+        // If not in cache already, minify...
+        if ( ! $cache->check() ) {
+            if ( 'js' === $type ) {
+                $contents = trim( JSMin::minify( $contents ) );
+            } elseif ('css' === $type ) {
+                $cssmin = new autoptimizeCSSmin();
+                $contents = trim( $cssmin->run( $contents ) );
+            }
+            // Store in cache.
+            $cache->cache( $contents, $mime );
+        }
+        $url = AUTOPTIMIZE_CACHE_URL . $cache->getname();
+        unset( $cache );
+
+        // if CDN, then CDN
+        $url = $this->url_replace_cdn( $url );
+
+        return $url;
+    }
+
+    /**
+     * Returns true if given $str ends with given $test.
+     *
+     * @param string $str
+     * @param string $test
+     *
+     * @return bool
+     */
+    protected function str_ends_in( $str, $test )
+    {
+        return ( 0 === substr_compare( $str, $test, -strlen( $test ) ) );
     }
 }

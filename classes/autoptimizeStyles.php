@@ -181,6 +181,30 @@ class autoptimizeStyles extends autoptimizeBase
 
                     // Remove the original style tag
                     $this->content = str_replace( $tag, '', $this->content );
+                } else {
+                    // Excluded CSS, minify if getpath and filter says so...
+                    if ( preg_match( '#<link.*href=("|\')(.*)("|\')#Usmi', $tag, $source ) ) {
+                        $exploded_url = explode( '?', $source[2], 2 );
+                        $url          = $exploded_url[0];
+                        $path         = $this->getpath( $url );
+
+                        if ( $path && apply_filters( 'autoptimize_filter_css_minify_excluded', false ) ) {
+                            $minified_url = $this->minify_single($path);
+                            if ( ! empty( $minified_url ) ) {
+                                // Replace orig URL with cached minified URL
+                                $new_tag = str_replace( $url, $minified_url, $tag );
+                            } else {
+                                $new_tag = $tag;
+                            }
+
+                            // Removes querystring from URL.
+                            if ( ! empty( $exploded_url[1] ) ) {
+                                $new_tag = str_replace( '?' . $exploded_url[1], '', $new_tag );
+                            }
+                            // And replace!
+                            $this->content = str_replace( $tag, $new_tag, $this->content );
+                        }
+                    }
                 }
             }
             return true;
