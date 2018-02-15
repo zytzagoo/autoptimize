@@ -291,10 +291,13 @@ class autoptimizeMain
                 $is_customize_preview = is_customize_preview();
             }
 
-            // We only buffer the frontend requests (and then only if not a feed
-            // and not turned off explicitly and not when being previewed in Customizer)
-            // TODO/FIXME: Tests throw a notice here since we're calling is_feed()
-            // without the main query being ran (unless we init early).
+            /**
+             * We only buffer the frontend requests (and then only if not a feed
+             * and not turned off explicitly and not when being previewed in Customizer)!
+             * NOTE: Tests throw a notice here due to is_feed() being called
+             * while the main query hasn't been ran yet. Thats why we use
+             * AUTOPTIMIZE_INIT_EARLIER in tests.
+             */
             $do_buffering = ( ! is_admin() && ! is_feed() && ! $ao_noptimize && ! $is_customize_preview );
         }
 
