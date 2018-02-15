@@ -1565,4 +1565,49 @@ HTML;
         remove_all_filters( 'autoptimize_filter_css_defer' );
         remove_all_filters( 'autoptimize_filter_css_defer_inline' );
     }
+
+    public function test_js_aggregation_setting_and_dontaggregate_filter()
+    {
+        $opts = $this->getAoScriptsDefaultOptions();
+
+        // Aggregating by default
+        $scripts = new autoptimizeScripts('');
+        $scripts->read($opts);
+        $this->assertTrue($scripts->aggregating());
+
+        // Not aggregating when option turns it off.
+        $opts['aggregate'] = false;
+        $scripts = new autoptimizeScripts('');
+        $scripts->read($opts);
+        $this->assertFalse($scripts->aggregating());
+
+        // Not aggregating when filter says so.
+        add_filter( 'autoptimize_filter_js_dontaggregate', '__return_true' );
+        $scripts = new autoptimizeScripts('');
+        $scripts->read($opts);
+        $this->assertFalse($scripts->aggregating());
+        remove_all_filters( 'autoptimize_filter_js_dontaggregate' );
+    }
+
+    public function test_css_aggregation_setting_and_dontaggregate_filter()
+    {
+        $opts = $this->getAoStylesDefaultOptions();
+
+        // Aggregating by default
+        $styles = new autoptimizeStyles('');
+        $this->assertTrue($styles->aggregating());
+
+        // Not aggregating when option turns
+        $opts['aggregate'] = false;
+        $styles = new autoptimizeStyles('');
+        $styles->read($opts);
+        $this->assertFalse($styles->aggregating());
+
+        // Not aggregating when filter says so.
+        add_filter( 'autoptimize_filter_css_dontaggregate', '__return_true' );
+        $styles = new autoptimizeStyles('');
+        $styles->read($opts);
+        $this->assertFalse($styles->aggregating());
+        remove_all_filters( 'autoptimize_filter_css_dontaggregate' );
+    }
 }

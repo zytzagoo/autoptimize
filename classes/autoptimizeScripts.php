@@ -27,6 +27,7 @@ class autoptimizeScripts extends autoptimizeBase
         'jd.gallery.js.php','jd.gallery.transitions.js','swfobject.embedSWF(','linkwithin.com/widget.js','tiny_mce.js','tinyMCEPreInit.go'
     );
 
+    private $aggregate       = true;
     private $trycatch        = false;
     private $alreadyminified = false;
     private $forcehead       = true;
@@ -64,6 +65,15 @@ class autoptimizeScripts extends autoptimizeBase
             $content             = explode( '</head>', $this->content, 2 );
             $this->content       = $content[0] . '</head>';
             $this->restofcontent = $content[1];
+        }
+
+        // Determine whether we're doing JS-files aggregation or not.
+        if ( ! $options['aggregate'] ) {
+            $this->aggregate = false;
+        }
+        // Returning true for "dontaggregate" turns off aggregation.
+        if ( $this->aggregate && apply_filters( 'autoptimize_filter_js_dontaggregate', false ) ) {
+            $this->aggregate = false;
         }
 
         // include inline?
@@ -410,7 +420,7 @@ class autoptimizeScripts extends autoptimizeBase
     // Checks against the white- and blacklists
     private function ismergeable($tag)
     {
-        if ( apply_filters( 'autoptimize_filter_js_dontaggregate', false ) ) {
+        if ( ! $this->aggregate ) {
             return false;
         }
 
@@ -512,4 +522,13 @@ class autoptimizeScripts extends autoptimizeBase
         }
     }
 
+    /**
+     * Returns whether we're doing aggregation or not.
+     *
+     * @return bool
+     */
+    public function aggregating()
+    {
+        return $this->aggregate;
+    }
 }
