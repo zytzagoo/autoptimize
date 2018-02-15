@@ -46,10 +46,6 @@ class autoptimizeVersionUpdatesHandler
                 $this->upgrade_from_2_2();
                 $major_update = true;
                 // No break, intentionally, so all upgrades are ran during a single request...
-            case '2.3':
-                $this->upgrade_from_2_3();
-                $major_update = true;
-                // No break, intentionally, so all upgrades are ran during a single request...
         }
 
         if ( true === $major_update ) {
@@ -206,30 +202,5 @@ class autoptimizeVersionUpdatesHandler
             update_option( 'autoptimize_extra_settings', autoptimizeConfig::get_ao_extra_default_options() );
         }
         delete_option( 'autoptimize_css_nogooglefont' );
-    }
-
-    /**
-     * 2.4 adds (among other things) some new options which aren't strictly
-     * required to exist in the DB (since they default to true for now, and the
-     * UI showing them is not querying get_option() directly, but rather going
-     * throuh `autoptmizeConfig::get()` -- that makes sure the defaults are there).
-     * But I'm adding the code to add the values to the DB too just in case for now.
-     */
-    private function upgrade_from_2_3()
-    {
-        if ( ! is_multisite() ) {
-            update_option( 'autoptimize_css_aggregate', 'on' );
-            update_option( 'autoptimize_js_aggregate', 'on' );
-        } else {
-            global $wpdb;
-            $blog_ids         = $wpdb->get_col( "SELECT blog_id FROM $wpdb->blogs" );
-            $original_blog_id = get_current_blog_id();
-            foreach ( $blog_ids as $blog_id ) {
-                switch_to_blog( $blog_id );
-                update_option( 'autoptimize_css_aggregate', 'on' );
-                update_option( 'autoptimize_js_aggregate', 'on' );
-            }
-            switch_to_blog( $original_blog_id );
-        }
     }
 }
