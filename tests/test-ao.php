@@ -22,6 +22,39 @@ class AOTest extends WP_UnitTestcase
         return str_replace("\r\n", "\n", $str);
     }
 
+    protected function getAoStylesDefaultOptions()
+    {
+        $conf = autoptimizeConfig::instance();
+
+        return [
+            'aggregate'      => $conf->get('autoptimize_css_aggregate'),
+            'justhead'       => $conf->get('autoptimize_css_justhead'),
+            'datauris'       => $conf->get('autoptimize_css_datauris'),
+            'defer'          => $conf->get('autoptimize_css_defer'),
+            'defer_inline'   => $conf->get('autoptimize_css_defer_inline'),
+            'inline'         => $conf->get('autoptimize_css_inline'),
+            'css_exclude'    => $conf->get('autoptimize_css_exclude'),
+            'cdn_url'        => $conf->get('autoptimize_cdn_url'),
+            'include_inline' => $conf->get('autoptimize_css_include_inline'),
+            'nogooglefont'   => $conf->get('autoptimize_css_nogooglefont')
+        ];
+    }
+
+    protected function getAoScriptsDefaultOptions()
+    {
+        $conf = autoptimizeConfig::instance();
+
+        return [
+            'aggregate'      => $conf->get( 'autoptimize_js_aggregate' ),
+            'justhead'       => $conf->get( 'autoptimize_js_justhead' ),
+            'forcehead'      => $conf->get( 'autoptimize_js_forcehead' ),
+            'trycatch'       => $conf->get( 'autoptimize_js_trycatch' ),
+            'js_exclude'     => $conf->get( 'autoptimize_js_exclude' ),
+            'cdn_url'        => $conf->get( 'autoptimize_cdn_url' ),
+            'include_inline' => $conf->get( 'autoptimize_js_include_inline' ),
+        ];
+    }
+
     public function setUp()
     {
         $this->ao = new autoptimizeMain( AUTOPTIMIZE_PLUGIN_VERSION, AUTOPTIMIZE_PLUGIN_FILE );
@@ -1413,29 +1446,18 @@ CSS;
 
     public function test_css_import_semicolon_url_issue_122()
     {
-        $in = <<<CSS
+        $in = <<<HTML
 <style type="text/css">
 @import url("foo.css?a&#038;b");
 @import url("bar.css");
 </style>
-CSS;
+HTML;
 
         $expected = '<style type="text/css" media="all">@import url(http://cdn.example.org/foo.css?a&#038;b);@import url(http://cdn.example.org/bar.css);</style><!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `title` missing --><!--/noptimize-->';
 
-        $conf = autoptimizeConfig::instance();
-        $options = array(
-            'autoptimizeStyles' => array(
-                'justhead' => $conf->get('autoptimize_css_justhead'),
-                'datauris' => $conf->get('autoptimize_css_datauris'),
-                'defer' => $conf->get('autoptimize_css_defer'),
-                'defer_inline' => $conf->get('autoptimize_css_defer_inline'),
-                'inline' => $conf->get('autoptimize_css_inline'),
-                'css_exclude' => $conf->get('autoptimize_css_exclude'),
-                'cdn_url' => $conf->get('autoptimize_cdn_url'),
-                'include_inline' => $conf->get('autoptimize_css_include_inline'),
-                'nogooglefont' => $conf->get('autoptimize_css_nogooglefont')
-            )
-        );
+        $options = [
+            'autoptimizeStyles' => $this->getAoStylesDefaultOptions()
+        ];
 
         $instance = new autoptimizeStyles($in);
         $instance->read($options['autoptimizeStyles']);
@@ -1456,28 +1478,17 @@ CSS;
 
     public function test_aostyles_at_imports_with_media_queries()
     {
-        $in = <<<CSS
+        $in = <<<HTML
 <style type="text/css">
 @import "foo.css"; @import "bar.css" (orientation:landscape);
 </style>
-CSS;
+HTML;
 
         $expected = '<style type="text/css" media="all">@import url(http://cdn.example.org/foo.css);@import url(http://cdn.example.org/bar.css) (orientation:landscape);</style><!--noptimize--><!-- Autoptimize found a problem with the HTML in your Theme, tag `title` missing --><!--/noptimize-->';
 
-        $conf = autoptimizeConfig::instance();
-        $options = array(
-            'autoptimizeStyles' => array(
-                'justhead' => $conf->get('autoptimize_css_justhead'),
-                'datauris' => $conf->get('autoptimize_css_datauris'),
-                'defer' => $conf->get('autoptimize_css_defer'),
-                'defer_inline' => $conf->get('autoptimize_css_defer_inline'),
-                'inline' => $conf->get('autoptimize_css_inline'),
-                'css_exclude' => $conf->get('autoptimize_css_exclude'),
-                'cdn_url' => $conf->get('autoptimize_cdn_url'),
-                'include_inline' => $conf->get('autoptimize_css_include_inline'),
-                'nogooglefont' => $conf->get('autoptimize_css_nogooglefont')
-            )
-        );
+        $options = [
+            'autoptimizeStyles' => $this->getAoStylesDefaultOptions()
+        ];
 
         $instance = new autoptimizeStyles($in);
         $instance->read($options['autoptimizeStyles']);
