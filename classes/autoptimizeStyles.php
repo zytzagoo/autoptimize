@@ -32,6 +32,7 @@ class autoptimizeStyles extends autoptimizeBase
     private $datauris        = false;
     private $hashmap         = array();
     private $alreadyminified = false;
+    private $aggregate       = true;
     private $inline          = false;
     private $defer           = false;
     private $defer_inline    = false;
@@ -69,6 +70,15 @@ class autoptimizeStyles extends autoptimizeBase
             $content             = explode( '</head>', $this->content, 2 );
             $this->content       = $content[0] . '</head>';
             $this->restofcontent = $content[1];
+        }
+
+        // Determine whether we're doing CSS-files aggregation or not.
+        if ( isset( $options['aggregate'] ) && ! $options['aggregate'] ) {
+            $this->aggregate = false;
+        }
+        // Returning true for "dontaggregate" turns off aggregation.
+        if ( $this->aggregate && apply_filters( 'autoptimize_filter_css_dontaggregate', false ) ) {
+            $this->aggregate = false;
         }
 
         // include inline?
@@ -901,9 +911,11 @@ class autoptimizeStyles extends autoptimizeBase
 
     private function ismovable($tag)
     {
-        if ( apply_filters( 'autoptimize_filter_css_dontaggregate', false ) ) {
+        if ( ! $this->aggregate ) {
             return false;
-        } else if ( ! empty( $this->whitelist ) ) {
+        }
+
+        if ( ! empty( $this->whitelist ) ) {
             foreach ( $this->whitelist as $match ) {
                 if ( false !== strpos( $tag, $match ) ) {
                     return true;
@@ -948,6 +960,16 @@ class autoptimizeStyles extends autoptimizeBase
             // phew, all is safe, we can late-inject
             return true;
         }
+    }
+
+    /**
+     * Returns whether we're doing aggregation or not.
+     *
+     * @return bool
+     */
+    public function aggregating()
+    {
+        return $this->aggregate;
     }
 
     public function getOptions()
