@@ -707,6 +707,13 @@ abstract class autoptimizeBase
      */
     protected function str_ends_in( $str, $test )
     {
-        return ( 0 === substr_compare( $str, $test, -strlen( $test ) ) );
+        // @codingStandardsIgnoreStart
+        // substr_compare() is bugged on 5.5.11: https://3v4l.org/qGYBH
+        // return ( 0 === substr_compare( $str, $test, -strlen( $test ) ) );
+        // @codingStandardsIgnoreEnd
+
+        $length = strlen( $test );
+
+        return ( substr( $str, -$length, $length ) === $test );
     }
 }
