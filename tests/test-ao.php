@@ -1566,45 +1566,95 @@ HTML;
         remove_all_filters( 'autoptimize_filter_css_defer_inline' );
     }
 
-    public function test_js_aggregation_setting_and_dontaggregate_filter()
+    public function test_js_aggregation_decision_and_dontaggregate_filter()
     {
         $opts = $this->getAoScriptsDefaultOptions();
 
-        // Aggregating by default
+        // Aggregating: true by default
         $scripts = new autoptimizeScripts('');
         $scripts->read($opts);
         $this->assertTrue($scripts->aggregating());
 
-        // Not aggregating when option turns it off.
+        // Aggregating: option=true (dontaggregate=false by default).
+        $opts['aggregate'] = true;
+        $scripts = new autoptimizeScripts('');
+        $scripts->read($opts);
+        $this->assertTrue($scripts->aggregating());
+
+        // Aggregating: option=true, dontaggregate=false explicit.
+        add_filter( 'autoptimize_filter_js_dontaggregate', '__return_false' );
+        $opts['aggregate'] = true;
+        $scripts = new autoptimizeScripts('');
+        $scripts->read($opts);
+        $this->assertTrue($scripts->aggregating());
+        remove_all_filters( 'autoptimize_filter_js_dontaggregate' );
+
+        // Not aggregating: option=true, dontaggregate=true.
+        add_filter( 'autoptimize_filter_js_dontaggregate', '__return_true' );
+        $opts['aggregate'] = true;
+        $scripts = new autoptimizeScripts('');
+        $scripts->read($opts);
+        $this->assertFalse($scripts->aggregating());
+        remove_all_filters( 'autoptimize_filter_js_dontaggregate' );
+
+        // Not aggregating: option=false, dontaggregate=false.
+        add_filter( 'autoptimize_filter_js_dontaggregate', '__return_false' );
         $opts['aggregate'] = false;
         $scripts = new autoptimizeScripts('');
         $scripts->read($opts);
         $this->assertFalse($scripts->aggregating());
+        remove_all_filters( 'autoptimize_filter_js_dontaggregate' );
 
-        // Not aggregating when filter says so.
+        // Not aggregating: option=false, dontaggregate=true.
         add_filter( 'autoptimize_filter_js_dontaggregate', '__return_true' );
+        $opts['aggregate'] = false;
         $scripts = new autoptimizeScripts('');
         $scripts->read($opts);
         $this->assertFalse($scripts->aggregating());
         remove_all_filters( 'autoptimize_filter_js_dontaggregate' );
     }
 
-    public function test_css_aggregation_setting_and_dontaggregate_filter()
+    public function test_css_aggregation_decision_and_dontaggregate_filter()
     {
         $opts = $this->getAoStylesDefaultOptions();
 
-        // Aggregating by default
+        // Aggregating: true by default
         $styles = new autoptimizeStyles('');
         $this->assertTrue($styles->aggregating());
 
-        // Not aggregating when option turns
+        // Aggregating: option=true (dontaggregate=false by default).
+        $opts['aggregate'] = true;
+        $styles = new autoptimizeStyles('');
+        $styles->read($opts);
+        $this->assertTrue($styles->aggregating());
+
+        // Aggregating: option=true, dontaggregate=false explicit.
+        add_filter( 'autoptimize_filter_css_dontaggregate', '__return_false' );
+        $opts['aggregate'] = true;
+        $styles = new autoptimizeStyles('');
+        $styles->read($opts);
+        $this->assertTrue($styles->aggregating());
+        remove_all_filters( 'autoptimize_filter_css_dontaggregate' );
+
+        // Not aggregating: option=true, dontaggregate=true.
+        add_filter( 'autoptimize_filter_css_dontaggregate', '__return_true' );
+        $opts['aggregate'] = true;
+        $styles = new autoptimizeStyles('');
+        $styles->read($opts);
+        $this->assertFalse($styles->aggregating());
+        remove_all_filters( 'autoptimize_filter_css_dontaggregate' );
+
+        // Not aggregating: option=false, dontaggregate=false.
+        add_filter( 'autoptimize_filter_css_dontaggregate', '__return_false' );
         $opts['aggregate'] = false;
         $styles = new autoptimizeStyles('');
         $styles->read($opts);
         $this->assertFalse($styles->aggregating());
+        remove_all_filters( 'autoptimize_filter_css_dontaggregate' );
 
-        // Not aggregating when filter says so.
+        // Not aggregating: option=false, dontaggregate=true.
         add_filter( 'autoptimize_filter_css_dontaggregate', '__return_true' );
+        $opts['aggregate'] = false;
         $styles = new autoptimizeStyles('');
         $styles->read($opts);
         $this->assertFalse($styles->aggregating());
