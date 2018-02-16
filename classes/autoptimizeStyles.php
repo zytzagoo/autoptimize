@@ -913,7 +913,9 @@ class autoptimizeStyles extends autoptimizeBase
     {
         if ( ! $this->aggregate ) {
             return false;
-        } else if ( ! empty( $this->whitelist ) ) {
+        }
+
+        if ( ! empty( $this->whitelist ) ) {
             foreach ( $this->whitelist as $match ) {
                 if ( false !== strpos( $tag, $match ) ) {
                     return true;

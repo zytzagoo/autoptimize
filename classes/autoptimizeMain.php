@@ -390,7 +390,7 @@ class autoptimizeMain
                 'include_inline' => $conf->get( 'autoptimize_js_include_inline' ),
             ),
             'autoptimizeStyles'  => array(
-                'aggregate'      => $conf->get( 'autoptimize_js_aggregate' ),
+                'aggregate'      => $conf->get( 'autoptimize_css_aggregate' ),
                 'justhead'       => $conf->get( 'autoptimize_css_justhead' ),
                 'datauris'       => $conf->get( 'autoptimize_css_datauris' ),
                 'defer'          => $conf->get( 'autoptimize_css_defer' ),
