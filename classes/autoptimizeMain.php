@@ -64,7 +64,7 @@ class autoptimizeMain
 
     public function on_activate()
     {
-        register_uninstall_hook( $this->filepath, array( $this, 'on_uninstall' ) );
+        register_uninstall_hook( $this->filepath, 'autoptimizeMain::on_uninstall' );
     }
 
     public function load_textdomain()
@@ -424,7 +424,7 @@ class autoptimizeMain
         return $content;
     }
 
-    public function on_uninstall()
+    public static function on_uninstall()
     {
         autoptimizeCache::clearall();
 
@@ -432,6 +432,7 @@ class autoptimizeMain
             'autoptimize_cache_clean',
             'autoptimize_cache_nogzip',
             'autoptimize_css',
+            'autoptimize_css_aggregate',
             'autoptimize_css_datauris',
             'autoptimize_css_justhead',
             'autoptimize_css_defer',
@@ -441,6 +442,7 @@ class autoptimizeMain
             'autoptimize_html',
             'autoptimize_html_keepcomments',
             'autoptimize_js',
+            'autoptimize_js_aggregate',
             'autoptimize_js_exclude',
             'autoptimize_js_forcehead',
             'autoptimize_js_justhead',
