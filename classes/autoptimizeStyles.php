@@ -211,6 +211,24 @@ class autoptimizeStyles extends autoptimizeBase
                             if ( ! empty( $exploded_url[1] ) ) {
                                 $new_tag = str_replace( '?' . $exploded_url[1], '', $new_tag );
                             }
+
+                            // Defer single CSS if "inline & defer" is on.
+                            if ( $this->defer ) {
+                                $_preload_onload = apply_filters(
+                                    'autoptimize_filter_css_preload_onload',
+                                    "this.onload=null;this.rel='stylesheet'",
+                                    $url
+                                );
+                                $new_tag = str_replace(
+                                    array(
+                                        "rel='stylesheet'",
+                                        'rel="stylesheet"',
+                                    ),
+                                    "rel='preload' onload=\"" . $_preload_onload . "\"",
+                                    $new_tag
+                                );
+                            }
+
                             // And replace!
                             $this->content = str_replace( $tag, $new_tag, $this->content );
                         }
