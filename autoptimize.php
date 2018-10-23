@@ -26,6 +26,10 @@ define( 'AUTOPTIMIZE_PLUGIN_VERSION', '2.4.0' );
 define( 'AUTOPTIMIZE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AUTOPTIMIZE_PLUGIN_FILE', __FILE__ );
 
+if ( ! defined( 'AUTOPTIMIZE_SETUP_ACTION' ) ) {
+    define( 'AUTOPTIMIZE_SETUP_ACTION', 'plugins_loaded' );
+}
+
 // Bail early if attempting to run on non-supported php versions.
 if ( version_compare( PHP_VERSION, '5.3', '<' ) ) {
     function autoptimize_incompatible_admin_notice() {
@@ -87,7 +91,11 @@ function autoptimize() {
     static $plugin = null;
 
     if ( null === $plugin ) {
-        $plugin = new autoptimizeMain( AUTOPTIMIZE_PLUGIN_VERSION, AUTOPTIMIZE_PLUGIN_FILE );
+        $plugin = new autoptimizeMain(
+            AUTOPTIMIZE_PLUGIN_VERSION,
+            AUTOPTIMIZE_PLUGIN_FILE,
+            AUTOPTIMIZE_SETUP_ACTION
+        );
     }
 
     return $plugin;

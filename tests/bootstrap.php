@@ -23,6 +23,7 @@ require_once $_tests_dir . '/includes/functions.php';
 function _manually_load_plugin() {
     define( 'AUTOPTIMIZE_INIT_EARLIER', true );
 
+    define( 'AUTOPTIMIZE_SETUP_ACTION', 'init' );
     // For overriding cache dirs and whatnot. Kinda works if you keep a few things in mind.
     if ( getenv('CUSTOM_CONSTANTS' ) ) {
         define( 'AUTOPTIMIZE_CACHE_CHILD_DIR', '/c/ao/' );

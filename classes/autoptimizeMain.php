@@ -28,15 +28,27 @@ class autoptimizeMain
     protected $filepath = null;
 
     /**
+     * WP Hook to run AO setup/init on.
+     *
+     * @var string
+     */
+    protected $setup_hook = 'plugins_loaded';
+
+    /**
      * Constructor.
      *
      * @param string $version Version.
      * @param string $filepath Filepath. Needed for activation/deactivation/uninstall hooks.
+     * @param string|null $setup_hook WP hook on which to run our setup/init code.
      */
-    public function __construct( $version, $filepath )
+    public function __construct( $version, $filepath, $setup_hook = null )
     {
         $this->version  = $version;
         $this->filepath = $filepath;
+
+        if ( null !== $setup_hook ) {
+            $this->setup_hook = $setup_hook;
+        }
     }
 
     public function run()
@@ -50,7 +62,8 @@ class autoptimizeMain
 
     protected function add_hooks()
     {
-        add_action( 'plugins_loaded', array( $this, 'setup' ) );
+        add_action( $this->setup_hook, array( $this, 'setup' ) );
+        add_action( $this->setup_hook, array( $this, 'hook_page_cache_purge' ) );
 
         add_action( 'autoptimize_setup_done', array( $this, 'version_upgrades_check' ) );
         add_action( 'autoptimize_setup_done', array( $this, 'check_cache_and_run' ) );
@@ -58,7 +71,6 @@ class autoptimizeMain
         add_action( 'autoptimize_setup_done', array( $this, 'maybe_run_partners_tab' ) );
 
         add_action( 'init', array( $this, 'load_textdomain' ) );
-        add_action( 'plugins_loaded', array( $this, 'hook_page_cache_purge' ) );
         add_action( 'admin_init', array( 'PAnD', 'init' ) );
 
         register_activation_hook( $this->filepath, array( $this, 'on_activate' ) );
